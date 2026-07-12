@@ -1,20 +1,177 @@
 'use client';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import ThemeToggle from './theme-toggle';
-const LOGO_URL = 'https://media.base44.com/images/public/69dbf76f393b4827a5591a8c/a3882d98d_Untitleddesign.png';
-const links = [['News','/news'],['People','/people'],['Tech','/tech'],['Places','/places'],['Unspoken','/unspoken'],['Podcast','/podcast']];
+
+const LOGO_URL =
+  'https://media.base44.com/images/public/69dbf76f393b4827a5591a8c/a3882d98d_Untitleddesign.png';
+
+const NAV_LINKS = [
+  { label: 'News', href: '/news' },
+  { label: 'People', href: '/people' },
+  { label: 'Tech', href: '/tech' },
+  { label: 'Places', href: '/places' },
+  { label: 'Unspoken', href: '/unspoken' },
+  { label: 'Podcast', href: '/podcast', accent: true },
+];
+
 export default function SiteHeader() {
-  const path = usePathname(); const [scrolled,setScrolled]=useState(false); const [open,setOpen]=useState(false);
-  useEffect(()=>{const f=()=>setScrolled(window.scrollY>20); window.addEventListener('scroll',f); return()=>window.removeEventListener('scroll',f)},[]);
-  useEffect(()=>setOpen(false),[path]);
-  return <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled?'bg-background/95 backdrop-blur-md border-b border-border/20':'bg-transparent'}`}>
-    <div className="max-w-7xl mx-auto px-6 md:px-12">
-      <div className="hidden md:flex flex-col items-center pt-8 pb-3 gap-2"><Link href="/"><img src={LOGO_URL} alt="REVELATIONS" className="h-14 md:h-20 w-auto dark:invert"/></Link><span className="font-mono text-[9px] tracking-[0.22em] uppercase text-muted-foreground/60">Born as a podcast. Built as a media platform.</span></div>
-      <nav className="hidden md:flex justify-center items-center gap-10 pb-6">{links.map(([label,href])=><Link key={href} href={href} className={`font-mono text-[11px] tracking-[0.2em] uppercase transition-colors ${path===href?'text-foreground':'text-muted-foreground hover:text-foreground'}`}>{label}</Link>)}<Link href="/access" className="font-mono text-[11px] tracking-[0.2em] uppercase text-muted-foreground hover:text-foreground">Access</Link><ThemeToggle/></nav>
-      <div className="flex md:hidden h-20 items-center justify-between"><Link href="/"><img src={LOGO_URL} alt="REVELATIONS" className="h-10 w-auto dark:invert"/></Link><div className="flex items-center gap-2"><ThemeToggle/><button onClick={()=>setOpen(!open)} aria-label="Toggle menu" className="w-10 h-10 text-xl">☰</button></div></div>
-    </div>
-    {open&&<nav className="md:hidden bg-background/98 border-b border-border/20 px-6 py-8 flex flex-col gap-6">{links.map(([label,href])=><Link key={href} href={href} className="font-mono text-sm tracking-[0.18em] uppercase text-muted-foreground">{label}</Link>)}<Link href="/access" className="font-mono text-sm tracking-[0.18em] uppercase text-muted-foreground">Access</Link></nav>}
-  </header>;
+  const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  return (
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? 'border-b border-border/20 bg-background/95 backdrop-blur-md'
+          : 'bg-transparent'
+      }`}
+    >
+      <div className="mx-auto max-w-7xl px-6 md:px-12">
+        <div className="hidden flex-col items-center gap-2 pb-3 pt-8 md:flex">
+          <Link href="/" aria-label="REVELATIONS home">
+            <img
+              src={LOGO_URL}
+              alt="REVELATIONS"
+              className="h-14 w-auto dark:invert md:h-20"
+            />
+          </Link>
+
+          <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground/60 md:text-[10px]">
+            Born as a podcast. Built as a media platform.
+          </span>
+        </div>
+
+        <div className="hidden items-center justify-center pb-6 md:flex">
+          <nav className="flex items-center gap-10">
+            {NAV_LINKS.map((link) => {
+              const active = pathname === link.href;
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={
+                    link.accent
+                      ? `rounded-full border px-4 py-1 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors duration-300 ${
+                          active
+                            ? 'border-rose/50 bg-rose/10 text-foreground'
+                            : 'border-rose/30 text-foreground/80 hover:border-rose/50 hover:bg-rose/10 hover:text-foreground'
+                        }`
+                      : `font-mono text-[11px] uppercase tracking-[0.2em] transition-colors duration-300 ${
+                          active
+                            ? 'text-foreground'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`
+                  }
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+
+            <Link
+              href="/access"
+              className={`font-mono text-[11px] uppercase tracking-[0.2em] transition-colors duration-300 ${
+                pathname === '/access'
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Access
+            </Link>
+
+            <ThemeToggle />
+          </nav>
+        </div>
+
+        <div className="flex h-20 items-center justify-between md:hidden">
+          <Link href="/" aria-label="REVELATIONS home">
+            <img
+              src={LOGO_URL}
+              alt="REVELATIONS"
+              className="h-10 w-auto dark:invert"
+            />
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+
+            <button
+              type="button"
+              onClick={() => setMenuOpen((current) => !current)}
+              aria-label="Toggle menu"
+              aria-expanded={menuOpen}
+              className="flex h-10 w-10 items-center justify-center"
+            >
+              <span className="relative flex h-5 w-5 flex-col items-center justify-center gap-1.5">
+                <span
+                  className={`block h-px w-5 bg-foreground transition-all duration-300 ${
+                    menuOpen ? 'absolute rotate-45' : ''
+                  }`}
+                />
+                <span
+                  className={`block h-px w-5 bg-foreground transition-all duration-300 ${
+                    menuOpen ? 'opacity-0' : ''
+                  }`}
+                />
+                <span
+                  className={`block h-px w-5 bg-foreground transition-all duration-300 ${
+                    menuOpen ? 'absolute -rotate-45' : ''
+                  }`}
+                />
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {menuOpen && (
+        <div className="border-b border-border/20 bg-background/98 px-6 py-8 backdrop-blur-xl md:hidden">
+          <nav className="flex flex-col gap-6">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`font-mono text-sm uppercase tracking-[0.18em] transition-colors ${
+                  pathname === link.href
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+
+            <Link
+              href="/access"
+              className={`font-mono text-sm uppercase tracking-[0.18em] transition-colors ${
+                pathname === '/access'
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Access
+            </Link>
+          </nav>
+        </div>
+      )}
+    </header>
+  );
 }
