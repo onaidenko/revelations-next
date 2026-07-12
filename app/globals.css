@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'Inter', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --background: 0 0% 4%;
+    --foreground: 0 0% 92%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 92%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 92%;
+    --primary: 330 40% 82%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 330 100% 83%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 330 40% 82%;
+    --chart-1: 330 40% 82%;
+    --chart-2: 207 40% 81%;
+    --chart-3: 0 0% 55%;
+    --chart-4: 330 100% 83%;
+    --chart-5: 207 40% 70%;
+    --radius: 0.25rem;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 330 40% 82%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 330 40% 82%;
+
+    --rose: 330 40% 82%;
+    --sky: 207 40% 81%;
+    --pink: 330 100% 83%;
+    --carbon: 0 0% 4%;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 92%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 92%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 92%;
+    --primary: 330 40% 82%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 330 100% 83%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 330 40% 82%;
+    --chart-1: 330 40% 82%;
+    --chart-2: 207 40% 81%;
+    --chart-3: 0 0% 55%;
+    --chart-4: 330 100% 83%;
+    --chart-5: 207 40% 70%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 330 40% 82%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 330 40% 82%;
+  }
+
+  /* ── Light theme ─────────────────────────────────────────────────
+     Warm editorial paper — graphite ink — muted dusty rose accent
+     Not pure white. Not SaaS blue. Quiet luxury printed magazine.
+  ───────────────────────────────────────────────────────────────── */
+  .light {
+    /* Warm ivory paper background */
+    --background: 36 30% 95%;        /* #F5F1EA */
+    --foreground: 20 6% 10%;         /* #1C1A18 — deep graphite ink */
+
+    /* Card / surface — slightly lighter warm paper */
+    --card: 36 40% 98%;              /* #FFFDF8 */
+    --card-foreground: 20 6% 10%;
+
+    --popover: 36 40% 98%;
+    --popover-foreground: 20 6% 10%;
+
+    /* Primary — dusty rose, slightly deeper for light contrast */
+    --primary: 330 28% 58%;          /* #B98295 */
+    --primary-foreground: 36 30% 95%;
+
+    /* Secondary — warm parchment for subtle surfaces */
+    --secondary: 33 22% 89%;         /* #E8E0D5 */
+    --secondary-foreground: 20 6% 10%;
+
+    /* Muted — warm gray-beige */
+    --muted: 33 22% 89%;
+    --muted-foreground: 25 8% 44%;   /* #7A736B — taupe gray */
+
+    /* Accent — same dusty rose as primary */
+    --accent: 330 28% 58%;
+    --accent-foreground: 36 30% 95%;
+
+    /* Destructive */
+    --destructive: 0 72% 44%;
+    --destructive-foreground: 36 30% 95%;
+
+    /* Borders — soft warm gray */
+    --border: 30 16% 82%;            /* #DDD4C8 */
+    --input: 30 16% 82%;
+    --ring: 330 28% 58%;
+
+    /* Charts */
+    --chart-1: 330 28% 58%;
+    --chart-2: 207 30% 55%;
+    --chart-3: 25 8% 44%;
+    --chart-4: 330 28% 68%;
+    --chart-5: 207 30% 45%;
+
+    /* Sidebar */
+    --sidebar-background: 36 30% 95%;
+    --sidebar-foreground: 20 6% 10%;
+    --sidebar-primary: 330 28% 58%;
+    --sidebar-primary-foreground: 36 30% 95%;
+    --sidebar-accent: 33 22% 89%;
+    --sidebar-accent-foreground: 20 6% 10%;
+    --sidebar-border: 30 16% 82%;
+    --sidebar-ring: 330 28% 58%;
+
+    /* Rose accent — slightly deeper for light mode contrast */
+    --rose: 330 28% 58%;             /* #B98295 */
+    --sky: 207 30% 55%;
+    --pink: 330 35% 65%;
+    --carbon: 36 30% 95%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+
+  ::selection {
+    background: hsl(var(--rose) / 0.3);
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Apply background early to prevent flash */
+html.light body { background-color: #F5F1EA; }
+html.dark body  { background-color: #0A0A0A; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 3px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--rose) / 0.5);
+}
+
+.article-prose { color: hsl(var(--foreground)); font-family: var(--font-body); line-height: 1.85; }
+.article-prose h1,.article-prose h2,.article-prose h3 { font-family: var(--font-display); margin: 2rem 0 1rem; line-height: 1.2; }
+.article-prose h2 { font-size: 2rem; } .article-prose h3 { font-size: 1.5rem; }
+.article-prose p,.article-prose ul,.article-prose ol,.article-prose blockquote { margin: 1.25rem 0; }
+.article-prose a { color: hsl(var(--rose)); text-decoration: underline; }
+.article-prose ul { list-style: disc; padding-left: 1.5rem; } .article-prose ol { list-style: decimal; padding-left: 1.5rem; }
+.article-prose blockquote { border-left: 2px solid hsl(var(--rose)); padding-left: 1rem; color: hsl(var(--muted-foreground)); }

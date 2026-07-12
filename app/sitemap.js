@@ -1,0 +1,2 @@
+import { getPublishedArticles } from '@/lib/articles'; import { SITE_URL } from '@/lib/site';
+export default function sitemap(){const staticPaths=['','news','people','tech','places','unspoken','podcast','about','advertise','contact','archive'];return [...staticPaths.map(path=>({url:`${SITE_URL}/${path}`.replace(/\/$/,path?'':'/'),lastModified:new Date()})),...getPublishedArticles().map(a=>({url:`${SITE_URL}/${a.slug}`,lastModified:new Date(a.updated_date||a.publication_date||a.created_date)}))]}
