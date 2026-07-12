@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
+import DropsMarquee from '@/components/drops-marquee';
 import { getArticlesBySection } from '@/lib/articles';
 
 function formatDate(value, variant = 'full') {
@@ -96,6 +97,8 @@ export default function HomePage() {
             )}
           </section>
         )}
+
+        <DropsMarquee />
 
         {secondary.length > 0 && (
           <section className="mx-auto max-w-7xl border-b border-border/20 px-6 py-14 md:px-12">
