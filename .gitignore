@@ -1,12 +1,6 @@
-node_modules
-.next
-deploy-package
-revelations-staging.tar.gz
-.env*.local
-.DS_Store
-node_modules
-.next
-deploy-package
+node_modules/
+.next/
+deploy-package/
 revelations-staging.tar.gz
 .env*.local
 .DS_Store
