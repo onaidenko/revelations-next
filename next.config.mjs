@@ -2,6 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   images: { unoptimized: true },
+  allowedDevOrigins: ['172.20.10.4'],
   async redirects() {
     return [
       { source: '/Home', destination: '/', permanent: true },
