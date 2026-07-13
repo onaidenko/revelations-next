@@ -39,14 +39,19 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const description =
-    article.excerpt || `Read ${article.title} on REVELATIONS.`;
+  const seoTitle =
+    article.seo_title || article.title;
+
+  const seoDescription =
+    article.seo_description ||
+    article.excerpt ||
+    `Read ${article.title} on REVELATIONS.`;
 
   const image = article.cover_image || DEFAULT_IMAGE;
 
   return {
-    title: article.title,
-    description,
+    title: seoTitle,
+    description: seoDescription,
 
     alternates: {
       canonical: `/${article.slug}`,
@@ -54,8 +59,8 @@ export async function generateMetadata({ params }) {
 
     openGraph: {
       type: 'article',
-      title: article.title,
-      description,
+      title: seoTitle,
+      description: seoDescription,
       url: `/${article.slug}`,
       images: [image],
       publishedTime: article.publication_date,
@@ -67,8 +72,8 @@ export async function generateMetadata({ params }) {
 
     twitter: {
       card: 'summary_large_image',
-      title: article.title,
-      description,
+      title: seoTitle,
+      description: seoDescription,
       images: [image],
     },
   };

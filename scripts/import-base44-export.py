@@ -187,6 +187,8 @@ for row in published_rows:
     if not cover_image:
         raise RuntimeError(f"Article has no cover image: {slug}")
 
+    existing_article = old_by_slug.get(slug, {})
+
     content = str(row.get("content") or "").strip()
     content_file_url = optional_text(
         row.get("content_file_url")
@@ -203,8 +205,18 @@ for row in published_rows:
         "id": str(row.get("id") or "").strip(),
         "slug": slug,
         "title": title,
+        "seo_title": (
+            optional_text(row.get("seo_title"))
+            or optional_text(existing_article.get("seo_title"))
+        ),
         "section": section,
         "excerpt": optional_text(row.get("excerpt")),
+        "seo_description": (
+            optional_text(row.get("seo_description"))
+            or optional_text(
+                existing_article.get("seo_description")
+            )
+        ),
         "content": content,
         "cover_image": cover_image,
         "author": optional_text(row.get("author")),
