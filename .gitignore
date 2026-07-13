@@ -4,3 +4,7 @@ deploy-package/
 revelations-staging.tar.gz
 .env*.local
 .DS_Store
+STAGING_SEO_AUDIT.md
+SEO_METADATA_PLAN.md
+data/staging-seo-audit.json
+data/seo-metadata-plan.json

@@ -46,10 +46,27 @@ const htmlEntities = {
 };
 
 function decodeHtml(value = '') {
-  return value.replace(
-    /&amp;|&quot;|&#39;|&lt;|&gt;/g,
-    (match) => htmlEntities[match] || match
-  );
+  return value
+    .replace(
+      /&#x([0-9a-f]+);/gi,
+      (_, hex) =>
+        String.fromCodePoint(
+          Number.parseInt(hex, 16)
+        )
+    )
+    .replace(
+      /&#([0-9]+);/g,
+      (_, decimal) =>
+        String.fromCodePoint(
+          Number.parseInt(decimal, 10)
+        )
+    )
+    .replace(
+      /&amp;|&quot;|&apos;|&#39;|&lt;|&gt;/g,
+      (match) =>
+        htmlEntities[match] ||
+        (match === '&apos;' ? "'" : match)
+    );
 }
 
 function extractTags(html, tagName) {
