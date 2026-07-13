@@ -130,27 +130,56 @@ for (const article of articles) {
 }
 
 const imageHostCounts = {};
+const localImages = [];
 const base44Images = [];
 const invalidImageUrls = [];
 
 for (const article of articles) {
   if (!hasValue(article.cover_image)) continue;
 
+  const image = String(article.cover_image).trim();
+
+  if (image.startsWith('/')) {
+    const localFilePath = path.join(
+      ROOT,
+      'public',
+      image.replace(/^\/+/, '')
+    );
+
+    if (
+      fs.existsSync(localFilePath) &&
+      fs.statSync(localFilePath).isFile()
+    ) {
+      localImages.push({
+        article: displayArticle(article),
+        image,
+      });
+    } else {
+      invalidImageUrls.push({
+        article: displayArticle(article),
+        image,
+      });
+    }
+
+    continue;
+  }
+
   try {
-    const url = new URL(article.cover_image);
+    const url = new URL(image);
+
     imageHostCounts[url.hostname] =
       (imageHostCounts[url.hostname] || 0) + 1;
 
     if (url.hostname.includes('base44')) {
       base44Images.push({
         article: displayArticle(article),
-        image: article.cover_image,
+        image,
       });
     }
   } catch {
     invalidImageUrls.push({
       article: displayArticle(article),
-      image: article.cover_image,
+      image,
     });
   }
 }
@@ -169,6 +198,7 @@ const audit = {
   invalidSections,
   missingFields: checks,
   imageHostCounts,
+  localImages,
   base44Images,
   invalidImageUrls,
 };
@@ -210,8 +240,9 @@ const lines = [
   `- Missing content: ${checks.noContent.length}`,
   `- Invalid cover-image URLs: ${invalidImageUrls.length}`,
   '',
-  '## Image hosts',
+  '## Image locations',
   '',
+  `- Local project files: ${localImages.length}`,
   ...Object.entries(imageHostCounts)
     .sort((a, b) => b[1] - a[1])
     .map(([host, count]) => `- ${host}: ${count}`),
@@ -241,6 +272,7 @@ console.log(`Duplicate slugs:          ${duplicateSlugs.length}`);
 console.log(`Invalid sections:         ${invalidSections.length}`);
 console.log(`Missing content:          ${checks.noContent.length}`);
 console.log(`Missing cover image:      ${checks.noCoverImage.length}`);
+console.log(`Local cover images:       ${localImages.length}`);
 console.log(`Base44 cover images:      ${base44Images.length}`);
 console.log('');
 console.log('By section:');

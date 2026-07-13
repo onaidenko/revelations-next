@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import ThemeToggle from './theme-toggle';
 
 const LOGO_URL =
-  'https://media.base44.com/images/public/69dbf76f393b4827a5591a8c/a3882d98d_Untitleddesign.png';
+  '/media/brand/revelations-logo.png';
 
 const NAV_LINKS = [
   { label: 'News', href: '/news' },
