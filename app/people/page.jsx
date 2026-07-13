@@ -8,7 +8,8 @@ export function generateMetadata() {
 
   return {
     title: section.title,
-    description: section.description,
+    description:
+      section.seoDescription || section.description,
     alternates: {
       canonical: `/${SECTION}`,
     },
