@@ -8,3 +8,5 @@ STAGING_SEO_AUDIT.md
 SEO_METADATA_PLAN.md
 data/staging-seo-audit.json
 data/seo-metadata-plan.json
+deploy-production/
+revelations-production.tar.gz

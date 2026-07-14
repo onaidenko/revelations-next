@@ -2,7 +2,7 @@ import Link from 'next/link';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import DropsMarquee from '@/components/drops-marquee';
-import { getArticlesBySection } from '@/lib/articles';
+import { getArticlesBySection } from '@/lib/cms-articles';
 
 function formatDate(value, variant = 'full') {
   if (!value) return '';
@@ -21,8 +21,8 @@ function formatDate(value, variant = 'full') {
   return new Intl.DateTimeFormat('en-US', options).format(date);
 }
 
-export default function HomePage() {
-  const articles = getArticlesBySection('news').slice(0, 10);
+export default async function HomePage() {
+  const articles = (await getArticlesBySection('news')).slice(0, 10);
 
   const hero = articles[0] || null;
   const secondary = articles.slice(1, 3);

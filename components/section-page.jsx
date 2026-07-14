@@ -5,7 +5,7 @@ import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import SectionArticleCard from '@/components/section-article-card';
 
-import { getArticlesBySection } from '@/lib/articles';
+import { getArticlesBySection } from '@/lib/cms-articles';
 import { SECTIONS } from '@/lib/sections';
 
 const STICKY_RIGHT = new Set([
@@ -14,14 +14,14 @@ const STICKY_RIGHT = new Set([
   'unspoken',
 ]);
 
-export default function SectionPage({ sectionId }) {
+export default async function SectionPage({ sectionId }) {
   const section = SECTIONS[sectionId];
 
   if (!section) {
     notFound();
   }
 
-  const articles = getArticlesBySection(sectionId);
+  const articles = await getArticlesBySection(sectionId);
   const isPodcast = sectionId === 'podcast';
   const stickyRight = STICKY_RIGHT.has(sectionId);
 

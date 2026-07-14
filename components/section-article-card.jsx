@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { formatDate } from '@/lib/articles';
+import { formatDate } from '@/lib/cms-articles';
 import { SECTIONS } from '@/lib/sections';
 
 export default function SectionArticleCard({

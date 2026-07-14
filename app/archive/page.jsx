@@ -6,7 +6,7 @@ import SiteFooter from '@/components/site-footer';
 import {
   formatDate,
   getPublishedArticles,
-} from '@/lib/articles';
+} from '@/lib/cms-articles';
 
 const SECTION_ORDER = [
   'news',
@@ -35,8 +35,8 @@ export const metadata = {
   },
 };
 
-export default function ArchivePage() {
-  const articles = getPublishedArticles();
+export default async function ArchivePage() {
+  const articles = await getPublishedArticles();
 
   const grouped = articles.reduce((result, article) => {
     const section = article.section || 'news';

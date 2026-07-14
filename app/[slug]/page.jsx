@@ -12,7 +12,7 @@ import {
   getPublishedArticles,
   getRelatedArticles,
   formatDate,
-} from '@/lib/articles';
+} from '@/lib/cms-articles';
 
 import { SECTIONS } from '@/lib/sections';
 import {
@@ -21,13 +21,13 @@ import {
   SITE_URL,
 } from '@/lib/site';
 
-export function generateStaticParams() {
-  return getPublishedArticles().map(({ slug }) => ({ slug }));
+export async function generateStaticParams() {
+  return (await getPublishedArticles()).map(({ slug }) => ({ slug }));
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getArticleBySlug(slug);
 
   if (!article) {
     return {
@@ -81,14 +81,14 @@ export async function generateMetadata({ params }) {
 
 export default async function ArticlePage({ params }) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  const article = await getArticleBySlug(slug);
 
   if (!article) {
     notFound();
   }
 
   const section = SECTIONS[article.section];
-  const related = getRelatedArticles(article);
+  const related = await getRelatedArticles(article);
   const canonical = `${SITE_URL}/${article.slug}`;
 
   const publicationDate =
@@ -194,7 +194,7 @@ export default async function ArticlePage({ params }) {
         </header>
 
         <div className="mx-auto max-w-3xl px-6 py-12">
-          <ArticleBody content={article.content} />
+          <ArticleBody content={article.content} format={article.content_format} />
 
           {article.youtube_url && (
             <div className="mt-12">

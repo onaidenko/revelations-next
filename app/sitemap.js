@@ -1,7 +1,7 @@
-import { getPublishedArticles } from '@/lib/articles';
+import { getPublishedArticles } from '@/lib/cms-articles';
 import { SITE_URL } from '@/lib/site';
 
-export default function sitemap() {
+export default async function sitemap() {
   const staticPaths = [
     '',
     'news',
@@ -25,7 +25,7 @@ export default function sitemap() {
     lastModified: new Date(),
   }));
 
-  const articlePages = getPublishedArticles().map(
+  const articlePages = (await getPublishedArticles()).map(
     (article) => ({
       url: `${SITE_URL}/${article.slug}`,
       lastModified: new Date(
