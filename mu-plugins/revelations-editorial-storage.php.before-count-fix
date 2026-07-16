@@ -1,0 +1,345 @@
+<?php
+/**
+ * Plugin Name: REVELATIONS Editorial Storage
+ * Description: Private storage for editorial candidates and run logs.
+ * Version: 0.1.0
+ */
+
+declare(strict_types=1);
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+/**
+ * Allowed editorial sections.
+ *
+ * @return string[]
+ */
+function revelations_editorial_sections(): array {
+    return array(
+        'news',
+        'people',
+        'tech',
+        'places',
+        'unspoken',
+        'podcast',
+    );
+}
+
+/**
+ * Allowed candidate workflow statuses.
+ *
+ * @return string[]
+ */
+function revelations_editorial_candidate_statuses(): array {
+    return array(
+        'selected',
+        'rejected',
+        'processing',
+        'processed',
+        'failed',
+    );
+}
+
+/**
+ * Sanitize a candidate section.
+ */
+function revelations_editorial_sanitize_section(
+    mixed $value
+): string {
+    $value = sanitize_key( (string) $value );
+
+    return in_array(
+        $value,
+        revelations_editorial_sections(),
+        true
+    )
+        ? $value
+        : 'news';
+}
+
+/**
+ * Sanitize a candidate workflow status.
+ */
+function revelations_editorial_sanitize_candidate_status(
+    mixed $value
+): string {
+    $value = sanitize_key( (string) $value );
+
+    return in_array(
+        $value,
+        revelations_editorial_candidate_statuses(),
+        true
+    )
+        ? $value
+        : 'selected';
+}
+
+/**
+ * Sanitize an editorial score.
+ */
+function revelations_editorial_sanitize_score(
+    mixed $value
+): float {
+    return round(
+        max(
+            0,
+            min( 10, (float) $value )
+        ),
+        1
+    );
+}
+
+/**
+ * Register non-public internal record types.
+ */
+add_action(
+    'init',
+    static function (): void {
+        register_post_type(
+            'rev_candidate',
+            array(
+                'labels' => array(
+                    'name'          => 'Editorial Candidates',
+                    'singular_name' => 'Editorial Candidate',
+                ),
+
+                'public'              => false,
+                'publicly_queryable'  => false,
+                'exclude_from_search' => true,
+                'show_ui'             => false,
+                'show_in_menu'        => false,
+                'show_in_rest'        => false,
+                'has_archive'         => false,
+                'rewrite'             => false,
+                'query_var'           => false,
+                'map_meta_cap'        => true,
+                'supports'            => array(
+                    'title',
+                    'custom-fields',
+                ),
+                'delete_with_user'    => false,
+            )
+        );
+
+        register_post_type(
+            'rev_run_log',
+            array(
+                'labels' => array(
+                    'name'          => 'Editorial Run Logs',
+                    'singular_name' => 'Editorial Run Log',
+                ),
+
+                'public'              => false,
+                'publicly_queryable'  => false,
+                'exclude_from_search' => true,
+                'show_ui'             => false,
+                'show_in_menu'        => false,
+                'show_in_rest'        => false,
+                'has_archive'         => false,
+                'rewrite'             => false,
+                'query_var'           => false,
+                'map_meta_cap'        => true,
+                'supports'            => array(
+                    'title',
+                    'custom-fields',
+                ),
+                'delete_with_user'    => false,
+            )
+        );
+    }
+);
+
+/**
+ * Register candidate and run-log metadata.
+ */
+add_action(
+    'init',
+    static function (): void {
+        $candidate_meta = array(
+            '_rev_source_url' => array(
+                'type'              => 'string',
+                'sanitize_callback' => 'esc_url_raw',
+            ),
+
+            '_rev_source_name' => array(
+                'type'              => 'string',
+                'sanitize_callback' =>
+                    'sanitize_text_field',
+            ),
+
+            '_rev_published_at' => array(
+                'type'              => 'string',
+                'sanitize_callback' =>
+                    'sanitize_text_field',
+            ),
+
+            '_rev_fetched_at' => array(
+                'type'              => 'string',
+                'sanitize_callback' =>
+                    'sanitize_text_field',
+            ),
+
+            '_rev_summary' => array(
+                'type'              => 'string',
+                'sanitize_callback' =>
+                    'sanitize_textarea_field',
+            ),
+
+            '_rev_raw_excerpt' => array(
+                'type'              => 'string',
+                'sanitize_callback' =>
+                    'sanitize_textarea_field',
+            ),
+
+            '_rev_section' => array(
+                'type'              => 'string',
+                'sanitize_callback' =>
+                    'revelations_editorial_sanitize_section',
+            ),
+
+            '_rev_freshness_score' => array(
+                'type'              => 'number',
+                'sanitize_callback' =>
+                    'revelations_editorial_sanitize_score',
+            ),
+
+            '_rev_relevance_score' => array(
+                'type'              => 'number',
+                'sanitize_callback' =>
+                    'revelations_editorial_sanitize_score',
+            ),
+
+            '_rev_implementation_score' => array(
+                'type'              => 'number',
+                'sanitize_callback' =>
+                    'revelations_editorial_sanitize_score',
+            ),
+
+            '_rev_hype_score' => array(
+                'type'              => 'number',
+                'sanitize_callback' =>
+                    'revelations_editorial_sanitize_score',
+            ),
+
+            '_rev_fit_score' => array(
+                'type'              => 'number',
+                'sanitize_callback' =>
+                    'revelations_editorial_sanitize_score',
+            ),
+
+            '_rev_total_score' => array(
+                'type'              => 'number',
+                'sanitize_callback' =>
+                    'revelations_editorial_sanitize_score',
+            ),
+
+            '_rev_scoring_reason' => array(
+                'type'              => 'string',
+                'sanitize_callback' =>
+                    'sanitize_textarea_field',
+            ),
+
+            '_rev_duplicate_key' => array(
+                'type'              => 'string',
+                'sanitize_callback' =>
+                    'sanitize_text_field',
+            ),
+
+            '_rev_run_id' => array(
+                'type'              => 'integer',
+                'sanitize_callback' => 'absint',
+            ),
+
+            '_rev_status' => array(
+                'type'              => 'string',
+                'sanitize_callback' =>
+                    'revelations_editorial_sanitize_candidate_status',
+            ),
+
+            '_rev_error_message' => array(
+                'type'              => 'string',
+                'sanitize_callback' =>
+                    'sanitize_textarea_field',
+            ),
+        );
+
+        foreach ( $candidate_meta as $key => $args ) {
+            register_post_meta(
+                'rev_candidate',
+                $key,
+                array_merge(
+                    $args,
+                    array(
+                        'single'       => true,
+                        'show_in_rest' => false,
+
+                        'auth_callback' =>
+                            static fn (): bool =>
+                                current_user_can(
+                                    'manage_options'
+                                ),
+                    )
+                )
+            );
+        }
+
+        $run_meta = array(
+            '_rev_run_date'           => 'string',
+            '_rev_run_status'         => 'string',
+            '_rev_section'            => 'string',
+            '_rev_sources_checked'    => 'string',
+            '_rev_sources_failed'     => 'string',
+            '_rev_errors'             => 'string',
+            '_rev_total_fetched'      => 'integer',
+            '_rev_duplicates_removed' => 'integer',
+            '_rev_candidates_selected'=> 'integer',
+            '_rev_drafts_requested'   => 'integer',
+            '_rev_drafts_generated'   => 'integer',
+            '_rev_drafts_failed'      => 'integer',
+            '_rev_duration_ms'        => 'integer',
+        );
+
+        foreach ( $run_meta as $key => $type ) {
+            register_post_meta(
+                'rev_run_log',
+                $key,
+                array(
+                    'type'         => $type,
+                    'single'       => true,
+                    'show_in_rest' => false,
+
+                    'sanitize_callback' =>
+                        'integer' === $type
+                            ? 'absint'
+                            : 'sanitize_textarea_field',
+
+                    'auth_callback' =>
+                        static fn (): bool =>
+                            current_user_can(
+                                'manage_options'
+                            ),
+                )
+            );
+        }
+    }
+);
+
+/**
+ * Count privately stored editorial candidates.
+ */
+function revelations_editorial_candidate_count(): int {
+    $counts = wp_count_posts( 'rev_candidate' );
+
+    if ( ! $counts ) {
+        return 0;
+    }
+
+    return array_sum(
+        array_map(
+            'intval',
+            get_object_vars( $counts )
+        )
+    );
+}
