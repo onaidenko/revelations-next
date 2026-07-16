@@ -24,7 +24,7 @@ done < <(
 
 echo "Copying live MU plugins..."
 
-rsync -a --delete \
+rsync -a --delete --delete-excluded \
     --exclude='*.bak' \
     --exclude='*.backup' \
     --exclude='*.before-*' \
