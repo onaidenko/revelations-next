@@ -66,8 +66,10 @@ echo
 echo "===== RSYNC COMPARISON ====="
 
 RSYNC_ARGS=(
-    -av
-    --delete
+    -rvc
+    --delete-delay
+    --itemize-changes
+    --exclude='.DS_Store'
     --exclude='*.bak'
     --exclude='*.backup'
     --exclude='*.before-*'
@@ -77,7 +79,7 @@ RSYNC_ARGS=(
 )
 
 if [ "$MODE" = "--dry-run" ]; then
-    RSYNC_ARGS+=(--dry-run --itemize-changes)
+    RSYNC_ARGS+=(--dry-run)
 fi
 
 if [ "$MODE" = "--deploy" ]; then
