@@ -117,6 +117,59 @@ if [ "$MODE" = "--dry-run" ]; then
 fi
 
 echo
+echo "===== NORMALIZE REMOTE PERMISSIONS ====="
+
+ssh "$SERVER" bash -s -- "$REMOTE_MU" <<'REMOTE'
+set -euo pipefail
+
+REMOTE_MU="$1"
+
+chown root:www-data "$REMOTE_MU"
+chmod 750 "$REMOTE_MU"
+
+while IFS= read -r -d '' FILE; do
+    chown root:www-data "$FILE"
+    chmod 640 "$FILE"
+done < <(
+    find "$REMOTE_MU" \
+        -maxdepth 1 \
+        -type f \
+        \( -name '*.php' -o -name '*.js' \) \
+        -print0
+)
+
+while IFS= read -r -d '' FILE; do
+    sudo -u revelations-cms -- test -r "$FILE"
+
+    OWNER_GROUP="$(
+        stat -c '%U:%G' "$FILE"
+    )"
+
+    MODE="$(
+        stat -c '%a' "$FILE"
+    )"
+
+    if [ "$OWNER_GROUP" != "root:www-data" ]; then
+        echo "Invalid owner/group: $FILE — $OWNER_GROUP"
+        exit 1
+    fi
+
+    if [ "$MODE" != "640" ]; then
+        echo "Invalid file mode: $FILE — $MODE"
+        exit 1
+    fi
+done < <(
+    find "$REMOTE_MU" \
+        -maxdepth 1 \
+        -type f \
+        \( -name '*.php' -o -name '*.js' \) \
+        -print0
+)
+
+echo "Remote ownership and permissions: OK"
+REMOTE
+
+echo
 echo "===== VERIFY DEPLOYED FILES ====="
 
 ssh "$SERVER" bash -s -- \
