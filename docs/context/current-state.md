@@ -10,8 +10,11 @@
   (`Document AI generation contract`), этап 1 — отдельным коммитом
   `440f2b3` (`Stabilize AI generation controls`).
 - Оба коммита и последующее context-обновление `d56b7f9` отправлены в
-  `origin/admin-editorial`. Перед началом этапа 2 локальная ветка и
-  origin были синхронизированы на `d56b7f9`.
+  `origin/admin-editorial`.
+- Этап 2 зафиксирован отдельным коммитом `bd56006`
+  (`Repair editorial action interfaces`) и отправлен в
+  `origin/admin-editorial`; после функционального push ветки были
+  синхронизированы.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
@@ -106,7 +109,7 @@
 
 ## Этап 2: Editorial action interfaces
 
-- Незакоммиченная реализация исправляет оборванный дублированный
+- Реализация в коммите `bd56006` исправляет оборванный дублированный
   `<style>`/`<script>` fragment в source-draft UI.
 - `Create source draft` обслуживается одним submit listener в
   `revelations-editorial-source-draft-ui.php`.
@@ -153,8 +156,8 @@
 
 ## Следующий безопасный шаг
 
-Проверить итоговый diff этапа 2 и после отдельного разрешения создать
-локальный commit `Repair editorial action interfaces`. Этап 3
-(shared candidate-save backend), OpenAI API test, WordPress/DB runtime,
-scanner dry-run, push и deploy не выполнять без отдельного
-согласования.
+Для этапа 3 изучить размещённый в Tech preview candidate-save backend,
+его вызовы и инварианты nonce, permissions, duplicate protection и
+поведения News, People, Tech и Places. До завершения анализа код этапа
+3 не менять. OpenAI API test, WordPress/DB runtime, scanner dry-run и
+deploy не выполнять без отдельного согласования.
