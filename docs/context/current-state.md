@@ -48,6 +48,9 @@
 - Scanner runtime hardening зафиксирован отдельным коммитом `b56828c`
   (`Harden scanner runtime diagnostics`) и отправлен в
   `origin/admin-editorial`; deploy не выполнялся.
+- Context-only commit `c1ecff4`
+  (`Document controlled scanner dry-run`) отправлен в
+  `origin/admin-editorial`; после push ahead/behind равен `0/0`.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
@@ -382,10 +385,11 @@
 
 ## Следующий безопасный шаг
 
-Согласовать точечные signal changes по результатам повторного
-controlled scanner dry-run. Thresholds и weights автоматически не
-менять. Controlled OpenAI generation test, deploy dry-run и production
-deploy требуют отдельных разрешений.
+Scanner signal changes отложены до нескольких RSS snapshots; global AI
+gate, Tech signals, thresholds и scoring weights не менять. Следующий
+этап — отдельный controlled OpenAI generation test после утверждения
+точного draft, модели, стоимости и разрешения на один платный request.
+Deploy dry-run и production deploy требуют отдельных разрешений.
 
 ## Этап 9: Unspoken scanner and preview
 
@@ -475,6 +479,11 @@ deploy требуют отдельных разрешений.
   требовании удалить AI nudify apps (`no_meaningful_ai_action`) и BBC
   о снятой после backlash AI image feature
   (`insufficient_ai_context`).
+- Backlog: не менять global AI gate, Tech signals, thresholds или
+  scoring weights по одному snapshot. Сначала повторно проверить эти
+  два возможных false negative, а также GPT-Red и Applied Computing,
+  на нескольких RSS snapshots в разные даты; сравнить rejection codes
+  и section scores и только затем принимать решение о signal changes.
 - До/после совпали posts, postmeta, candidates, preview transients,
   run logs, scanner option, authors и categories. PHP guard не
   зафиксировал write queries; candidates/run logs created — 0.
