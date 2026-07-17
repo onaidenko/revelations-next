@@ -47,6 +47,20 @@ function revelations_editorial_preview_sections(): array {
             'scan_callback' =>
                 'revelations_editorial_news_scan_dry_run',
         ),
+
+        'people' => array(
+            'label' =>
+                'People',
+
+            'default_enabled' =>
+                false,
+
+            'default_preview_limit' =>
+                5,
+
+            'scan_callback' =>
+                'revelations_editorial_people_scan_dry_run',
+        ),
     );
 }
 

@@ -455,8 +455,187 @@ function revelations_editorial_default_scanner_settings(): array {
             ),
         ),
 
-        'people' =>
-            revelations_editorial_empty_scanner_profile(),
+        'people' => array(
+            'enabled' =>
+                false,
+
+            'preview_limit' =>
+                5,
+
+            'active_sources' => array(
+                array(
+                    'name' =>
+                        'Fast Company Leadership',
+
+                    'url' =>
+                        'https://www.fastcompany.com/leadership/rss',
+                ),
+
+                array(
+                    'name' =>
+                        'TechCrunch Startups',
+
+                    'url' =>
+                        'https://techcrunch.com/category/startups/feed/',
+                ),
+
+                array(
+                    'name' =>
+                        'Entrepreneur Latest',
+
+                    'url' =>
+                        'https://www.entrepreneur.com/latest.rss',
+                ),
+            ),
+
+            'disabled_sources' => array(
+                array(
+                    'name' =>
+                        'Harvard Business Review',
+
+                    'reason' =>
+                        'RSS request fails with a TLS connection error.',
+                ),
+
+                array(
+                    'name' =>
+                        'Inc Leadership',
+
+                    'reason' =>
+                        'RSS endpoint returns HTTP 404.',
+                ),
+
+                array(
+                    'name' =>
+                        'Fast Company general feed',
+
+                    'reason' =>
+                        'Feed is valid but too infrequent for People scanning.',
+                ),
+            ),
+
+            'keywords' => array(
+                'relevance' => array(
+                    'founder',
+                    'co-founder',
+                    'ceo',
+                    'chief executive',
+                    'entrepreneur',
+                    'executive',
+                    'leader',
+                    'investor',
+                    'chairman',
+                    'president',
+                    'director',
+                    'artist',
+                    'designer',
+                    'creator',
+                    'architect',
+                    'scientist',
+                    'researcher',
+                    'author',
+                    'filmmaker',
+                    'musician',
+                    'chef',
+                    'athlete',
+                ),
+
+                'implementation' => array(
+                    'appointed',
+                    'named',
+                    'joined',
+                    'joins',
+                    'leaves',
+                    'resigns',
+                    'steps down',
+                    'leads',
+                    'launches',
+                    'founded',
+                    'built',
+                    'created',
+                    'raises',
+                    'raised',
+                    'invests',
+                    'investment',
+                    'acquired',
+                    'wins',
+                    'won',
+                    'awarded',
+                    'unveils',
+                ),
+
+                'speculative' => array(
+                    'may',
+                    'could',
+                    'might',
+                    'reportedly',
+                    'rumor',
+                    'rumoured',
+                    'expected',
+                    'considering',
+                ),
+
+                'impact' => array(
+                    'billion',
+                    'million',
+                    'unicorn',
+                    'global',
+                    'breakthrough',
+                    'first',
+                    'record',
+                    'influential',
+                    'award',
+                    'major',
+                    'expansion',
+                    'ipo',
+                    'funding',
+                ),
+
+                'product_launch' =>
+                    array(),
+
+                'avoid' => array(
+                    'how to',
+                    'guide',
+                    'tips',
+                    'five types',
+                    '5 types',
+                    'lessons for',
+                    'what leaders should',
+                    'job candidates',
+                    'sponsored',
+                    'advertisement',
+                    'press release',
+                    'webinar',
+                    'course',
+                    'apply to',
+                    'list of',
+                    'best workplaces',
+                ),
+            ),
+
+            'thresholds' => array(
+                'people_signal' => array(
+                    'total_score' =>
+                        4.8,
+
+                    'relevance_score' =>
+                        2.0,
+
+                    'freshness_score' =>
+                        3.0,
+
+                    'implementation_score' =>
+                        2.0,
+
+                    'impact_score' =>
+                        2.5,
+
+                    'strong_relevance_score' =>
+                        6.0,
+                ),
+            ),
+        ),
 
         'places' =>
             revelations_editorial_empty_scanner_profile(),
@@ -756,6 +935,7 @@ function revelations_editorial_scanner_section_is_editable(
         sanitize_key( $section ),
         array(
             'news',
+            'people',
             'tech',
         ),
         true
