@@ -22,6 +22,10 @@
   (`Extract shared candidate-save backend`) и отправлен в
   `origin/admin-editorial`; после функционального push ветки были
   синхронизированы.
+- Этап 4 зафиксирован отдельным коммитом `34d47f7`
+  (`Add section-specific generation profiles`) и отправлен в
+  `origin/admin-editorial`; после функционального push ветки были
+  синхронизированы.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
