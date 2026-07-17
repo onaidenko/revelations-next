@@ -71,8 +71,9 @@
   fact-check flags и проверяемый контракт прямых цитат отсутствуют.
 - Excerpt и SEO description уже являются отдельными полями, но
   проверка на дословное совпадение отсутствует.
-- Для всех разделов используется один общий news-oriented prompt;
-  section-specific generation profiles отсутствуют.
+- Общие generation rules дополнены section-specific профилями; legacy
+  response schema и автоматическое назначение category пока остаются до
+  следующего этапа.
 - Source snapshot ограничен одним источником; автоматического
   multi-source verification нет.
 - Присвоение `Julia U.` только пустому author уже соответствует
@@ -164,6 +165,32 @@
 - Локальная и удалённая временные директории удалены; база, рабочий
   WordPress, scanners, API и deploy не запускались.
 
+## Этап 4: Section-specific generation profiles
+
+- Добавлен pure registry без fallback для News, Tech, People, Places и
+  Unspoken; профиль выбирается только по точному исходному
+  `_rev_section`.
+- Пустой, неизвестный и legacy `podcast` section возвращают
+  `unsupported_generation_section` до чтения source snapshot,
+  regeneration metadata, generation settings и OpenAI request.
+- Prompt содержит только выбранный section profile. Он дополняет
+  сохранённые global editorial policy, tone, structure, banned phrases
+  и factual-safety rules.
+- Временный legacy-контракт требует точного строкового equality response
+  `section` и исходного `_rev_section`. Mismatch возвращает
+  `generation_section_mismatch` до word-count validation, version
+  backup и любых обновлений WordPress.
+- Structured output schema, UI, review metadata, fact-check flags,
+  image workflow и storage contracts не менялись.
+- Изолированный `test-editorial-ai-generation-profiles.php` без
+  WordPress bootstrap, OpenAI API и базы выполнил 40 synthetic cases:
+  40 passed, 0 failed, exit code 0.
+- На `revelations-prod` в уникальной `/tmp`-директории PHP 8.5.4 с
+  `mbstring=yes` выполнил отдельный `php -l` для трёх файлов этапа:
+  все exit code 0.
+- Локальная и удалённая временные директории удалены; рабочий WordPress,
+  API, база и deploy не использовались.
+
 ## Подтверждённая интеграция AI gate
 
 - Gate определён и вызывается один раз в общем scanner engine.
@@ -185,7 +212,7 @@
 
 ## Следующий безопасный шаг
 
-После синхронизации этапа 3 выполнить read-only анализ этапа 4:
-`Add section-specific generation profiles`. До согласования плана код
-этапа 4 не менять. OpenAI API test, WordPress/DB runtime, scanner
-dry-run и deploy не выполнять без отдельного согласования.
+После синхронизации этапа 4 выполнить read-only анализ этапа 5:
+`Extend editorial generation schema`. До согласования плана код этапа 5
+не менять. OpenAI API test, WordPress/DB runtime, scanner dry-run и
+deploy не выполнять без отдельного согласования.

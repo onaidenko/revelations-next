@@ -25,6 +25,21 @@
 - Section preview-файлы отвечают только за свои формы и notices;
   shared save handler не зависит от загрузки Tech preview.
 
+## AI generation
+
+- `revelations-editorial-ai-generation-profiles.php` — pure registry
+  профилей генерации для News, Tech, People, Places и Unspoken. Профиль
+  выбирается только по точному исходному `_rev_section`; fallback
+  отсутствует.
+- Пустой, неизвестный и legacy `podcast` section блокируются с
+  `unsupported_generation_section` до чтения source snapshot,
+  generation settings и OpenAI request.
+- Выбранный section profile дополняет общий editorial policy, tone,
+  structure, banned phrases и factual-safety rules в generation prompt.
+- До расширения schema legacy-поле `section` в ответе проходит точную
+  проверку equality с исходным `_rev_section`. Mismatch блокирует
+  version backup, обновление draft, category и meta.
+
 ## Порядок обработки истории
 
 1. Нормализовать section и limits.
