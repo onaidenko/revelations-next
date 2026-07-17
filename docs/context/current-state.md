@@ -382,10 +382,10 @@
 
 ## Следующий безопасный шаг
 
-Завершить regression проверки scanner runtime hardening, синхронизировать
-этап и повторить controlled scanner dry-run без process-local Unspoken
-profile override. Thresholds и weights до анализа повторного отчёта не
-менять.
+Согласовать точечные signal changes по результатам повторного
+controlled scanner dry-run. Thresholds и weights автоматически не
+менять. Controlled OpenAI generation test, deploy dry-run и production
+deploy требуют отдельных разрешений.
 
 ## Этап 9: Unspoken scanner and preview
 
@@ -459,4 +459,23 @@ profile override. Thresholds и weights до анализа повторного
   итоговый exit code 0.
 - Commit `b56828c` отправлен в `origin/admin-editorial`. Локальный и
   удалённый regression `/tmp`-каталоги удалены, отсутствие проверено.
+- Повторный controlled scanner dry-run выполнен из copied MU directory
+  в уникальной `/tmp` с production WordPress bootstrap, process-local
+  theme/feed/cron guards и read-only DB transaction. Unspoken получил
+  четыре default feeds через runtime normalization без profile
+  override; сохранённый `enabled=false` не изменился.
+- Все 19 feeds пяти sections загрузились без HTTP/parser errors.
+  Qualified candidates: 0. Below threshold: News 2, Tech 2; People,
+  Places и Unspoken — 0. Exact rejection counts сохранены в отчёте.
+- Unspoken hard-rejected три истории с `harm_not_central`. Tech:
+  Applied Computing получил `insufficient_event_signal` с total `2.9`,
+  implementation `0`; mixed GPT-Red Download получил
+  `insufficient_section_signal` с relevance/implementation `0`.
+- Подозрительные upstream rejects для отдельного решения: WIRED о
+  требовании удалить AI nudify apps (`no_meaningful_ai_action`) и BBC
+  о снятой после backlash AI image feature
+  (`insufficient_ai_context`).
+- До/после совпали posts, postmeta, candidates, preview transients,
+  run logs, scanner option, authors и categories. PHP guard не
+  зафиксировал write queries; candidates/run logs created — 0.
 - OpenAI API, база, live WordPress actions и deploy не выполнялись.
