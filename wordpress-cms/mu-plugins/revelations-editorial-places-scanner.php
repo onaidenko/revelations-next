@@ -505,6 +505,9 @@ function revelations_editorial_places_scan_dry_run(
                     'name'
                 ),
 
+            'ai_gate_filtered' =>
+                0,
+
             'qualified_candidates' =>
                 array(),
 

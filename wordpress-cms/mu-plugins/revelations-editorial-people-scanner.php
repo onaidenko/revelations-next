@@ -657,6 +657,9 @@ function revelations_editorial_people_scan_dry_run(
                     'name'
                 ),
 
+            'ai_gate_filtered' =>
+                0,
+
             'qualified_candidates' =>
                 array(),
 

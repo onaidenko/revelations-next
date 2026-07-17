@@ -767,6 +767,9 @@ function revelations_editorial_tech_scan_dry_run(
             'invalid_removed' =>
                 0,
 
+            'ai_gate_filtered' =>
+                0,
+
             'hard_filtered' =>
                 0,
 
