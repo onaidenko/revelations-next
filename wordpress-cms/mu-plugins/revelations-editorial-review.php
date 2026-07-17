@@ -80,6 +80,15 @@ function revelations_editorial_review_content_hash(
                 'revelations_seo_description',
                 true
             ),
+
+        'ai_review_metadata' =>
+            function_exists(
+                'revelations_editorial_ai_review_metadata_for_draft'
+            )
+                ? revelations_editorial_ai_review_metadata_for_draft(
+                    $draft_id
+                )
+                : array(),
     );
 
     return hash(

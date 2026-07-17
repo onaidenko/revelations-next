@@ -78,6 +78,22 @@
   backup и WordPress writes; draft, category, author, content и AI
   version остаются неизменными. Handler также не записывает
   `_revelations_ai_error` в draft для validation-class errors.
+- `revelations-editorial-ai-review-metadata.php` — read-only panel
+  текущих AI review metadata в Editorial Desk. Панель расположена
+  после AI readiness/actions и до Human Review, безопасно декодирует
+  metadata, экранирует model/source strings и не содержит форм или
+  mutation actions.
+- Панель показывает alternative titles, advisory section data,
+  fact-check flags и server-validated quote evidence. Suggested section
+  явно обозначен рекомендацией и не меняет WordPress category.
+- Human Review hash включает только нормализованные metadata текущей
+  draft version: immutable source section, alternative titles,
+  advisory section fields, fact-check flags и validated direct quotes.
+  Associative keys и unordered metadata lists canonicalized перед
+  hashing; metadata предыдущих private AI versions не участвуют.
+- Restore сохраняет существующий контракт: восстановленные metadata
+  становятся текущими, поэтому панель и Human Review hash используют
+  именно восстановленное состояние.
 
 ## Порядок обработки истории
 

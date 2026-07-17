@@ -83,9 +83,8 @@
 - Server validation уже проверяет title uniqueness, conditional
   advisory fields, различие excerpt/SEO description, fact flags,
   high-confidence sensitive claims и exact direct quotes.
-- Review metadata ещё не показаны в Editorial Desk; оператор пока не
-  видит alternative titles, advisory section, flags и quote evidence в
-  отдельном review-интерфейсе.
+- Review metadata текущей версии показаны в отдельной read-only панели
+  Editorial Desk и включены в Human Review hash.
 - Source section является server-only context; generation больше не
   назначает WordPress category из model output.
 - Source snapshot ограничен одним источником; автоматического
@@ -286,6 +285,31 @@
 - Локальная и удалённая уникальные `/tmp`-директории удалены. Live
   WordPress, база, OpenAI API и deploy не использовались.
 
+## Этап 7: AI editorial review metadata
+
+- Добавлен отдельный read-only MU-plugin
+  `revelations-editorial-ai-review-metadata.php`; его панель находится
+  между AI readiness/actions и существующим Human Review.
+- Панель показывает только metadata текущей draft version:
+  alternative titles, immutable source section, advisory section
+  fields, fact-check flags и validated direct quote evidence.
+- UI различает `Found in source`, `Exact source match` и
+  `Requires manual verification`; suggested section обозначен только
+  рекомендацией и не меняет WordPress category.
+- Model-generated и source-derived strings экранируются через
+  WordPress escaping. Invalid JSON, пустые metadata и legacy drafts
+  обрабатываются без warning/fatal и без mutation actions.
+- Human Review hash включает детерминированно нормализованные metadata
+  текущей версии. Порядок associative JSON keys и unordered flags/quote
+  lists не влияет на hash; изменение текущих metadata его меняет.
+  Metadata предыдущих AI versions не участвуют.
+- На `revelations-prod` PHP 8.5.4 с `mbstring=yes` выполнил lint четырёх
+  PHP-файлов: 4 passed, все exit code 0.
+- `test-editorial-ai-review-metadata.php` выполнил 23 synthetic cases:
+  23 passed, 0 failed, exit code 0 без WordPress bootstrap, API и базы.
+- Локальная и удалённая уникальные `/tmp`-директории удалены. Live
+  WordPress, база, OpenAI API и deploy не использовались.
+
 ## Подтверждённая интеграция AI gate
 
 - Gate определён и вызывается один раз в общем scanner engine.
@@ -307,7 +331,7 @@
 
 ## Следующий безопасный шаг
 
-После синхронизации этапа 6 выполнить read-only анализ этапа 7:
-`Expose AI editorial review metadata`. До согласования плана код этапа
-7 не менять. OpenAI API test, WordPress/DB runtime, scanner dry-run и
-deploy не выполнять без отдельного согласования.
+После синхронизации этапа 7 выполнить read-only анализ этапа 8:
+`Run combined AI generation diagnostics`. OpenAI API test,
+WordPress/DB runtime, scanner dry-run и deploy не выполнять без
+отдельного согласования.

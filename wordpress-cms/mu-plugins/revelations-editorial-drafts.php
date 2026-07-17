@@ -760,6 +760,16 @@ function revelations_editorial_render_drafts(): void {
 
                                 if (
                                     function_exists(
+                                        'revelations_editorial_render_ai_review_metadata_action'
+                                    )
+                                ) {
+                                    revelations_editorial_render_ai_review_metadata_action(
+                                        $draft_id
+                                    );
+                                }
+
+                                if (
+                                    function_exists(
                                         'revelations_editorial_render_review_action'
                                     )
                                 ) {
