@@ -61,6 +61,23 @@
 - AI generation logs получают section только из server result
   `source_section` или candidate `_rev_section`, не из advisory fields
   и не из WordPress category.
+- `revelations-editorial-ai-generation-validation.php` — pure
+  server-side validation layer без WordPress, API и database calls.
+  Он проверяет output после parsing и до private version backup,
+  `wp_update_post` и metadata writes.
+- Validation детерминированно проверяет normalized title uniqueness,
+  advisory section invariants, различие excerpt/SEO description,
+  структуру и source evidence fact-check flags, high-confidence
+  sensitive claims и Unspoken safeguards.
+- Quote validation использует только CRLF/LF normalization и HTML
+  entity decoding; case, punctuation и wording не меняются. Quote
+  blocks и `direct_quotes` сопоставляются как multiset, а успешно
+  проверенные metadata получают server-generated
+  `verbatim_match=true`.
+- При validation error generation возвращает безопасный error code до
+  backup и WordPress writes; draft, category, author, content и AI
+  version остаются неизменными. Handler также не записывает
+  `_revelations_ai_error` в draft для validation-class errors.
 
 ## Порядок обработки истории
 

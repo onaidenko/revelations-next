@@ -1056,19 +1056,17 @@ function revelations_editorial_generate_draft_with_ai(
 
     $suggested_section =
         null === $article['suggested_section']
-            ? ''
+            ? null
             : sanitize_key(
                 (string) $article['suggested_section']
             );
 
     $section_mismatch_reason =
         null === $article['section_mismatch_reason']
-            ? ''
-            : sanitize_textarea_field(
-                (string) $article[
-                    'section_mismatch_reason'
-                ]
-            );
+            ? null
+            : (string) $article[
+                'section_mismatch_reason'
+            ];
 
     $excerpt = sanitize_textarea_field(
         (string) $article['excerpt']
@@ -1095,10 +1093,8 @@ function revelations_editorial_generate_draft_with_ai(
 
             $fact_check_flags[] = array(
                 'claim' =>
-                    sanitize_textarea_field(
-                        (string) (
-                            $flag['claim'] ?? ''
-                        )
+                    (string) (
+                        $flag['claim'] ?? ''
                     ),
 
                 'claim_type' =>
@@ -1109,10 +1105,8 @@ function revelations_editorial_generate_draft_with_ai(
                     ),
 
                 'source_evidence' =>
-                    sanitize_textarea_field(
-                        (string) (
-                            $flag['source_evidence'] ?? ''
-                        )
+                    (string) (
+                        $flag['source_evidence'] ?? ''
                     ),
 
                 'verification_required' =>
@@ -1122,10 +1116,8 @@ function revelations_editorial_generate_draft_with_ai(
                     ),
 
                 'reason' =>
-                    sanitize_textarea_field(
-                        (string) (
-                            $flag['reason'] ?? ''
-                        )
+                    (string) (
+                        $flag['reason'] ?? ''
                     ),
             );
         }
@@ -1177,6 +1169,93 @@ function revelations_editorial_generate_draft_with_ai(
             'One or more generated article fields are empty.'
         );
     }
+
+    if (
+        ! function_exists(
+            'revelations_editorial_ai_validate_generated_article'
+        )
+    ) {
+        return new WP_Error(
+            'generation_validation_unavailable',
+            'Editorial generation validation is unavailable.'
+        );
+    }
+
+    $validation =
+        revelations_editorial_ai_validate_generated_article(
+            array(
+                'recommended_title' =>
+                    $recommended_title,
+                'alternative_titles' =>
+                    $alternative_titles,
+                'section_mismatch' =>
+                    $section_mismatch,
+                'suggested_section' =>
+                    $suggested_section,
+                'section_mismatch_reason' =>
+                    $section_mismatch_reason,
+                'excerpt' =>
+                    $excerpt,
+                'seo_title' =>
+                    $seo_title,
+                'seo_description' =>
+                    $seo_description,
+                'fact_check_flags' =>
+                    $fact_check_flags,
+                'direct_quotes' =>
+                    $direct_quotes,
+                'blocks' =>
+                    $blocks,
+            ),
+            $current_section,
+            $source_text
+        );
+
+    if ( empty( $validation['valid'] ) ) {
+        return new WP_Error(
+            sanitize_key(
+                (string) (
+                    $validation['code']
+                    ?? 'generation_validation_failed'
+                )
+            ),
+            sanitize_text_field(
+                (string) (
+                    $validation['message']
+                    ?? 'Generated article validation failed.'
+                )
+            )
+        );
+    }
+
+    $validated_article = is_array(
+        $validation['article'] ?? null
+    )
+        ? $validation['article']
+        : array();
+
+    $fact_check_flags = is_array(
+        $validated_article[
+            'fact_check_flags'
+        ] ?? null
+    )
+        ? $validated_article[
+            'fact_check_flags'
+        ]
+        : array();
+
+    $direct_quotes = is_array(
+        $validated_article['direct_quotes']
+        ?? null
+    )
+        ? $validated_article['direct_quotes']
+        : array();
+
+    $blocks = is_array(
+        $validated_article['blocks'] ?? null
+    )
+        ? $validated_article['blocks']
+        : array();
 
     $word_count =
         revelations_editorial_ai_article_word_count(
@@ -1358,10 +1437,10 @@ function revelations_editorial_generate_draft_with_ai(
             $section_mismatch ? '1' : '0',
 
         '_revelations_ai_suggested_section' =>
-            $suggested_section,
+            $suggested_section ?? '',
 
         '_revelations_ai_section_mismatch_reason' =>
-            $section_mismatch_reason,
+            $section_mismatch_reason ?? '',
 
         '_revelations_ai_fact_check_flags' =>
             wp_json_encode(
@@ -1854,11 +1933,25 @@ add_action(
         delete_transient( $lock_key );
 
         if ( is_wp_error( $result ) ) {
-            update_post_meta(
-                $draft_id,
-                '_revelations_ai_error',
-                $result->get_error_message()
+            $error_code = sanitize_key(
+                (string) $result->get_error_code()
             );
+
+            $is_validation_error =
+                function_exists(
+                    'revelations_editorial_ai_is_validation_error_code'
+                ) &&
+                revelations_editorial_ai_is_validation_error_code(
+                    $error_code
+                );
+
+            if ( ! $is_validation_error ) {
+                update_post_meta(
+                    $draft_id,
+                    '_revelations_ai_error',
+                    $result->get_error_message()
+                );
+            }
 
             if (
                 function_exists(
@@ -1881,7 +1974,7 @@ add_action(
                     'message' =>
                         $result->get_error_message(),
                     'code'    =>
-                        $result->get_error_code(),
+                        $error_code,
                 ),
                 15 * MINUTE_IN_SECONDS
             );

@@ -76,11 +76,12 @@
 - Structured output и storage уже содержат recommended/alternative
   titles, advisory section fields, fact-check flags и direct-quote
   candidates.
-- Серверная точная проверка direct quotes, conditional validation
-  section advisory fields, проверка уникальности titles и поиск
-  пропущенных sensitive claims ещё отсутствуют.
-- Excerpt и SEO description уже являются отдельными полями, но
-  проверка на дословное совпадение отсутствует.
+- Server validation уже проверяет title uniqueness, conditional
+  advisory fields, различие excerpt/SEO description, fact flags,
+  high-confidence sensitive claims и exact direct quotes.
+- Review metadata ещё не показаны в Editorial Desk; оператор пока не
+  видит alternative titles, advisory section, flags и quote evidence в
+  отдельном review-интерфейсе.
 - Source section является server-only context; generation больше не
   назначает WordPress category из model output.
 - Source snapshot ограничен одним источником; автоматического
@@ -241,6 +242,46 @@
 - Локальная и удалённая уникальные `/tmp`-директории удалены. Live
   WordPress, база, OpenAI API и deploy не использовались.
 
+## Этап 6: Generated editorial claim validation
+
+- Добавлен pure
+  `revelations-editorial-ai-generation-validation.php`; он не вызывает
+  WordPress, API или базу и выполняется после parsing model output, но
+  до private version backup, `wp_update_post` и metadata writes.
+- Titles проходят deterministic normalization: HTML stripping, entity
+  decoding, Unicode lowercase, NBSP/typographic mark normalization,
+  whitespace collapse и punctuation removal. Все три word sequences
+  должны быть непустыми и уникальными.
+- Advisory section fields проверяются условно; suggested section
+  остаётся рекомендацией и не меняет source section или category.
+  Excerpt и SEO description не могут совпадать после базовой
+  normalization.
+- Fact-check flags требуют непустые claim/evidence/reason, утверждённый
+  claim type, `verification_required=true`, exact claim presence в
+  generated units, case-sensitive exact evidence в source snapshot и
+  отсутствие duplicate claim/type.
+- High-confidence detector сканирует titles, excerpt/SEO и article
+  blocks на numbers, dates, money/investment/valuation, measurable
+  benchmarks, superlatives, quotes, medical/legal/regulatory и явные
+  reputational claims. Каждый detection требует compatible flag;
+  Unspoken дополнительно запрещает пустой flags list.
+- Direct quotes проходят exact source/fragment validation и двустороннее
+  multiset-сопоставление с quote blocks. Разрешены только CRLF/LF
+  normalization и HTML entity decoding; successful metadata получают
+  server-generated `verbatim_match=true`.
+- При любой validation error generation возвращает безопасный code до
+  backup и WordPress writes; model output не меняет draft, category,
+  author, content или AI versions. Validation-class errors также не
+  записывают `_revelations_ai_error` в draft.
+- На `revelations-prod` PHP 8.5.4 с `mbstring=yes` выполнил lint восьми
+  PHP-файлов: 8 passed, все exit code 0.
+- Validation diagnostics: 37 passed, 0 failed; profile diagnostics:
+  35 passed, 0 failed; schema/storage diagnostics: 48 passed, 0 failed.
+  Все scripts завершились с exit code 0 без WordPress bootstrap, API
+  и базы.
+- Локальная и удалённая уникальные `/tmp`-директории удалены. Live
+  WordPress, база, OpenAI API и deploy не использовались.
+
 ## Подтверждённая интеграция AI gate
 
 - Gate определён и вызывается один раз в общем scanner engine.
@@ -262,7 +303,7 @@
 
 ## Следующий безопасный шаг
 
-После синхронизации этапа 5 выполнить read-only анализ этапа 6:
-`Validate generated editorial claims`. До согласования плана код этапа
-6 не менять. OpenAI API test, WordPress/DB runtime, scanner dry-run и
+После синхронизации этапа 6 выполнить read-only анализ этапа 7:
+`Expose AI editorial review metadata`. До согласования плана код этапа
+7 не менять. OpenAI API test, WordPress/DB runtime, scanner dry-run и
 deploy не выполнять без отдельного согласования.
