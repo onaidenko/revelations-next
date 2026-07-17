@@ -18,6 +18,10 @@
 - Context-обновление этапа 2 `c2222d1`
   (`Update project context after stage 2`) отправлено; перед этапом 3
   локальная ветка и origin были синхронизированы на `c2222d1`.
+- Этап 3 зафиксирован отдельным коммитом `9f60e57`
+  (`Extract shared candidate-save backend`) и отправлен в
+  `origin/admin-editorial`; после функционального push ветки были
+  синхронизированы.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
@@ -137,7 +141,7 @@
 
 ## Этап 3: Shared preview candidate-save backend
 
-- Подготовлен отдельный MU-plugin
+- В коммите `9f60e57` добавлен отдельный MU-plugin
   `revelations-editorial-preview-candidate-save.php` с общим duplicate
   helper и единственным
   `admin_post_revelations_save_preview_candidate` handler.
