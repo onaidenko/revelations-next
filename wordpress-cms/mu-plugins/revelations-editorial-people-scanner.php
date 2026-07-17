@@ -130,10 +130,16 @@ function revelations_editorial_people_keyword_matches(
             continue;
         }
 
+        $right_boundary =
+            'won' === $keyword
+                ? '(?![’\']t)(?![\p{L}\p{N}])'
+                : '(?![\p{L}\p{N}])';
+
         $pattern =
             '~(?<![\p{L}\p{N}])' .
             preg_quote( $keyword, '~' ) .
-            '(?![\p{L}\p{N}])~iu';
+            $right_boundary .
+            '~iu';
 
         if (
             1 === preg_match(
@@ -157,14 +163,95 @@ function revelations_editorial_people_keyword_matches(
 function revelations_editorial_people_has_name_signal(
     string $title
 ): bool {
-    return 1 === preg_match(
+    $pattern =
         '~(?<![\p{L}\p{N}])' .
-        '\p{Lu}[\p{L}\p{M}.\'-]{1,}' .
+        '(\p{Lu}[\p{L}\p{M}.\'’\-]{1,})' .
         '\s+' .
-        '\p{Lu}[\p{L}\p{M}.\'-]{1,}' .
-        '(?![\p{L}\p{N}])~u',
-        $title
+        '(\p{Lu}[\p{L}\p{M}.\'’\-]{1,})' .
+        '(?![\p{L}\p{N}])~u';
+
+    preg_match_all(
+        $pattern,
+        $title,
+        $matches,
+        PREG_SET_ORDER
     );
+
+    if ( array() === $matches ) {
+        return false;
+    }
+
+    $stopwords = array(
+        'ai',
+        'applied',
+        'artificial',
+        'attention',
+        'business',
+        'company',
+        'computing',
+        'fast',
+        'five',
+        'former',
+        'four',
+        'health',
+        'indian',
+        'inside',
+        'intelligence',
+        'ive',
+        'labs',
+        'leadership',
+        'new',
+        'one',
+        'open',
+        'research',
+        'source',
+        'startup',
+        'techcrunch',
+        'the',
+        'this',
+        'three',
+        'two',
+        'watched',
+        'why',
+    );
+
+    foreach ( $matches as $match ) {
+        $first = mb_strtolower(
+            str_replace(
+                array( "'", '’' ),
+                '',
+                (string) ( $match[1] ?? '' )
+            ),
+            'UTF-8'
+        );
+
+        $second = mb_strtolower(
+            str_replace(
+                array( "'", '’' ),
+                '',
+                (string) ( $match[2] ?? '' )
+            ),
+            'UTF-8'
+        );
+
+        if (
+            in_array( $first, $stopwords, true ) ||
+            in_array( $second, $stopwords, true )
+        ) {
+            continue;
+        }
+
+        if (
+            mb_strlen( $first, 'UTF-8' ) < 2 ||
+            mb_strlen( $second, 'UTF-8' ) < 2
+        ) {
+            continue;
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 /**
@@ -247,6 +334,11 @@ function revelations_editorial_score_people_story(
         'UTF-8'
     );
 
+    $title_text = mb_strtolower(
+        $title,
+        'UTF-8'
+    );
+
     $avoid_matches =
         revelations_editorial_people_keyword_matches(
             $text,
@@ -281,24 +373,46 @@ function revelations_editorial_score_people_story(
             $keywords['impact']
         );
 
-    /*
-     * A capitalized two-word phrase is not necessarily a personal
-     * name. Require an explicit People keyword before applying the
-     * name bonus.
-     */
-    if ( array() === $relevance_matches ) {
-        return null;
-    }
+    $title_action_matches =
+        revelations_editorial_people_keyword_matches(
+            $title_text,
+            $keywords['implementation']
+        );
 
     $name_signal =
         revelations_editorial_people_has_name_signal(
             $title
         );
 
+    $has_explicit_people_signal =
+        array() !== $relevance_matches;
+
+    $has_named_action_signal =
+        $name_signal &&
+        array() !== $title_action_matches;
+
+    /*
+     * A story may omit a title such as CEO or founder when the
+     * headline still contains a plausible personal name and a
+     * confirmed action. Company names alone are not sufficient.
+     */
+    if (
+        ! $has_explicit_people_signal &&
+        ! $has_named_action_signal
+    ) {
+        return null;
+    }
+
     $relevance_score = min(
         10,
         count( $relevance_matches ) * 2 +
-        ( $name_signal ? 2 : 0 )
+        ( $name_signal ? 2 : 0 ) +
+        (
+            ! $has_explicit_people_signal &&
+            $has_named_action_signal
+                ? 2
+                : 0
+        )
     );
 
     $implementation_score = min(
@@ -310,9 +424,17 @@ function revelations_editorial_score_people_story(
         )
     );
 
+    $compact_money_signal =
+        1 === preg_match(
+            '~[$€£]\s*\d+(?:\.\d+)?\s*[mb]' .
+            '(?![\p{L}\p{N}])~iu',
+            $text
+        );
+
     $impact_score = min(
         10,
-        count( $impact_matches ) * 2.5
+        count( $impact_matches ) * 2.5 +
+        ( $compact_money_signal ? 5.0 : 0 )
     );
 
     $freshness =
