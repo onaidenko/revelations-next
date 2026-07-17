@@ -12,6 +12,19 @@
 - `revelations-editorial-preview-engine.php` — registry и общий запуск preview для Tech, News, People и Places, runtime-настройки, transient preview и run logging.
 - `revelations-editorial-{news,people,tech,places}-preview.php` — административные preview-интерфейсы разделов.
 
+## Preview candidate persistence
+
+- `revelations-editorial-preview-candidate-save.php` — общий backend
+  сохранения одного qualified preview candidate для News, People,
+  Tech и Places.
+- Формы разделов передают общий action, исходный section и candidate
+  index с section-specific nonce.
+- Handler проверяет capability, server-side section registry, nonce и
+  user-specific preview transient; повторно проверяет duplicate key и
+  только затем создаёт `rev_candidate` с общим meta mapping.
+- Section preview-файлы отвечают только за свои формы и notices;
+  shared save handler не зависит от загрузки Tech preview.
+
 ## Порядок обработки истории
 
 1. Нормализовать section и limits.

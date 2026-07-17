@@ -15,6 +15,9 @@
   (`Repair editorial action interfaces`) и отправлен в
   `origin/admin-editorial`; после функционального push ветки были
   синхронизированы.
+- Context-обновление этапа 2 `c2222d1`
+  (`Update project context after stage 2`) отправлено; перед этапом 3
+  локальная ветка и origin были синхронизированы на `c2222d1`.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
@@ -73,9 +76,6 @@
   отсутствуют, что также соответствует контракту.
 - Unspoken поддержан storage, ручным candidate intake и общей AI
   schema, но scanner backend и preview отсутствуют.
-- Повреждённый source-draft progress script, дублирующиеся submit
-  handlers и размещение общего candidate-save handler в Tech preview
-  остаются для следующих отдельных этапов.
 
 ## Этап 1: AI generation controls
 
@@ -135,6 +135,31 @@
 - Локальная и удалённая временные директории удалены; OpenAI API,
   база, рабочий WordPress, scanners и deploy не запускались.
 
+## Этап 3: Shared preview candidate-save backend
+
+- Подготовлен отдельный MU-plugin
+  `revelations-editorial-preview-candidate-save.php` с общим duplicate
+  helper и единственным
+  `admin_post_revelations_save_preview_candidate` handler.
+- Из Tech preview удалён только перенесённый backend-блок. Формы News,
+  People, Tech и Places, preview engine, storage, manual backend,
+  candidate-save UI и action-value formatting не менялись.
+- Capability, section/index nonce, server-side registry, user-specific
+  transient, порядок validation и duplicate checks, post status, meta
+  mapping, redirects и сообщения сохранены.
+- Межплагинные функции разрешаются только при выполнении admin_post
+  callback, после загрузки всех MU plugins; новый backend не зависит
+  от Tech preview и не создаёт duplicate definitions.
+- Автономный `test-editorial-preview-candidate-save.mjs` без WordPress
+  bootstrap проверяет ownership, четыре form/nonce contracts, security
+  order, load dependencies и handler/storage meta contracts:
+  28 passed, 0 failed, exit code 0.
+- На `revelations-prod` в уникальной `/tmp`-директории PHP 8.5.4 с
+  `mbstring=yes` выполнил отдельный `php -l` для нового backend и
+  изменённого Tech preview: оба exit code 0.
+- Локальная и удалённая временные директории удалены; база, рабочий
+  WordPress, scanners, API и deploy не запускались.
+
 ## Подтверждённая интеграция AI gate
 
 - Gate определён и вызывается один раз в общем scanner engine.
@@ -156,8 +181,7 @@
 
 ## Следующий безопасный шаг
 
-Для этапа 3 изучить размещённый в Tech preview candidate-save backend,
-его вызовы и инварианты nonce, permissions, duplicate protection и
-поведения News, People, Tech и Places. До завершения анализа код этапа
-3 не менять. OpenAI API test, WordPress/DB runtime, scanner dry-run и
-deploy не выполнять без отдельного согласования.
+После синхронизации этапа 3 выполнить read-only анализ этапа 4:
+`Add section-specific generation profiles`. До согласования плана код
+этапа 4 не менять. OpenAI API test, WordPress/DB runtime, scanner
+dry-run и deploy не выполнять без отдельного согласования.
