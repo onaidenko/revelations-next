@@ -45,6 +45,9 @@
 - Unspoken scanner и preview зафиксированы отдельным коммитом
   `9643e3e` (`Complete Unspoken scanner and preview`) и отправлены в
   `origin/admin-editorial`; deploy не выполнялся.
+- Scanner runtime hardening зафиксирован отдельным коммитом `b56828c`
+  (`Harden scanner runtime diagnostics`) и отправлен в
+  `origin/admin-editorial`; deploy не выполнялся.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
@@ -454,4 +457,6 @@ profile override. Thresholds и weights до анализа повторного
 - Полный regression runner сохранил успешные результаты всех прежних
   component/integration suites и новых scanner runtime diagnostics;
   итоговый exit code 0.
+- Commit `b56828c` отправлен в `origin/admin-editorial`. Локальный и
+  удалённый regression `/tmp`-каталоги удалены, отсутствие проверено.
 - OpenAI API, база, live WordPress actions и deploy не выполнялись.
