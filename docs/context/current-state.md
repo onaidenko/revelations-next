@@ -9,9 +9,9 @@
 - Контракт AI generation зафиксирован коммитом `38722d1`
   (`Document AI generation contract`), этап 1 — отдельным коммитом
   `440f2b3` (`Stabilize AI generation controls`).
-- Оба коммита отправлены в `origin/admin-editorial`; после
-  функционального push локальная ветка и origin были синхронизированы
-  на `440f2b3`.
+- Оба коммита и последующее context-обновление `d56b7f9` отправлены в
+  `origin/admin-editorial`. Перед началом этапа 2 локальная ветка и
+  origin были синхронизированы на `d56b7f9`.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
@@ -104,6 +104,34 @@
   не создавал WordPress-записей.
 - Локальная и удалённая временные директории удалены.
 
+## Этап 2: Editorial action interfaces
+
+- Незакоммиченная реализация исправляет оборванный дублированный
+  `<style>`/`<script>` fragment в source-draft UI.
+- `Create source draft` обслуживается одним submit listener в
+  `revelations-editorial-source-draft-ui.php`.
+- `Fetch source text`, `Generate/Regenerate with AI`, OpenAI connection
+  test и `Restore AI version` обслуживаются одним общим listener в
+  `revelations-editorial-long-actions-ui.php`.
+- Отдельный generation listener удалён из AI readiness UI; один submit
+  generation-формы имеет один native submission path.
+- Loading state, duplicate-submit guard и восстановление после
+  клиентской ошибки применяются только к отправляемой форме и не
+  блокируют несвязанные action-формы.
+- Backend handlers, nonce checks, AI generation transient lock,
+  resolver, schema, prompts, section/author logic, source extraction и
+  database contracts не менялись. Candidate-save handler и его UI не
+  переносились.
+- Автономный `test-editorial-action-ui.mjs` без WordPress bootstrap
+  проверяет структуру inline script/style, JavaScript syntax, action
+  ownership, единственность listeners, form-local controls и error
+  recovery: 26 passed, 0 failed, exit code 0.
+- На `revelations-prod` в уникальной `/tmp`-директории PHP 8.5.4 с
+  `mbstring=yes` выполнил отдельный `php -l` для трёх изменённых
+  MU-plugin PHP-файлов: все exit code 0.
+- Локальная и удалённая временные директории удалены; OpenAI API,
+  база, рабочий WordPress, scanners и deploy не запускались.
+
 ## Подтверждённая интеграция AI gate
 
 - Gate определён и вызывается один раз в общем scanner engine.
@@ -125,8 +153,8 @@
 
 ## Следующий безопасный шаг
 
-Этап 1 завершён и отправлен в origin. Этап 2
-`Repair source-draft and generation UI` ещё не начат и должен быть
-отдельной задачей. OpenAI API test, WordPress/DB runtime, Unspoken
-scanner, scanner dry-run и deploy не выполнять без отдельного
+Проверить итоговый diff этапа 2 и после отдельного разрешения создать
+локальный commit `Repair editorial action interfaces`. Этап 3
+(shared candidate-save backend), OpenAI API test, WordPress/DB runtime,
+scanner dry-run, push и deploy не выполнять без отдельного
 согласования.

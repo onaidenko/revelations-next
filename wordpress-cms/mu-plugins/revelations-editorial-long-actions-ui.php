@@ -35,6 +35,13 @@ function revelations_editorial_render_long_actions_progress_ui(): void {
             margin:0;
         }
 
+        .revelations-long-action-error {
+            display:block;
+            margin-top:6px;
+            color:#b32d2e;
+            font-size:12px;
+        }
+
         form[aria-busy="true"] {
             cursor:progress;
         }
@@ -58,6 +65,11 @@ function revelations_editorial_render_long_actions_progress_ui(): void {
                 revelations_test_openai_connection: {
                     buttonLabel: 'Testing…',
                     progressLabel: 'Testing AI connection…'
+                },
+
+                revelations_restore_ai_version: {
+                    buttonLabel: 'Restoring…',
+                    progressLabel: 'Restoring AI version…'
                 }
             };
 
@@ -84,13 +96,12 @@ function revelations_editorial_render_long_actions_progress_ui(): void {
                 return;
             }
 
-            const allSubmitControls = actionForms.flatMap((form) =>
+            const getSubmitControls = (form) =>
                 Array.from(
                     form.querySelectorAll(
                         'input[type="submit"], button[type="submit"]'
                     )
-                )
-            );
+                );
 
             const setControlLabel = (control, label) => {
                 if (!control) {
@@ -104,31 +115,27 @@ function revelations_editorial_render_long_actions_progress_ui(): void {
                 }
             };
 
-            allSubmitControls.forEach((control) => {
-                control.dataset.revelationsInitiallyDisabled =
-                    control.disabled ? '1' : '0';
+            const resetForm = (form) => {
+                delete form.dataset.revelationsSubmitting;
+                form.removeAttribute('aria-busy');
 
-                control.dataset.revelationsOriginalLabel =
-                    control.tagName === 'INPUT'
-                        ? control.value
-                        : control.textContent;
-            });
+                const progress = form.querySelector(
+                    '.revelations-long-action-progress'
+                );
 
-            const resetInterface = () => {
-                actionForms.forEach((form) => {
-                    delete form.dataset.revelationsSubmitting;
-                    form.removeAttribute('aria-busy');
+                if (progress) {
+                    progress.remove();
+                }
 
-                    const progress = form.querySelector(
-                        '.revelations-long-action-progress'
-                    );
+                const errorMessage = form.querySelector(
+                    '.revelations-long-action-error'
+                );
 
-                    if (progress) {
-                        progress.remove();
-                    }
-                });
+                if (errorMessage) {
+                    errorMessage.remove();
+                }
 
-                allSubmitControls.forEach((control) => {
+                getSubmitControls(form).forEach((control) => {
                     control.disabled =
                         control.dataset
                             .revelationsInitiallyDisabled === '1';
@@ -153,6 +160,30 @@ function revelations_editorial_render_long_actions_progress_ui(): void {
             };
 
             actionForms.forEach((form) => {
+                if (
+                    form.dataset
+                        .revelationsLongActionUiReady === '1'
+                ) {
+                    return;
+                }
+
+                form.dataset.revelationsLongActionUiReady = '1';
+
+                const submitControls =
+                    getSubmitControls(form);
+
+                submitControls.forEach((control) => {
+                    control.dataset
+                        .revelationsInitiallyDisabled =
+                            control.disabled ? '1' : '0';
+
+                    control.dataset
+                        .revelationsOriginalLabel =
+                            control.tagName === 'INPUT'
+                                ? control.value
+                                : control.textContent;
+                });
+
                 form.addEventListener('submit', (event) => {
                     event.preventDefault();
 
@@ -183,9 +214,9 @@ function revelations_editorial_render_long_actions_progress_ui(): void {
                         );
 
                     /*
-                     * Prevent parallel source or AI operations.
+                     * Prevent duplicate submission of this form.
                      */
-                    allSubmitControls.forEach((control) => {
+                    submitControls.forEach((control) => {
                         control.disabled = true;
                         control.setAttribute(
                             'aria-disabled',
@@ -228,9 +259,30 @@ function revelations_editorial_render_long_actions_progress_ui(): void {
                      * before the request starts.
                      */
                     window.setTimeout(() => {
-                        HTMLFormElement.prototype.submit.call(
-                            form
-                        );
+                        try {
+                            HTMLFormElement.prototype.submit.call(
+                                form
+                            );
+                        } catch (error) {
+                            resetForm(form);
+
+                            const errorMessage =
+                                document.createElement('span');
+
+                            errorMessage.className =
+                                'revelations-long-action-error';
+
+                            errorMessage.setAttribute(
+                                'role',
+                                'alert'
+                            );
+
+                            errorMessage.textContent =
+                                'The request could not start. ' +
+                                'Please try again.';
+
+                            form.appendChild(errorMessage);
+                        }
                     }, 80);
                 });
             });
@@ -239,7 +291,7 @@ function revelations_editorial_render_long_actions_progress_ui(): void {
                 'pageshow',
                 (event) => {
                     if (event.persisted) {
-                        resetInterface();
+                        actionForms.forEach(resetForm);
                     }
                 }
             );

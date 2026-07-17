@@ -35,14 +35,14 @@ function revelations_editorial_render_source_draft_progress_ui(): void {
             margin:0;
         }
 
-        form[aria-busy="true"] {
-            cursor:progress;
+        .revelations-source-draft-error {
+            display:block;
+            margin-top:6px;
+            color:#b32d2e;
+            font-size:12px;
         }
-    </style>
 
-    <script>
-        (() => {
-            'usy="true"] {
+        form[aria-busy="true"] {
             cursor:progress;
         }
     </style>
@@ -74,13 +74,12 @@ function revelations_editorial_render_source_draft_progress_ui(): void {
                 return;
             }
 
-            const submitControls = draftForms.flatMap((form) =>
+            const getSubmitControls = (form) =>
                 Array.from(
                     form.querySelectorAll(
                         'input[type="submit"], button[type="submit"]'
                     )
-                )
-            );
+                );
 
             const setControlLabel = (control, label) => {
                 if (!control) {
@@ -94,31 +93,27 @@ function revelations_editorial_render_source_draft_progress_ui(): void {
                 }
             };
 
-            submitControls.forEach((control) => {
-                control.dataset.revelationsInitiallyDisabled =
-                    control.disabled ? '1' : '0';
+            const resetForm = (form) => {
+                delete form.dataset.revelationsSubmitting;
+                form.removeAttribute('aria-busy');
 
-                control.dataset.revelationsOriginalLabel =
-                    control.tagName === 'INPUT'
-                        ? control.value
-                        : control.textContent;
-            });
+                const progress = form.querySelector(
+                    '.revelations-source-draft-progress'
+                );
 
-            const resetInterface = () => {
-                draftForms.forEach((form) => {
-                    delete form.dataset.revelationsSubmitting;
-                    form.removeAttribute('aria-busy');
+                if (progress) {
+                    progress.remove();
+                }
 
-                    const progress = form.querySelector(
-                        '.revelations-source-draft-progress'
-                    );
+                const errorMessage = form.querySelector(
+                    '.revelations-source-draft-error'
+                );
 
-                    if (progress) {
-                        progress.remove();
-                    }
-                });
+                if (errorMessage) {
+                    errorMessage.remove();
+                }
 
-                submitControls.forEach((control) => {
+                getSubmitControls(form).forEach((control) => {
                     control.disabled =
                         control.dataset
                             .revelationsInitiallyDisabled === '1';
@@ -143,6 +138,30 @@ function revelations_editorial_render_source_draft_progress_ui(): void {
             };
 
             draftForms.forEach((form) => {
+                if (
+                    form.dataset
+                        .revelationsSourceDraftUiReady === '1'
+                ) {
+                    return;
+                }
+
+                form.dataset.revelationsSourceDraftUiReady = '1';
+
+                const submitControls =
+                    getSubmitControls(form);
+
+                submitControls.forEach((control) => {
+                    control.dataset
+                        .revelationsInitiallyDisabled =
+                            control.disabled ? '1' : '0';
+
+                    control.dataset
+                        .revelationsOriginalLabel =
+                            control.tagName === 'INPUT'
+                                ? control.value
+                                : control.textContent;
+                });
+
                 form.addEventListener('submit', (event) => {
                     event.preventDefault();
 
@@ -163,7 +182,7 @@ function revelations_editorial_render_source_draft_progress_ui(): void {
                         );
 
                     /*
-                     * Prevent parallel or duplicate draft creation.
+                     * Prevent duplicate submission of this form.
                      */
                     submitControls.forEach((control) => {
                         control.disabled = true;
@@ -206,9 +225,30 @@ function revelations_editorial_render_source_draft_progress_ui(): void {
                      * state before navigation starts.
                      */
                     window.setTimeout(() => {
-                        HTMLFormElement.prototype.submit.call(
-                            form
-                        );
+                        try {
+                            HTMLFormElement.prototype.submit.call(
+                                form
+                            );
+                        } catch (error) {
+                            resetForm(form);
+
+                            const errorMessage =
+                                document.createElement('span');
+
+                            errorMessage.className =
+                                'revelations-source-draft-error';
+
+                            errorMessage.setAttribute(
+                                'role',
+                                'alert'
+                            );
+
+                            errorMessage.textContent =
+                                'The source draft request could ' +
+                                'not start. Please try again.';
+
+                            form.appendChild(errorMessage);
+                        }
                     }, 80);
                 });
             });
@@ -217,7 +257,7 @@ function revelations_editorial_render_source_draft_progress_ui(): void {
                 'pageshow',
                 (event) => {
                     if (event.persisted) {
-                        resetInterface();
+                        draftForms.forEach(resetForm);
                     }
                 }
             );
