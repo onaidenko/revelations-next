@@ -9,11 +9,25 @@
 - `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, глобальная дедупликация, AI gate, вызов section scorer, сортировка и формирование результата.
 - `revelations-editorial-{news,people,tech,places,unspoken}-scanner.php` — источники, ключевые слова, пороги и scoring соответствующего раздела. Каждый scanner вызывает общий engine.
 - `revelations-editorial-scanner-settings.php` — профили News, People, Tech, Places и Unspoken: включение, preview limit, активные и отключённые источники, keyword groups и thresholds.
+- Runtime settings выполняют pure-нормализацию только Unspoken:
+  legacy-пустой профиль получает актуальные default feeds, частичный
+  профиль — только отсутствующие поля. Явные operator values и
+  `enabled=false` сохраняются; обычное чтение option не выполняет
+  запись. Отдельная idempotent migration function доступна только для
+  явного вызова.
 - `revelations-editorial-preview-engine.php` — registry и общий запуск preview для пяти разделов, runtime-настройки, transient preview и run logging.
 - `revelations-editorial-{news,people,tech,places,unspoken}-preview.php` — административные preview-интерфейсы разделов.
 - Unspoken scanner по умолчанию выключен. Его source pool ограничен MIT Technology Review, WIRED, BBC Technology и The Verge.
 - Unspoken использует только пять явных tracks: `documented_harm`, `failure_or_reversal`, `economic_model_failure`, `legal_or_governance_conflict` и `labor_or_social_cost`; fallback track отсутствует.
 - После общего AI gate Unspoken отдельно требует harm/failure signal, подтверждённое событие, attribution/evidence, свежесть и значимость. Total threshold равен `5.2`, что выше самого строгого действующего total threshold остальных разделов `4.8`; обязательные gates нельзя компенсировать aggregate score.
+- Общий engine агрегирует machine-readable rejection counts отдельно
+  для global AI gate и section scorer. Для section results ниже
+  threshold возвращаются ограниченные score diagnostics; rejection
+  samples не содержат RSS summary или source snapshot и не
+  переносятся в постоянный run log.
+- People scorer до scoring отклоняет generic leadership advice без
+  нового события, но сохраняет новости о решении, назначении,
+  заявлении или действии конкретного человека.
 - Single-source allegation допускается только в preview при явном evidence signal. Transient preview содержит evidence type и reputational safeguards; эти поля не создают новый candidate storage contract.
 
 ## Preview candidate persistence
@@ -127,7 +141,8 @@
 6. Сформировать общий story record.
 7. Выполнить обязательный глобальный AI relevance gate.
 8. Только прошедшую gate историю передать section-specific scoring callback.
-9. Отдельно учесть section hard filters, отсортировать scores и выбрать qualified stories.
-10. Вернуть dry-run result без создания кандидатов.
+9. Агрегировать безопасные rejection codes и scores ниже threshold.
+10. Отдельно учесть section hard filters, отсортировать scores и выбрать qualified stories.
+11. Вернуть dry-run result без создания кандидатов.
 
 Глобальный AI gate расположен в общем engine непосредственно перед `call_user_func($score_story, $story)`, поэтому он предшествует section-specific scoring для News, People, Tech, Places и Unspoken.

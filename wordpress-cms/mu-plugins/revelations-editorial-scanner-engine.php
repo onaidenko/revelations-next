@@ -728,6 +728,8 @@ function revelations_editorial_scanner_ai_gate(
         $direct_qualified ||
         $contextual_qualified;
 
+    $rejection_code = '';
+
     if ( $direct_qualified ) {
         $reason =
             'AI subject has action and context: ' .
@@ -760,6 +762,29 @@ function revelations_editorial_scanner_ai_gate(
                 )
             );
     } else {
+        if (
+            array() === $direct_matches &&
+            array() === $contextual_matches
+        ) {
+            $rejection_code =
+                array() !== $technical_matches ||
+                array() !== $action_matches
+                    ? 'broad_signal_without_technical_context'
+                    : 'no_ai_signal';
+        } elseif ( array() === $action_matches ) {
+            $rejection_code =
+                'no_meaningful_ai_action';
+        } elseif (
+            array() === $direct_matches &&
+            array() !== $contextual_matches
+        ) {
+            $rejection_code =
+                'ambiguous_product_without_ai_context';
+        } else {
+            $rejection_code =
+                'insufficient_ai_context';
+        }
+
         $reason =
             'AI lacks the action and technical context required '
             . 'to be the dominant subject.';
@@ -793,7 +818,228 @@ function revelations_editorial_scanner_ai_gate(
 
         'reason' =>
             $reason,
+
+        'rejection_code' =>
+            $rejection_code,
     );
+}
+
+/**
+ * Return the stable machine-readable rejection vocabulary.
+ *
+ * @return array{global_ai_gate:string[],section:string[]}
+ */
+function revelations_editorial_scanner_rejection_codes(): array {
+    return array(
+        'global_ai_gate' => array(
+            'no_ai_signal',
+            'insufficient_ai_context',
+            'ambiguous_product_without_ai_context',
+            'broad_signal_without_technical_context',
+            'no_meaningful_ai_action',
+        ),
+        'section' => array(
+            'opinion_or_advice',
+            'speculation_or_prediction',
+            'promotional',
+            'insufficient_section_signal',
+            'insufficient_event_signal',
+            'insufficient_evidence',
+            'insufficient_significance',
+            'planned_not_implemented',
+            'person_not_central',
+            'place_not_central',
+            'harm_not_central',
+            'allegation_without_attribution',
+            'headline_only_sensationalism',
+            'stale_story',
+            'below_threshold',
+            'unspecified_section_rejection',
+        ),
+    );
+}
+
+/**
+ * Resolve a safe code for a section avoid-list match.
+ *
+ * @param string[] $matches Matched normalized phrases.
+ */
+function revelations_editorial_scanner_avoid_rejection_code(
+    array $matches
+): string {
+    $opinion = array(
+        'opinion:',
+        'commentary:',
+        'editorial:',
+        'review:',
+        'how to',
+        'guide',
+        'tips',
+        'lessons for',
+        'what leaders should',
+        'five types',
+        '5 types',
+        'list of',
+    );
+    $promotional = array(
+        'sponsored',
+        'advertisement',
+        'partner content',
+        'press release',
+        'webinar',
+        'course',
+    );
+    $unsupported = array(
+        'anonymous sources',
+        'unnamed sources',
+        'rumor',
+        'rumour',
+    );
+
+    if ( array_intersect( $matches, $opinion ) ) {
+        return 'opinion_or_advice';
+    }
+
+    if ( array_intersect( $matches, $promotional ) ) {
+        return 'promotional';
+    }
+
+    if ( array_intersect( $matches, $unsupported ) ) {
+        return 'allegation_without_attribution';
+    }
+
+    return 'insufficient_section_signal';
+}
+
+/**
+ * Return a hard-rejection result consumed by the shared engine.
+ *
+ * @param array<string, int|float|null> $scores Optional scores.
+ * @return array<string, mixed>
+ */
+function revelations_editorial_scanner_rejection(
+    string $code,
+    string $reason,
+    array $scores = array()
+): array {
+    $allowed =
+        revelations_editorial_scanner_rejection_codes()[
+            'section'
+        ];
+    $code = sanitize_key( $code );
+
+    if ( ! in_array( $code, $allowed, true ) ) {
+        $code =
+            'unspecified_section_rejection';
+    }
+
+    return array_replace(
+        $scores,
+        array(
+            'qualified' => false,
+            'hard_rejected' => true,
+            'rejection_code' => $code,
+            'rejection_reason' =>
+                sanitize_text_field( $reason ),
+        )
+    );
+}
+
+/**
+ * Increment one rejection aggregate.
+ *
+ * @param array<string, array<string, int>> $counts Counts.
+ */
+function revelations_editorial_scanner_count_rejection(
+    array &$counts,
+    string $scope,
+    string $code
+): void {
+    $scope = 'global_ai_gate' === $scope
+        ? 'global_ai_gate'
+        : 'section';
+    $allowed =
+        revelations_editorial_scanner_rejection_codes()[
+            $scope
+        ];
+    $code = sanitize_key( $code );
+
+    if ( ! in_array( $code, $allowed, true ) ) {
+        $code = 'global_ai_gate' === $scope
+            ? 'insufficient_ai_context'
+            : 'unspecified_section_rejection';
+    }
+
+    if ( ! isset( $counts[ $scope ] ) ) {
+        $counts[ $scope ] = array();
+    }
+
+    $counts[ $scope ][ $code ] =
+        (int) ( $counts[ $scope ][ $code ] ?? 0 ) + 1;
+}
+
+/**
+ * Retain a bounded dry-run sample without a summary/source snapshot.
+ *
+ * @param array<string, array<string, array<int, array<string, mixed>>>> $samples
+ * @param array<string, mixed> $story Story.
+ * @param array<string, mixed> $diagnostic Diagnostic fields.
+ */
+function revelations_editorial_scanner_add_rejection_sample(
+    array &$samples,
+    string $scope,
+    string $code,
+    array $story,
+    array $diagnostic = array()
+): void {
+    $scope = 'global_ai_gate' === $scope
+        ? 'global_ai_gate'
+        : 'section';
+    $code = sanitize_key( $code );
+
+    if (
+        count(
+            $samples[ $scope ][ $code ] ?? array()
+        ) >= 5
+    ) {
+        return;
+    }
+
+    $sample = array(
+        'title' => sanitize_text_field(
+            (string) ( $story['title'] ?? '' )
+        ),
+        'source' => sanitize_text_field(
+            (string) ( $story['source_name'] ?? '' )
+        ),
+        'url' => esc_url_raw(
+            (string) ( $story['source_url'] ?? '' )
+        ),
+        'published_at' => sanitize_text_field(
+            (string) ( $story['published_at'] ?? '' )
+        ),
+        'rejection_code' => $code,
+    );
+
+    foreach (
+        array(
+            'rejection_reason',
+            'total_score',
+            'freshness_score',
+            'implementation_score',
+            'relevance_score',
+            'impact_score',
+            'fit_score',
+        ) as $key
+    ) {
+        if ( array_key_exists( $key, $diagnostic ) ) {
+            $sample[ $key ] =
+                $diagnostic[ $key ];
+        }
+    }
+
+    $samples[ $scope ][ $code ][] =
+        $sample;
 }
 
 /**
@@ -959,6 +1205,13 @@ function revelations_editorial_scanner_format_story(
                 $story['scoring_reason'] ?? ''
             ),
 
+        'rejection_code' =>
+            sanitize_key(
+                (string) (
+                    $story['rejection_code'] ?? ''
+                )
+            ),
+
         'secondary_section' =>
             sanitize_key(
                 (string) (
@@ -1028,7 +1281,9 @@ function revelations_editorial_scanner_run_dry_run(
     int $qualified_limit = 10,
     int $items_per_source = 20
 ): array {
-    require_once ABSPATH . WPINC . '/feed.php';
+    if ( ! function_exists( 'fetch_feed' ) ) {
+        require_once ABSPATH . WPINC . '/feed.php';
+    }
 
     $section = sanitize_key(
         $section
@@ -1056,6 +1311,15 @@ function revelations_editorial_scanner_run_dry_run(
     $invalid_removed    = 0;
     $ai_gate_filtered   = 0;
     $hard_filtered      = 0;
+    $rejection_counts   = array(
+        'global_ai_gate' => array(),
+        'section' => array(),
+    );
+    $rejection_samples  = array(
+        'global_ai_gate' => array(),
+        'section' => array(),
+    );
+    $below_threshold_scores = array();
 
     foreach ( $sources as $source ) {
         if ( ! is_array( $source ) ) {
@@ -1250,6 +1514,33 @@ function revelations_editorial_scanner_run_dry_run(
                 )
             ) {
                 $ai_gate_filtered++;
+
+                $rejection_code = sanitize_key(
+                    (string) (
+                        $ai_gate['rejection_code']
+                        ?? 'insufficient_ai_context'
+                    )
+                );
+
+                revelations_editorial_scanner_count_rejection(
+                    $rejection_counts,
+                    'global_ai_gate',
+                    $rejection_code
+                );
+
+                revelations_editorial_scanner_add_rejection_sample(
+                    $rejection_samples,
+                    'global_ai_gate',
+                    $rejection_code,
+                    $story,
+                    array(
+                        'rejection_reason' =>
+                            (string) (
+                                $ai_gate['reason'] ?? ''
+                            ),
+                    )
+                );
+
                 continue;
             }
 
@@ -1261,6 +1552,66 @@ function revelations_editorial_scanner_run_dry_run(
 
             if ( null === $scores ) {
                 $hard_filtered++;
+
+                revelations_editorial_scanner_count_rejection(
+                    $rejection_counts,
+                    'section',
+                    'unspecified_section_rejection'
+                );
+
+                revelations_editorial_scanner_add_rejection_sample(
+                    $rejection_samples,
+                    'section',
+                    'unspecified_section_rejection',
+                    $story
+                );
+
+                continue;
+            }
+
+            if ( ! is_array( $scores ) ) {
+                $hard_filtered++;
+
+                revelations_editorial_scanner_count_rejection(
+                    $rejection_counts,
+                    'section',
+                    'unspecified_section_rejection'
+                );
+
+                revelations_editorial_scanner_add_rejection_sample(
+                    $rejection_samples,
+                    'section',
+                    'unspecified_section_rejection',
+                    $story
+                );
+
+                continue;
+            }
+
+            if ( ! empty( $scores['hard_rejected'] ) ) {
+                $hard_filtered++;
+
+                $rejection_code = sanitize_key(
+                    (string) (
+                        $scores['rejection_code']
+                        ?? 'unspecified_section_rejection'
+                    )
+                );
+
+                revelations_editorial_scanner_count_rejection(
+                    $rejection_counts,
+                    'section',
+                    $rejection_code
+                );
+
+                revelations_editorial_scanner_add_rejection_sample(
+                    $rejection_samples,
+                    'section',
+                    $rejection_code,
+                    $story,
+                    $scores
+                );
+
                 continue;
             }
 
@@ -1281,6 +1632,43 @@ function revelations_editorial_scanner_run_dry_run(
                         : ''
                 );
 
+            if ( empty( $scores['qualified'] ) ) {
+                $rejection_code = sanitize_key(
+                    (string) (
+                        $scores['rejection_code']
+                        ?? 'below_threshold'
+                    )
+                );
+
+                $scores['rejection_code'] =
+                    $rejection_code;
+
+                revelations_editorial_scanner_count_rejection(
+                    $rejection_counts,
+                    'section',
+                    $rejection_code
+                );
+
+                $below_threshold_story =
+                    revelations_editorial_scanner_format_story(
+                        array_merge(
+                            $story,
+                            $scores
+                        )
+                    );
+
+                /*
+                 * Diagnostics retain title/source/score, but never
+                 * duplicate the RSS summary or source snapshot.
+                 */
+                unset(
+                    $below_threshold_story['summary']
+                );
+
+                $below_threshold_scores[] =
+                    $below_threshold_story;
+            }
+
             $stories[] = array_merge(
                 $story,
                 $scores
@@ -1300,6 +1688,21 @@ function revelations_editorial_scanner_run_dry_run(
             <=>
             (float) (
                 $left['total_score'] ?? 0
+            )
+    );
+
+    usort(
+        $below_threshold_scores,
+        static fn (
+            array $left,
+            array $right
+        ): int =>
+            (float) (
+                $right['scores']['total'] ?? 0
+            )
+            <=>
+            (float) (
+                $left['scores']['total'] ?? 0
             )
     );
 
@@ -1377,6 +1780,19 @@ function revelations_editorial_scanner_run_dry_run(
 
         'hard_filtered' =>
             $hard_filtered,
+
+        'rejection_counts' =>
+            $rejection_counts,
+
+        'rejection_samples' =>
+            $rejection_samples,
+
+        'below_threshold_scores' =>
+            array_slice(
+                $below_threshold_scores,
+                0,
+                20
+            ),
 
         'scored_stories' =>
             count( $stories ),

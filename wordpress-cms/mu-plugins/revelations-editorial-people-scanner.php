@@ -255,6 +255,56 @@ function revelations_editorial_people_has_name_signal(
 }
 
 /**
+ * Detect generic leadership advice without a new personal event.
+ */
+function revelations_editorial_people_is_generic_advice(
+    string $title
+): bool {
+    $title_text = mb_strtolower(
+        $title,
+        'UTF-8'
+    );
+    $advice_matches =
+        revelations_editorial_people_keyword_matches(
+            $title_text,
+            array(
+                'how to',
+                'guide',
+                'tips',
+                'things every',
+                'must do',
+                'should do',
+                'lessons for',
+                'ways to',
+                'what leaders should',
+                'why leaders should',
+            )
+        );
+
+    if ( array() === $advice_matches ) {
+        return false;
+    }
+
+    $has_personal_event =
+        revelations_editorial_people_has_name_signal(
+            $title
+        ) &&
+        1 === preg_match(
+            '/\b(?:appoints?|appointed|names?|named|' .
+            'joins?|joined|leaves?|left|resigns?|' .
+            'steps?\s+down|launches?|launched|founds?|' .
+            'founded|builds?|built|creates?|created|' .
+            'raises?|raised|invests?|invested|acquires?|' .
+            'acquired|wins?|won|unveils?|unveiled|' .
+            'announces?|announced|says?|said|decides?|' .
+            'decided|files?|filed|testifies|testified)\b/iu',
+            $title
+        );
+
+    return ! $has_personal_event;
+}
+
+/**
  * Calculate story freshness.
  *
  * @return array{score:float,age_hours:float|null}
@@ -346,7 +396,12 @@ function revelations_editorial_score_people_story(
         );
 
     if ( array() !== $avoid_matches ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            revelations_editorial_scanner_avoid_rejection_code(
+                $avoid_matches
+            ),
+            'People avoid-list rule matched.'
+        );
     }
 
     $relevance_matches =
@@ -391,6 +446,17 @@ function revelations_editorial_score_people_story(
         $name_signal &&
         array() !== $title_action_matches;
 
+    if (
+        revelations_editorial_people_is_generic_advice(
+            $title
+        )
+    ) {
+        return revelations_editorial_scanner_rejection(
+            'opinion_or_advice',
+            'Generic leadership advice has no new personal event.'
+        );
+    }
+
     /*
      * A story may omit a title such as CEO or founder when the
      * headline still contains a plausible personal name and a
@@ -400,7 +466,10 @@ function revelations_editorial_score_people_story(
         ! $has_explicit_people_signal &&
         ! $has_named_action_signal
     ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            'person_not_central',
+            'No central person or named personal action was found.'
+        );
     }
 
     $relevance_score = min(
@@ -609,6 +678,15 @@ function revelations_editorial_score_people_story(
         'qualified' =>
             $qualified,
 
+        'rejection_code' =>
+            $qualified
+                ? ''
+                : (
+                    ! $base_qualified
+                        ? 'below_threshold'
+                        : 'insufficient_significance'
+                ),
+
         'editorial_track' =>
             $qualified
                 ? 'people_signal'
@@ -659,6 +737,19 @@ function revelations_editorial_people_scan_dry_run(
 
             'ai_gate_filtered' =>
                 0,
+
+            'rejection_counts' => array(
+                'global_ai_gate' => array(),
+                'section' => array(),
+            ),
+
+            'rejection_samples' => array(
+                'global_ai_gate' => array(),
+                'section' => array(),
+            ),
+
+            'below_threshold_scores' =>
+                array(),
 
             'qualified_candidates' =>
                 array(),

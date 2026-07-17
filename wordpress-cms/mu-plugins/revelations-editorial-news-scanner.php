@@ -202,7 +202,12 @@ function revelations_editorial_score_news_story(
         );
 
     if ( array() !== $avoid_matches ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            revelations_editorial_scanner_avoid_rejection_code(
+                $avoid_matches
+            ),
+            'News avoid-list rule matched.'
+        );
     }
 
     $published_timestamp = absint(
@@ -277,7 +282,14 @@ function revelations_editorial_score_news_story(
     );
 
     if ( $relevance_score < 2 ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            'insufficient_section_signal',
+            'News relevance signal is below the required minimum.',
+            array(
+                'relevance_score' =>
+                    round( $relevance_score, 1 ),
+            )
+        );
     }
 
     $impact_matches =
@@ -440,6 +452,15 @@ function revelations_editorial_score_news_story(
         'qualified' =>
             $qualified,
 
+        'rejection_code' =>
+            $qualified
+                ? ''
+                : (
+                    ! $base_qualified
+                        ? 'below_threshold'
+                        : 'insufficient_significance'
+                ),
+
         'editorial_track' =>
             $qualified
                 ? 'news_signal'
@@ -493,6 +514,19 @@ function revelations_editorial_news_scan_dry_run(
 
             'ai_gate_filtered' =>
                 0,
+
+            'rejection_counts' => array(
+                'global_ai_gate' => array(),
+                'section' => array(),
+            ),
+
+            'rejection_samples' => array(
+                'global_ai_gate' => array(),
+                'section' => array(),
+            ),
+
+            'below_threshold_scores' =>
+                array(),
 
             'qualified_candidates' =>
                 array(),

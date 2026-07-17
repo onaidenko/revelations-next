@@ -376,7 +376,12 @@ function revelations_editorial_score_tech_story(
         );
 
     if ( $avoid_matches !== array() ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            revelations_editorial_scanner_avoid_rejection_code(
+                $avoid_matches
+            ),
+            'Tech avoid-list rule matched.'
+        );
     }
 
     $published_timestamp = absint(
@@ -438,7 +443,16 @@ function revelations_editorial_score_tech_story(
     );
 
     if ( $relevance_score < 2 ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            'insufficient_section_signal',
+            'Tech relevance signal is below the required minimum.',
+            array(
+                'relevance_score' =>
+                    round( $relevance_score, 1 ),
+                'implementation_score' =>
+                    round( $implementation_score, 1 ),
+            )
+        );
     }
 
     $impact_matches =
@@ -559,6 +573,26 @@ function revelations_editorial_score_tech_story(
 
     $qualified = null !== $editorial_track;
 
+    if ( $qualified ) {
+        $rejection_code = '';
+    } elseif (
+        array() !== $speculative_matches &&
+        0.0 === (float) $implementation_score &&
+        array() === $product_launch_matches
+    ) {
+        $rejection_code =
+            'speculation_or_prediction';
+    } elseif (
+        $implementation_score < 2 &&
+        array() === $product_launch_matches
+    ) {
+        $rejection_code =
+            'insufficient_event_signal';
+    } else {
+        $rejection_code =
+            'below_threshold';
+    }
+
     $reasons = array();
 
     if ( $implementation_matches !== array() ) {
@@ -631,6 +665,9 @@ function revelations_editorial_score_tech_story(
                 : round( $age_hours, 1 ),
 
         'qualified' => $qualified,
+
+        'rejection_code' =>
+            $rejection_code,
 
         'editorial_track' =>
             $editorial_track,
@@ -772,6 +809,19 @@ function revelations_editorial_tech_scan_dry_run(
 
             'hard_filtered' =>
                 0,
+
+            'rejection_counts' => array(
+                'global_ai_gate' => array(),
+                'section' => array(),
+            ),
+
+            'rejection_samples' => array(
+                'global_ai_gate' => array(),
+                'section' => array(),
+            ),
+
+            'below_threshold_scores' =>
+                array(),
 
             'scored_stories' =>
                 0,

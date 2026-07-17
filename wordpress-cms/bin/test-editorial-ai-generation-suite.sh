@@ -78,6 +78,11 @@ run_suite \
     "$NODE_BIN" \
     "$SCRIPT_DIR/test-editorial-unspoken-preview.mjs"
 
+run_suite \
+    'Scanner runtime: settings and structured rejection diagnostics' \
+    "$PHP_BIN" \
+    "$SCRIPT_DIR/test-editorial-scanner-runtime.php"
+
 printf '\n=== Separate upstream regression ===\n'
 printf 'The global AI gate is upstream and is not part of the generation integration count.\n'
 

@@ -1,6 +1,6 @@
 # Текущее состояние
 
-Дата фиксации: 2026-07-17.
+Дата фиксации: 2026-07-18.
 
 ## Git и окружение
 
@@ -373,13 +373,16 @@
 - `ai_gate_filtered` отображается в Unspoken preview, но не сохраняется
   в run log; preview других разделов это поле не показывает.
 - Keyword-based gate остаётся эвристикой и может потребовать настройки после проверки на реальных RSS summaries.
-- Полный scanner dry-run и взаимодействие с реальными feeds не проверялись.
+- Controlled scanner dry-run подтвердил загрузку реальных feeds, но
+  выявил legacy-пустой сохранённый Unspoken profile и недостаточную
+  детализацию причин section rejection.
 
 ## Следующий безопасный шаг
 
-После отдельного разрешения последовательно выполнить controlled
-scanner dry-run, controlled OpenAI generation test, deployment dry-run
-и только затем production deploy с live CMS smoke test.
+Завершить regression проверки scanner runtime hardening, синхронизировать
+этап и повторить controlled scanner dry-run без process-local Unspoken
+profile override. Thresholds и weights до анализа повторного отчёта не
+менять.
 
 ## Этап 9: Unspoken scanner and preview
 
@@ -423,3 +426,32 @@ scanner dry-run, controlled OpenAI generation test, deployment dry-run
 - Feed snapshots и локальные/удалённые scorer test-директории удалены.
   Candidates, WordPress/DB writes, OpenAI API, production scanner
   dry-run, live WordPress и deploy не использовались.
+
+## Этап 10: Scanner runtime diagnostics hardening
+
+- Runtime-нормализация изменяет только Unspoken settings: legacy-пустой
+  профиль получает четыре утверждённых feed, частичный профиль —
+  отсутствующие default fields. Operator source overrides и явный
+  `enabled=false` сохраняются; обычный `get_option` path не пишет
+  option. Отдельная migration function является явной и idempotent.
+- Global AI gate и пять section scorers возвращают стабильные
+  machine-readable rejection codes. Общий engine агрегирует counts,
+  ограниченные безопасные samples и section scores для результатов
+  ниже threshold; RSS summary/source snapshot не входят в diagnostics
+  и постоянный run log.
+- People scorer выполняет deterministic hard reject generic leadership
+  advice без нового события. Синтетическая новость о конкретном
+  человеке и его действии остаётся допустимой для дальнейшего scoring.
+- Qualification thresholds и scoring weights не менялись. Tech
+  candidates GPT-Red и Applied Computing до повторного dry-run не
+  настраиваются.
+- Изолированные remote diagnostics на `revelations-prod`: scanner
+  runtime 49/49, Unspoken 27/27 и global AI gate 23/23; все exit code
+  0.
+- PHP 8.5.4 с `mbstring=yes` выполнил lint 49 production/diagnostic
+  PHP-файлов: 49 passed, exit code 0. Bash syntax и Node 22.22.1
+  syntax checks также прошли.
+- Полный regression runner сохранил успешные результаты всех прежних
+  component/integration suites и новых scanner runtime diagnostics;
+  итоговый exit code 0.
+- OpenAI API, база, live WordPress actions и deploy не выполнялись.

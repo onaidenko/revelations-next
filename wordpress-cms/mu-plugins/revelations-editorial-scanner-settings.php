@@ -1058,6 +1058,176 @@ function revelations_editorial_default_scanner_settings(): array {
 }
 
 /**
+ * Recursively fill missing associative profile fields.
+ *
+ * Numeric lists are preserved exactly when supplied by an operator.
+ *
+ * @param array<string, mixed> $defaults Default values.
+ * @param array<string, mixed> $stored Stored values.
+ * @return array<string, mixed>
+ */
+function revelations_editorial_scanner_merge_profile_defaults(
+    array $defaults,
+    array $stored
+): array {
+    $merged = $stored;
+
+    foreach ( $defaults as $key => $default_value ) {
+        if ( ! array_key_exists( $key, $stored ) ) {
+            $merged[ $key ] = $default_value;
+            continue;
+        }
+
+        $stored_value = $stored[ $key ];
+
+        if (
+            is_array( $default_value ) &&
+            is_array( $stored_value ) &&
+            ! array_is_list( $default_value ) &&
+            ! array_is_list( $stored_value )
+        ) {
+            $merged[ $key ] =
+                revelations_editorial_scanner_merge_profile_defaults(
+                    $default_value,
+                    $stored_value
+                );
+        }
+    }
+
+    return $merged;
+}
+
+/**
+ * Detect the placeholder Unspoken profile used before its scanner existed.
+ *
+ * An operator-created profile with sources, keywords or thresholds is not
+ * considered legacy-empty, even when it remains explicitly disabled.
+ *
+ * @param array<string, mixed> $profile Profile.
+ */
+function revelations_editorial_unspoken_profile_is_legacy_empty(
+    array $profile
+): bool {
+    if (
+        ! empty( $profile['active_sources'] ) ||
+        ! empty( $profile['disabled_sources'] ) ||
+        ! empty( $profile['thresholds'] )
+    ) {
+        return false;
+    }
+
+    $keywords = isset( $profile['keywords'] ) &&
+        is_array( $profile['keywords'] )
+            ? $profile['keywords']
+            : array();
+
+    foreach ( $keywords as $values ) {
+        if ( is_array( $values ) && array() !== $values ) {
+            return false;
+        }
+    }
+
+    return false === ( $profile['enabled'] ?? false ) &&
+        10 === (int) ( $profile['preview_limit'] ?? 10 );
+}
+
+/**
+ * Normalize only the Unspoken profile without changing other sections.
+ *
+ * @param array<string, mixed> $stored Stored settings.
+ * @param array<string, array<string, mixed>> $defaults Defaults.
+ * @return array<string, mixed>
+ */
+function revelations_editorial_normalize_unspoken_scanner_settings(
+    array $stored,
+    array $defaults
+): array {
+    $default_profile =
+        $defaults['unspoken'] ?? array();
+
+    if ( array() === $default_profile ) {
+        return $stored;
+    }
+
+    $stored_profile =
+        $stored['unspoken'] ?? null;
+
+    if ( ! is_array( $stored_profile ) ) {
+        $stored['unspoken'] =
+            $default_profile;
+
+        return $stored;
+    }
+
+    if (
+        revelations_editorial_unspoken_profile_is_legacy_empty(
+            $stored_profile
+        )
+    ) {
+        $stored['unspoken'] =
+            $default_profile;
+
+        /*
+         * Preserve an explicit boolean false even though the current
+         * default is also false. No normalization path enables it.
+         */
+        if (
+            array_key_exists(
+                'enabled',
+                $stored_profile
+            ) &&
+            false === $stored_profile['enabled']
+        ) {
+            $stored['unspoken']['enabled'] =
+                false;
+        }
+
+        return $stored;
+    }
+
+    $stored['unspoken'] =
+        revelations_editorial_scanner_merge_profile_defaults(
+            $default_profile,
+            $stored_profile
+        );
+
+    return $stored;
+}
+
+/**
+ * Explicitly persist normalized Unspoken settings when requested.
+ *
+ * This migration is intentionally not hooked to normal reads.
+ * False means that no write was needed or WordPress rejected the write.
+ */
+function revelations_editorial_migrate_unspoken_scanner_settings(): bool {
+    $stored = get_option(
+        REVELATIONS_EDITORIAL_SCANNER_SETTINGS_OPTION,
+        array()
+    );
+
+    if ( ! is_array( $stored ) ) {
+        $stored = array();
+    }
+
+    $normalized =
+        revelations_editorial_normalize_unspoken_scanner_settings(
+            $stored,
+            revelations_editorial_default_scanner_settings()
+        );
+
+    if ( $normalized === $stored ) {
+        return false;
+    }
+
+    return update_option(
+        REVELATIONS_EDITORIAL_SCANNER_SETTINGS_OPTION,
+        $normalized,
+        false
+    );
+}
+
+/**
  * Load scanner settings merged with defaults.
  *
  * @return array<string, array<string, mixed>>
@@ -1074,6 +1244,12 @@ function revelations_editorial_get_scanner_settings(): array {
     if ( ! is_array( $stored ) ) {
         $stored = array();
     }
+
+    $stored =
+        revelations_editorial_normalize_unspoken_scanner_settings(
+            $stored,
+            $defaults
+        );
 
     foreach ( $defaults as $section => $profile ) {
         if (

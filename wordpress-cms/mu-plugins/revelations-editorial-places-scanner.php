@@ -238,7 +238,12 @@ function revelations_editorial_score_places_story(
         );
 
     if ( array() !== $avoid_matches ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            revelations_editorial_scanner_avoid_rejection_code(
+                $avoid_matches
+            ),
+            'Places avoid-list rule matched.'
+        );
     }
 
     $relevance_matches =
@@ -248,7 +253,10 @@ function revelations_editorial_score_places_story(
         );
 
     if ( array() === $relevance_matches ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            'place_not_central',
+            'No central physical-place signal was found.'
+        );
     }
 
     $implementation_matches =
@@ -457,6 +465,21 @@ function revelations_editorial_score_places_story(
         'qualified' =>
             $qualified,
 
+        'rejection_code' =>
+            $qualified
+                ? ''
+                : (
+                    array() !== $speculative_matches &&
+                    0.0 === (float) $implementation_score
+                        ? 'planned_not_implemented'
+                        : (
+                            $base_qualified &&
+                            ! $significance_qualified
+                                ? 'insufficient_significance'
+                                : 'below_threshold'
+                        )
+                ),
+
         'editorial_track' =>
             $qualified
                 ? 'places_signal'
@@ -507,6 +530,19 @@ function revelations_editorial_places_scan_dry_run(
 
             'ai_gate_filtered' =>
                 0,
+
+            'rejection_counts' => array(
+                'global_ai_gate' => array(),
+                'section' => array(),
+            ),
+
+            'rejection_samples' => array(
+                'global_ai_gate' => array(),
+                'section' => array(),
+            ),
+
+            'below_threshold_scores' =>
+                array(),
 
             'qualified_candidates' =>
                 array(),

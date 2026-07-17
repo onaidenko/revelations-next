@@ -581,7 +581,12 @@ function revelations_editorial_score_unspoken_story(
         );
 
     if ( array() !== $avoid_matches ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            revelations_editorial_scanner_avoid_rejection_code(
+                $avoid_matches
+            ),
+            'Unspoken avoid-list rule matched.'
+        );
     }
 
     if (
@@ -592,7 +597,10 @@ function revelations_editorial_score_unspoken_story(
             $title
         )
     ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            'headline_only_sensationalism',
+            'Sensational headline lacks a usable evidence summary.'
+        );
     }
 
     $harm_matches =
@@ -616,11 +624,38 @@ function revelations_editorial_score_unspoken_story(
             $keywords['impact']
         );
 
+    $explicit_no_event =
+        1 === preg_match(
+            '/\b(?:no|without)\b.{0,60}\b' .
+            '(?:confirmed\s+|new\s+|documented\s+)?' .
+            '(?:event|evidence|filing|statement|research)\b/iu',
+            $text
+        );
+
     if (
-        array() === $harm_matches ||
-        array() === $event_matches
+        array() !== $speculative_matches &&
+        $explicit_no_event
     ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            'speculation_or_prediction',
+            'Speculative story explicitly lacks a confirmed event.'
+        );
+    }
+
+    if ( array() === $harm_matches ) {
+        return revelations_editorial_scanner_rejection(
+            'harm_not_central',
+            'No central harm, failure or conflict signal was found.'
+        );
+    }
+
+    if ( array() === $event_matches ) {
+        return revelations_editorial_scanner_rejection(
+            array() !== $speculative_matches
+                ? 'speculation_or_prediction'
+                : 'insufficient_event_signal',
+            'No confirmed negative event signal was found.'
+        );
     }
 
     $track =
@@ -629,7 +664,10 @@ function revelations_editorial_score_unspoken_story(
         );
 
     if ( null === $track ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            'insufficient_section_signal',
+            'No approved Unspoken editorial track was resolved.'
+        );
     }
 
     $evidence =
@@ -638,7 +676,10 @@ function revelations_editorial_score_unspoken_story(
         );
 
     if ( '' === $evidence['type'] ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            'insufficient_evidence',
+            'No attribution or evidence type was found.'
+        );
     }
 
     $is_allegation =
@@ -655,7 +696,10 @@ function revelations_editorial_score_unspoken_story(
         $is_allegation &&
         array() === $evidence['signals']
     ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            'allegation_without_attribution',
+            'Allegation lacks an approved attribution signal.'
+        );
     }
 
     $freshness =
@@ -668,7 +712,14 @@ function revelations_editorial_score_unspoken_story(
         (float) $freshness['score'];
 
     if ( $freshness_score <= 0 ) {
-        return null;
+        return revelations_editorial_scanner_rejection(
+            'stale_story',
+            'Story is outside the Unspoken freshness window.',
+            array(
+                'freshness_score' =>
+                    round( $freshness_score, 1 ),
+            )
+        );
     }
 
     $relevance_score = min(
@@ -810,6 +861,15 @@ function revelations_editorial_score_unspoken_story(
             $freshness['age_hours'],
         'qualified' =>
             $qualified,
+        'rejection_code' =>
+            $qualified
+                ? ''
+                : (
+                    $base_qualified &&
+                    ! $significance_qualified
+                        ? 'insufficient_significance'
+                        : 'below_threshold'
+                ),
         'editorial_track' =>
             $qualified
                 ? $track
@@ -873,6 +933,15 @@ function revelations_editorial_unspoken_scan_dry_run(
             'invalid_removed' => 0,
             'ai_gate_filtered' => 0,
             'hard_filtered' => 0,
+            'rejection_counts' => array(
+                'global_ai_gate' => array(),
+                'section' => array(),
+            ),
+            'rejection_samples' => array(
+                'global_ai_gate' => array(),
+                'section' => array(),
+            ),
+            'below_threshold_scores' => array(),
             'scored_stories' => 0,
             'qualified_stories' => 0,
             'top_scored' => array(),

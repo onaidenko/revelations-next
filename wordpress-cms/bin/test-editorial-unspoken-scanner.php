@@ -285,7 +285,12 @@ $generic_opinion =
     );
 
 revelations_unspoken_test(
-    null === $generic_opinion,
+    true === (
+        $generic_opinion['hard_rejected'] ?? false
+    ) &&
+    'opinion_or_advice' === (
+        $generic_opinion['rejection_code'] ?? ''
+    ),
     'generic opinion is hard-rejected'
 );
 
@@ -300,7 +305,12 @@ $speculation =
     );
 
 revelations_unspoken_test(
-    null === $speculation,
+    true === (
+        $speculation['hard_rejected'] ?? false
+    ) &&
+    'speculation_or_prediction' === (
+        $speculation['rejection_code'] ?? ''
+    ),
     'prediction and speculation without an event are hard-rejected'
 );
 
@@ -314,7 +324,12 @@ $promotional =
     );
 
 revelations_unspoken_test(
-    null === $promotional,
+    true === (
+        $promotional['hard_rejected'] ?? false
+    ) &&
+    'promotional' === (
+        $promotional['rejection_code'] ?? ''
+    ),
     'promotional and sponsored material is hard-rejected'
 );
 
@@ -329,7 +344,12 @@ $anonymous_allegation =
     );
 
 revelations_unspoken_test(
-    null === $anonymous_allegation,
+    true === (
+        $anonymous_allegation['hard_rejected'] ?? false
+    ) &&
+    'allegation_without_attribution' === (
+        $anonymous_allegation['rejection_code'] ?? ''
+    ),
     'anonymous unsupported allegation is hard-rejected'
 );
 
@@ -400,7 +420,12 @@ $stale =
     );
 
 revelations_unspoken_test(
-    null === $stale,
+    true === (
+        $stale['hard_rejected'] ?? false
+    ) &&
+    'stale_story' === (
+        $stale['rejection_code'] ?? ''
+    ),
     'stale story is hard-rejected'
 );
 
@@ -413,7 +438,12 @@ $headline_only =
     );
 
 revelations_unspoken_test(
-    null === $headline_only,
+    true === (
+        $headline_only['hard_rejected'] ?? false
+    ) &&
+    'headline_only_sensationalism' === (
+        $headline_only['rejection_code'] ?? ''
+    ),
     'headline-only sensationalism is hard-rejected'
 );
 
