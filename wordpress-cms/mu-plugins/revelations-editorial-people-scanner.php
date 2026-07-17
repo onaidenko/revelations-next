@@ -281,6 +281,15 @@ function revelations_editorial_score_people_story(
             $keywords['impact']
         );
 
+    /*
+     * A capitalized two-word phrase is not necessarily a personal
+     * name. Require an explicit People keyword before applying the
+     * name bonus.
+     */
+    if ( array() === $relevance_matches ) {
+        return null;
+    }
+
     $name_signal =
         revelations_editorial_people_has_name_signal(
             $title
@@ -291,10 +300,6 @@ function revelations_editorial_score_people_story(
         count( $relevance_matches ) * 2 +
         ( $name_signal ? 2 : 0 )
     );
-
-    if ( $relevance_score < 2 ) {
-        return null;
-    }
 
     $implementation_score = min(
         10,
