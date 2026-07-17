@@ -279,29 +279,14 @@ function revelations_editorial_log_ai_generation(
 
     $section = sanitize_key(
         (string) (
-            $result['section']
+            $result['source_section']
             ?? get_post_meta(
-                $draft_id,
-                '_revelations_ai_section_suggestion',
+                $candidate_id,
+                '_rev_section',
                 true
             )
         )
     );
-
-    if ( '' === $section ) {
-        $category_slugs = wp_get_post_categories(
-            $draft_id,
-            array(
-                'fields' => 'slugs',
-            )
-        );
-
-        $section = sanitize_key(
-            (string) (
-                $category_slugs[0] ?? 'news'
-            )
-        );
-    }
 
     if (
         function_exists(

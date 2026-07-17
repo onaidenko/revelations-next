@@ -69,15 +69,16 @@
 
 ## Расхождения текущего кода с контрактом
 
-- Текущий structured output возвращает один `title` и `section`;
-  сгенерированный section автоматически назначается WordPress draft.
-- Alternative titles, `suggested_section`, `section_mismatch`,
-  fact-check flags и проверяемый контракт прямых цитат отсутствуют.
+- Structured output и storage уже содержат recommended/alternative
+  titles, advisory section fields, fact-check flags и direct-quote
+  candidates.
+- Серверная точная проверка direct quotes, conditional validation
+  section advisory fields, проверка уникальности titles и поиск
+  пропущенных sensitive claims ещё отсутствуют.
 - Excerpt и SEO description уже являются отдельными полями, но
   проверка на дословное совпадение отсутствует.
-- Общие generation rules дополнены section-specific профилями; legacy
-  response schema и автоматическое назначение category пока остаются до
-  следующего этапа.
+- Source section является server-only context; generation больше не
+  назначает WordPress category из model output.
 - Source snapshot ограничен одним источником; автоматического
   multi-source verification нет.
 - Присвоение `Julia U.` только пустому author уже соответствует
@@ -195,6 +196,47 @@
 - Локальная и удалённая временные директории удалены; рабочий WordPress,
   API, база и deploy не использовались.
 
+## Этап 5: Extended editorial generation schema
+
+- Legacy model fields `title` и `section` заменены на
+  `recommended_title`, ровно два `alternative_titles`, три advisory
+  section fields, structured `fact_check_flags` и `direct_quotes`.
+- `source_section` не входит в OpenAI response schema: сервер читает
+  точный `_rev_section`, передаёт его как immutable prompt context,
+  сохраняет в metadata и возвращает logs.
+- `recommended_title` становится WordPress `post_title`. Generation
+  path больше не вызывает category lookup или
+  `wp_set_post_categories`; текущая category сохраняется.
+- Fact-check flags содержат claim, утверждённый claim type, source
+  evidence, verification flag и reason. Direct-quote candidates
+  содержат только точные `quote_text` и `source_fragment`; модель не
+  возвращает `verbatim_match`.
+- Draft metadata:
+  `_revelations_ai_alternative_titles`,
+  `_revelations_ai_source_section`,
+  `_revelations_ai_section_mismatch`,
+  `_revelations_ai_suggested_section`,
+  `_revelations_ai_section_mismatch_reason`,
+  `_revelations_ai_fact_check_flags`,
+  `_revelations_ai_direct_quotes`.
+- Private versions сохраняют соответствующие
+  `_rev_ai_alternative_titles`, `_rev_ai_source_section`,
+  `_rev_ai_section_mismatch`, `_rev_ai_suggested_section`,
+  `_rev_ai_section_mismatch_reason`, `_rev_ai_fact_check_flags` и
+  `_rev_ai_direct_quotes`. Optional restore удаляет stale draft
+  metadata, если legacy version не содержит нового ключа, не меняя
+  существующий category/author/content contract.
+- Generation logs используют только server result `source_section` или
+  candidate `_rev_section`; suggested section, category, API key,
+  prompt и source snapshot не используются для section logging.
+- На `revelations-prod` PHP 8.5.4 с `mbstring=yes` выполнил lint шести
+  PHP-файлов: 6 passed, все exit code 0.
+- Profile diagnostics: 35 passed, 0 failed. Schema/storage diagnostics:
+  48 passed, 0 failed. Оба scripts завершились с exit code 0 без
+  WordPress bootstrap, OpenAI API и базы.
+- Локальная и удалённая уникальные `/tmp`-директории удалены. Live
+  WordPress, база, OpenAI API и deploy не использовались.
+
 ## Подтверждённая интеграция AI gate
 
 - Gate определён и вызывается один раз в общем scanner engine.
@@ -216,7 +258,7 @@
 
 ## Следующий безопасный шаг
 
-После синхронизации этапа 4 выполнить read-only анализ этапа 5:
-`Extend editorial generation schema`. До согласования плана код этапа 5
-не менять. OpenAI API test, WordPress/DB runtime, scanner dry-run и
+После синхронизации этапа 5 выполнить read-only анализ этапа 6:
+`Validate generated editorial claims`. До согласования плана код этапа
+6 не менять. OpenAI API test, WordPress/DB runtime, scanner dry-run и
 deploy не выполнять без отдельного согласования.

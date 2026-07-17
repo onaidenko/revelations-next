@@ -36,9 +36,31 @@
   generation settings и OpenAI request.
 - Выбранный section profile дополняет общий editorial policy, tone,
   structure, banned phrases и factual-safety rules в generation prompt.
-- До расширения schema legacy-поле `section` в ответе проходит точную
-  проверку equality с исходным `_rev_section`. Mismatch блокирует
-  version backup, обновление draft, category и meta.
+- `source_section` читается сервером из `_rev_section`, передаётся
+  модели только как неизменяемый контекст и не входит в model output.
+- Structured output содержит recommended и два alternative titles,
+  advisory section fields, fact-check flags, direct-quote evidence,
+  excerpt, SEO fields и article blocks. Legacy `title` и `section`
+  удалены из schema.
+- Generation path устанавливает recommended title, content и excerpt,
+  но не назначает WordPress category из model output. Existing
+  conditional default author `Julia U.` не управляется моделью.
+- Generation metadata хранится на draft в ключах:
+  `_revelations_ai_alternative_titles`,
+  `_revelations_ai_source_section`,
+  `_revelations_ai_section_mismatch`,
+  `_revelations_ai_suggested_section`,
+  `_revelations_ai_section_mismatch_reason`,
+  `_revelations_ai_fact_check_flags` и
+  `_revelations_ai_direct_quotes`.
+- Private `rev_ai_version` сохраняет соответствующие ключи с префиксом
+  `_rev_ai_`; restore переносит их обратно как optional metadata.
+  Legacy versions без этих ключей остаются совместимыми, а сохранённые
+  category, title, content и excerpt восстанавливаются существующим
+  контрактом.
+- AI generation logs получают section только из server result
+  `source_section` или candidate `_rev_section`, не из advisory fields
+  и не из WordPress category.
 
 ## Порядок обработки истории
 

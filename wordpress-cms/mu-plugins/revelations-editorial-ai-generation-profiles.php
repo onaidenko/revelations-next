@@ -93,7 +93,8 @@ function revelations_editorial_ai_generation_profile_prompt(
         $profile['instructions'] .
         "\n\nThe section profile supplements the global editorial " .
         "policy, tone, structure, banned-phrase and factual-safety rules. " .
-        "Return the legacy section field exactly as \"" .
-        $source_section .
-        "\". Do not select or suggest a different section.";
+        "The assigned source section is immutable server context and is " .
+        "not part of the model output. Do not attempt to change it. " .
+        "If the material clearly belongs elsewhere, use only the advisory " .
+        "section mismatch fields.";
 }

@@ -111,28 +111,62 @@ function revelations_editorial_ai_article_schema(): array {
         'type' => 'object',
 
         'properties' => array(
-            'title' => array(
+            'recommended_title' => array(
                 'type' =>
                     'string',
 
                 'description' =>
-                    'Editorial article title.',
+                    'Recommended editorial article title.',
             ),
 
-            'section' => array(
-                'type' => 'string',
+            'alternative_titles' => array(
+                'type' => 'array',
+
+                'items' => array(
+                    'type' => 'string',
+                ),
+
+                'minItems' => 2,
+                'maxItems' => 2,
+
+                'description' =>
+                    'Exactly two alternative editorial titles.',
+            ),
+
+            'section_mismatch' => array(
+                'type' => 'boolean',
+
+                'description' =>
+                    'Whether the assigned source section appears mismatched.',
+            ),
+
+            'suggested_section' => array(
+                'type' => array(
+                    'string',
+                    'null',
+                ),
 
                 'enum' => array(
                     'news',
-                    'people',
                     'tech',
+                    'people',
                     'places',
                     'unspoken',
-                    'podcast',
+                    null,
                 ),
 
                 'description' =>
-                    'Best REVELATIONS section for the article.',
+                    'Advisory section suggestion, or null.',
+            ),
+
+            'section_mismatch_reason' => array(
+                'type' => array(
+                    'string',
+                    'null',
+                ),
+
+                'description' =>
+                    'Concise advisory mismatch reason, or null.',
             ),
 
             'excerpt' => array(
@@ -157,6 +191,93 @@ function revelations_editorial_ai_article_schema(): array {
 
                 'description' =>
                     'Concise search description.',
+            ),
+
+            'fact_check_flags' => array(
+                'type' => 'array',
+
+                'items' => array(
+                    'type' => 'object',
+
+                    'properties' => array(
+                        'claim' => array(
+                            'type' => 'string',
+                        ),
+
+                        'claim_type' => array(
+                            'type' => 'string',
+
+                            'enum' => array(
+                                'number',
+                                'date',
+                                'money',
+                                'investment',
+                                'company_valuation',
+                                'quote',
+                                'superlative',
+                                'benchmark',
+                                'medical',
+                                'legal',
+                                'regulatory',
+                                'reputational',
+                                'other_sensitive',
+                            ),
+                        ),
+
+                        'source_evidence' => array(
+                            'type' => 'string',
+                        ),
+
+                        'verification_required' => array(
+                            'type' => 'boolean',
+                        ),
+
+                        'reason' => array(
+                            'type' => 'string',
+                        ),
+                    ),
+
+                    'required' => array(
+                        'claim',
+                        'claim_type',
+                        'source_evidence',
+                        'verification_required',
+                        'reason',
+                    ),
+
+                    'additionalProperties' => false,
+                ),
+
+                'description' =>
+                    'Claims recommended for mandatory manual verification. A flag does not mean the claim is false.',
+            ),
+
+            'direct_quotes' => array(
+                'type' => 'array',
+
+                'items' => array(
+                    'type' => 'object',
+
+                    'properties' => array(
+                        'quote_text' => array(
+                            'type' => 'string',
+                        ),
+
+                        'source_fragment' => array(
+                            'type' => 'string',
+                        ),
+                    ),
+
+                    'required' => array(
+                        'quote_text',
+                        'source_fragment',
+                    ),
+
+                    'additionalProperties' => false,
+                ),
+
+                'description' =>
+                    'Direct quotes actually used in the article and their exact source fragments.',
             ),
 
             'blocks' => array(
@@ -221,11 +342,16 @@ function revelations_editorial_ai_article_schema(): array {
         ),
 
         'required' => array(
-            'title',
-            'section',
+            'recommended_title',
+            'alternative_titles',
+            'section_mismatch',
+            'suggested_section',
+            'section_mismatch_reason',
             'excerpt',
             'seo_title',
             'seo_description',
+            'fact_check_flags',
+            'direct_quotes',
             'blocks',
         ),
 
@@ -685,6 +811,16 @@ function revelations_editorial_generate_draft_with_ai(
         $profile_prompt .
         "\n\n" .
 
+        "Return one recommended title and exactly two alternative titles. " .
+        "Treat section mismatch fields as editorial advice only; the server " .
+        "keeps the assigned source section and WordPress category unchanged.\n\n" .
+
+        "Flag sensitive claims that require manual verification. " .
+        "A fact-check flag does not mean that a claim is false. " .
+        "Return only direct quotes actually used in the article, with the " .
+        "exact source fragment supporting each quote. Do not claim that a " .
+        "quote has been verified; the server performs that check separately.\n\n" .
+
         "Return article body blocks only. " .
         "Do not put the article title inside the blocks. " .
         "Use H2 or H3 headings only when they improve readability. " .
@@ -867,11 +1003,16 @@ function revelations_editorial_generate_draft_with_ai(
     }
 
     $required_fields = array(
-        'title',
-        'section',
+        'recommended_title',
+        'alternative_titles',
+        'section_mismatch',
+        'suggested_section',
+        'section_mismatch_reason',
         'excerpt',
         'seo_title',
         'seo_description',
+        'fact_check_flags',
+        'direct_quotes',
         'blocks',
     );
 
@@ -885,21 +1026,49 @@ function revelations_editorial_generate_draft_with_ai(
         }
     }
 
-    $title = sanitize_text_field(
-        (string) $article['title']
+    $recommended_title = sanitize_text_field(
+        (string) $article['recommended_title']
     );
 
-    $response_section =
-        (string) $article['section'];
+    $alternative_titles = array();
 
-    if ( $response_section !== $current_section ) {
+    if ( is_array( $article['alternative_titles'] ) ) {
+        foreach (
+            $article['alternative_titles']
+            as $alternative_title
+        ) {
+            $alternative_titles[] =
+                sanitize_text_field(
+                    (string) $alternative_title
+                );
+        }
+    }
+
+    if ( 2 !== count( $alternative_titles ) ) {
         return new WP_Error(
-            'generation_section_mismatch',
-            'OpenAI returned a section that does not match the source section.'
+            'invalid_alternative_titles',
+            'OpenAI must return exactly two alternative titles.'
         );
     }
 
-    $section = $response_section;
+    $section_mismatch =
+        true === $article['section_mismatch'];
+
+    $suggested_section =
+        null === $article['suggested_section']
+            ? ''
+            : sanitize_key(
+                (string) $article['suggested_section']
+            );
+
+    $section_mismatch_reason =
+        null === $article['section_mismatch_reason']
+            ? ''
+            : sanitize_textarea_field(
+                (string) $article[
+                    'section_mismatch_reason'
+                ]
+            );
 
     $excerpt = sanitize_textarea_field(
         (string) $article['excerpt']
@@ -913,6 +1082,83 @@ function revelations_editorial_generate_draft_with_ai(
         (string) $article['seo_description']
     );
 
+    $fact_check_flags = array();
+
+    if ( is_array( $article['fact_check_flags'] ) ) {
+        foreach (
+            $article['fact_check_flags']
+            as $flag
+        ) {
+            if ( ! is_array( $flag ) ) {
+                continue;
+            }
+
+            $fact_check_flags[] = array(
+                'claim' =>
+                    sanitize_textarea_field(
+                        (string) (
+                            $flag['claim'] ?? ''
+                        )
+                    ),
+
+                'claim_type' =>
+                    sanitize_key(
+                        (string) (
+                            $flag['claim_type'] ?? ''
+                        )
+                    ),
+
+                'source_evidence' =>
+                    sanitize_textarea_field(
+                        (string) (
+                            $flag['source_evidence'] ?? ''
+                        )
+                    ),
+
+                'verification_required' =>
+                    true === (
+                        $flag['verification_required']
+                        ?? false
+                    ),
+
+                'reason' =>
+                    sanitize_textarea_field(
+                        (string) (
+                            $flag['reason'] ?? ''
+                        )
+                    ),
+            );
+        }
+    }
+
+    $direct_quotes = array();
+
+    if ( is_array( $article['direct_quotes'] ) ) {
+        foreach (
+            $article['direct_quotes']
+            as $direct_quote
+        ) {
+            if ( ! is_array( $direct_quote ) ) {
+                continue;
+            }
+
+            $direct_quotes[] = array(
+                'quote_text' =>
+                    (string) (
+                        $direct_quote['quote_text']
+                        ?? ''
+                    ),
+
+                'source_fragment' =>
+                    (string) (
+                        $direct_quote[
+                            'source_fragment'
+                        ] ?? ''
+                    ),
+            );
+        }
+    }
+
     $blocks = is_array(
         $article['blocks']
     )
@@ -920,7 +1166,7 @@ function revelations_editorial_generate_draft_with_ai(
         : array();
 
     if (
-        '' === $title ||
+        '' === $recommended_title ||
         '' === $excerpt ||
         '' === $seo_title ||
         '' === $seo_description ||
@@ -929,28 +1175,6 @@ function revelations_editorial_generate_draft_with_ai(
         return new WP_Error(
             'empty_article_fields',
             'One or more generated article fields are empty.'
-        );
-    }
-
-    $allowed_sections = array(
-        'news',
-        'people',
-        'tech',
-        'places',
-        'unspoken',
-        'podcast',
-    );
-
-    if (
-        ! in_array(
-            $section,
-            $allowed_sections,
-            true
-        )
-    ) {
-        return new WP_Error(
-            'invalid_section',
-            'OpenAI returned an unsupported section.'
         );
     }
 
@@ -989,18 +1213,6 @@ function revelations_editorial_generate_draft_with_ai(
         return new WP_Error(
             'invalid_blocks',
             'Generated Gutenberg content is invalid.'
-        );
-    }
-
-    $category =
-        get_category_by_slug(
-            $section
-        );
-
-    if ( ! $category instanceof WP_Term ) {
-        return new WP_Error(
-            'category_missing',
-            'The suggested WordPress category does not exist.'
         );
     }
 
@@ -1071,7 +1283,7 @@ function revelations_editorial_generate_draft_with_ai(
                 $draft_id,
 
             'post_title'   =>
-                $title,
+                $recommended_title,
 
             'post_content' =>
                 wp_slash( $content ),
@@ -1088,14 +1300,6 @@ function revelations_editorial_generate_draft_with_ai(
     if ( is_wp_error( $updated ) ) {
         return $updated;
     }
-
-    wp_set_post_categories(
-        $draft_id,
-        array(
-            (int) $category->term_id,
-        ),
-        false
-    );
 
     $usage = is_array(
         $decoded['usage'] ?? null
@@ -1140,8 +1344,38 @@ function revelations_editorial_generate_draft_with_ai(
                 )
             ),
 
-        '_revelations_ai_section_suggestion' =>
-            $section,
+        '_revelations_ai_alternative_titles' =>
+            wp_json_encode(
+                $alternative_titles,
+                JSON_UNESCAPED_UNICODE |
+                JSON_UNESCAPED_SLASHES
+            ),
+
+        '_revelations_ai_source_section' =>
+            $current_section,
+
+        '_revelations_ai_section_mismatch' =>
+            $section_mismatch ? '1' : '0',
+
+        '_revelations_ai_suggested_section' =>
+            $suggested_section,
+
+        '_revelations_ai_section_mismatch_reason' =>
+            $section_mismatch_reason,
+
+        '_revelations_ai_fact_check_flags' =>
+            wp_json_encode(
+                $fact_check_flags,
+                JSON_UNESCAPED_UNICODE |
+                JSON_UNESCAPED_SLASHES
+            ),
+
+        '_revelations_ai_direct_quotes' =>
+            wp_json_encode(
+                $direct_quotes,
+                JSON_UNESCAPED_UNICODE |
+                JSON_UNESCAPED_SLASHES
+            ),
 
         '_revelations_ai_word_count' =>
             $word_count,
@@ -1183,6 +1417,11 @@ function revelations_editorial_generate_draft_with_ai(
             $value
         );
     }
+
+    delete_post_meta(
+        $draft_id,
+        '_revelations_ai_section_suggestion'
+    );
 
     /*
      * Use the editorial default only when no author
@@ -1226,8 +1465,14 @@ function revelations_editorial_generate_draft_with_ai(
             revelations_editorial_ai_version_count(
                 $draft_id
             ) + 1,
-        'title'         => $title,
-        'section'       => $section,
+        'recommended_title' =>
+            $recommended_title,
+        'source_section' =>
+            $current_section,
+        'section_mismatch' =>
+            $section_mismatch,
+        'suggested_section' =>
+            $suggested_section,
         'word_count'    => $word_count,
         'duration_ms'   => $duration_ms,
         'input_tokens'  =>
@@ -1450,6 +1695,55 @@ function revelations_editorial_ai_create_version_backup(
             get_post_meta(
                 $draft_id,
                 '_revelations_ai_section_suggestion',
+                true
+            ),
+
+        '_rev_ai_alternative_titles' =>
+            get_post_meta(
+                $draft_id,
+                '_revelations_ai_alternative_titles',
+                true
+            ),
+
+        '_rev_ai_source_section' =>
+            get_post_meta(
+                $draft_id,
+                '_revelations_ai_source_section',
+                true
+            ),
+
+        '_rev_ai_section_mismatch' =>
+            get_post_meta(
+                $draft_id,
+                '_revelations_ai_section_mismatch',
+                true
+            ),
+
+        '_rev_ai_suggested_section' =>
+            get_post_meta(
+                $draft_id,
+                '_revelations_ai_suggested_section',
+                true
+            ),
+
+        '_rev_ai_section_mismatch_reason' =>
+            get_post_meta(
+                $draft_id,
+                '_revelations_ai_section_mismatch_reason',
+                true
+            ),
+
+        '_rev_ai_fact_check_flags' =>
+            get_post_meta(
+                $draft_id,
+                '_revelations_ai_fact_check_flags',
+                true
+            ),
+
+        '_rev_ai_direct_quotes' =>
+            get_post_meta(
+                $draft_id,
+                '_revelations_ai_direct_quotes',
                 true
             ),
 
@@ -1679,7 +1973,8 @@ function revelations_editorial_render_ai_generation_notices(): void {
                         ),
                         ucfirst(
                             (string) (
-                                $result['section'] ?? ''
+                                $result['source_section']
+                                ?? ''
                             )
                         ),
                         absint(

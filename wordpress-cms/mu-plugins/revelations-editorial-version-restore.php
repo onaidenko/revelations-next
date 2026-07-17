@@ -289,6 +289,63 @@ function revelations_editorial_ai_restore_readiness(
         );
     }
 
+    $optional_generation_meta = array(
+        '_rev_ai_alternative_titles' =>
+            '_revelations_ai_alternative_titles',
+
+        '_rev_ai_source_section' =>
+            '_revelations_ai_source_section',
+
+        '_rev_ai_section_mismatch' =>
+            '_revelations_ai_section_mismatch',
+
+        '_rev_ai_suggested_section' =>
+            '_revelations_ai_suggested_section',
+
+        '_rev_ai_section_mismatch_reason' =>
+            '_revelations_ai_section_mismatch_reason',
+
+        '_rev_ai_fact_check_flags' =>
+            '_revelations_ai_fact_check_flags',
+
+        '_rev_ai_direct_quotes' =>
+            '_revelations_ai_direct_quotes',
+    );
+
+    $current_generation_meta = array();
+    $version_generation_meta = array();
+
+    foreach (
+        $optional_generation_meta
+        as $version_key => $draft_key
+    ) {
+        $current_generation_meta[ $draft_key ] =
+            metadata_exists(
+                'post',
+                $draft_id,
+                $draft_key
+            )
+                ? get_post_meta(
+                    $draft_id,
+                    $draft_key,
+                    true
+                )
+                : null;
+
+        $version_generation_meta[ $draft_key ] =
+            metadata_exists(
+                'post',
+                $version_id,
+                $version_key
+            )
+                ? get_post_meta(
+                    $version_id,
+                    $version_key,
+                    true
+                )
+                : null;
+    }
+
     $current_categories = array_map(
         'absint',
         wp_get_post_categories(
@@ -327,6 +384,9 @@ function revelations_editorial_ai_restore_readiness(
                         'revelations_seo_description',
                         true
                     ),
+
+                'generation_metadata' =>
+                    $current_generation_meta,
             ),
             JSON_UNESCAPED_UNICODE |
             JSON_UNESCAPED_SLASHES
@@ -354,6 +414,9 @@ function revelations_editorial_ai_restore_readiness(
 
                 'seo_description' =>
                     $seo_description,
+
+                'generation_metadata' =>
+                    $version_generation_meta,
             ),
             JSON_UNESCAPED_UNICODE |
             JSON_UNESCAPED_SLASHES
@@ -556,6 +619,63 @@ function revelations_editorial_ai_restore_version(
             $draft_id,
             $key,
             $value
+        );
+    }
+
+    /*
+     * Stage 5 generation metadata is optional so private versions
+     * created before these fields existed remain restorable.
+     */
+    $optional_generation_meta = array(
+        '_rev_ai_alternative_titles' =>
+            '_revelations_ai_alternative_titles',
+
+        '_rev_ai_source_section' =>
+            '_revelations_ai_source_section',
+
+        '_rev_ai_section_mismatch' =>
+            '_revelations_ai_section_mismatch',
+
+        '_rev_ai_suggested_section' =>
+            '_revelations_ai_suggested_section',
+
+        '_rev_ai_section_mismatch_reason' =>
+            '_revelations_ai_section_mismatch_reason',
+
+        '_rev_ai_fact_check_flags' =>
+            '_revelations_ai_fact_check_flags',
+
+        '_rev_ai_direct_quotes' =>
+            '_revelations_ai_direct_quotes',
+    );
+
+    foreach (
+        $optional_generation_meta
+        as $version_key => $draft_key
+    ) {
+        if (
+            metadata_exists(
+                'post',
+                $version_id,
+                $version_key
+            )
+        ) {
+            update_post_meta(
+                $draft_id,
+                $draft_key,
+                get_post_meta(
+                    $version_id,
+                    $version_key,
+                    true
+                )
+            );
+
+            continue;
+        }
+
+        delete_post_meta(
+            $draft_id,
+            $draft_key
         );
     }
 

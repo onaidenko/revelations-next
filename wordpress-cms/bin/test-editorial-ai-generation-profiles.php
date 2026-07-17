@@ -152,11 +152,13 @@ foreach ( $expected_sections as $section ) {
         ) &&
         str_contains(
             $prompt,
-            'Return the legacy section field exactly as "' .
-            $section .
-            '"'
+            'immutable server context'
+        ) &&
+        str_contains(
+            $prompt,
+            'not part of the model output'
         ),
-        $section . ' prompt locks the exact legacy section'
+        $section . ' prompt keeps source section server-controlled'
     );
 
     $contains_only_selected_profile = str_contains(
@@ -281,54 +283,35 @@ foreach ( $global_prompt_fragments as $fragment ) {
 }
 
 revelations_profile_test(
-    str_contains(
+    ! str_contains(
         $generation_function,
-        '$response_section =' . "\n" .
-        "        (string) \$article['section'];"
+        "\$article['section']"
     ) &&
-    str_contains(
+    ! str_contains(
         $generation_function,
-        '$response_section !== $current_section'
+        'generation_section_mismatch'
     ),
-    'legacy response section is compared as an exact raw string'
+    'generation path no longer reads a legacy model section'
 );
 
 revelations_profile_test(
-    str_contains(
-        $generation_function,
-        "'generation_section_mismatch'"
-    ),
-    'legacy section mismatch returns a dedicated validation error'
-);
-
-foreach (
-    array(
-        'revelations_editorial_ai_article_word_count(',
-        'revelations_editorial_ai_create_version_backup(',
-        'wp_update_post(',
-        'wp_set_post_categories(',
-        'update_post_meta(',
-    ) as $mutation_or_later_validation
-) {
-    revelations_profile_test_before(
-        $generation_function,
-        "'generation_section_mismatch'",
-        $mutation_or_later_validation,
-        'section mismatch blocks before ' .
-        $mutation_or_later_validation
-    );
-}
-
-revelations_profile_test(
-    str_contains(
+    ! str_contains(
         $generation_source,
         "'section' => array("
-    ) &&
-    str_contains(
-        $generation_source,
-        "'podcast',"
     ),
-    'temporary legacy response schema remains present and unchanged'
+    'model output schema has no source section field'
+);
+
+revelations_profile_test(
+    ! str_contains(
+        $generation_function,
+        'get_category_by_slug('
+    ) &&
+    ! str_contains(
+        $generation_function,
+        'wp_set_post_categories('
+    ),
+    'generation keeps the existing WordPress category'
 );
 
 echo "\n" .
