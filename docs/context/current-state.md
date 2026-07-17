@@ -51,6 +51,10 @@
 - Context-only commit `c1ecff4`
   (`Document controlled scanner dry-run`) отправлен в
   `origin/admin-editorial`; после push ahead/behind равен `0/0`.
+- Context-only commit `d91d5ee`
+  (`Update project state before production rollout`) отправлен в
+  `origin/admin-editorial`; перед production rollout working tree был
+  чистым, ahead/behind — `0/0`.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
@@ -386,10 +390,13 @@
 ## Следующий безопасный шаг
 
 Scanner signal changes отложены до нескольких RSS snapshots; global AI
-gate, Tech signals, thresholds и scoring weights не менять. Следующий
-этап — отдельный controlled OpenAI generation test после утверждения
-точного draft, модели, стоимости и разрешения на один платный request.
-Deploy dry-run и production deploy требуют отдельных разрешений.
+gate, Tech signals, thresholds и scoring weights не менять. Не
+повторять платный generation smoke без отдельного решения: единственный
+разрешённый request выявил `invalid_fact_check_evidence`. Для frontend
+сначала устранить stale staging cache отдельным свежим build, собрать
+тот же source с production `NEXT_PUBLIC_SITE_URL`, проверить candidate
+service по Host header и только затем отдельно согласовать отключение
+Base44 и DNS/domain cutover.
 
 ## Этап 9: Unspoken scanner and preview
 
@@ -488,3 +495,73 @@ Deploy dry-run и production deploy требуют отдельных разре
   run logs, scanner option, authors и categories. PHP guard не
   зафиксировал write queries; candidates/run logs created — 0.
 - OpenAI API, база, live WordPress actions и deploy не выполнялись.
+
+## Production CMS rollout 2026-07-18
+
+- Перед rollout ветка `admin-editorial` была синхронизирована с
+  `origin/admin-editorial` на `d91d5ee`, working tree и index были
+  чистыми.
+- Production target подтверждён как
+  `/var/www/revelations-cms/public/wp-content/mu-plugins`.
+- До dry-run создан и проверен backup:
+  `/root/revelations-mu-plugins-before-deploy-20260717-230914-d91d5ee.tar.gz`;
+  SHA-256:
+  `c0e52a824bf0d26bd532d525f52d45ea05b6e0cba45a1bb150d7b5c1723692d1`.
+- Checksum-based deploy dry-run показал только ожидаемые новые и
+  изменённые MU plugins, без deletions. Тот же scope развернут через
+  SSH-алиас `revelations-prod`; raw IP deploy script не использовался.
+- После deploy все 40 production PHP MU plugins прошли `php -l`.
+  Повторный `rsync --dry-run` не обнаружил различий с локальным source.
+  PHP-FPM и CMS Nginx error logs после deploy пусты.
+- Public API health, articles и sections возвращают HTTP 200.
+  Editorial Desk зарегистрирован с `manage_options`; preview registry
+  содержит callable scanners News, People, Tech, Places и Unspoken.
+- Runtime Unspoken содержит четыре утверждённых feed, thresholds и
+  `enabled=false`. AI readiness обнаруживает key и модель
+  `gpt-5.6-luna`, но постоянный enabled flag остаётся `false`.
+- CMS login и Editorial Desk защищены Nginx Basic Auth и без
+  credentials ожидаемо возвращают HTTP 401; REST/Public API routes
+  доступны без Basic Auth.
+
+## Controlled production AI smoke
+
+- Выполнен ровно один OpenAI Responses API request с process-local
+  enabled flag и production model `gpt-5.6-luna`; постоянная
+  конфигурация не менялась, `store=false`.
+- Disposable candidate `227` и source draft `228` прошли Save
+  candidate, Create source draft и Fetch source. Source extraction
+  вернул HTTP 200, `main_paragraphs`, 7096 символов и 17 paragraphs.
+- API response был отклонён strict server validation с кодом
+  `invalid_fact_check_evidence`: model-provided fact-check evidence не
+  найдено точным фрагментом в source snapshot.
+- Ошибка произошла до draft update и private version backup. Human
+  Review invalidation, generated metadata и regeneration backup не
+  смогли быть подтверждены этим live request. Повторный API request не
+  выполнялся.
+- Candidate и draft помечены run ID и перемещены в Trash. Private AI
+  versions, AI run logs и публикации не созданы; editorial locks
+  отсутствуют. Временный local/remote runner удалён.
+
+## Staging frontend и Base44 baseline
+
+- `staging.revelations.me` обслуживается systemd service
+  `revelations-staging.service` из `/var/www/revelations-staging` на
+  loopback port 3001 через Nginx.
+- Deployed `BUILD_ID` `UkKDfZiUsQnvqSaHuBIL6`, `server.js` и
+  `.env.production` checksum точно совпадают с локальным verified
+  `.next` build. Build использует
+  `REVELATIONS_CMS_API_URL=https://cms.revelations.me/wp-json/revelations/v1`
+  и staging site URL.
+- Read-only SEO/HTTP audit проверил 62/62 страницы, 62 sitemap URLs,
+  63 внутренних ссылки и 58 images. Все основные страницы, sections,
+  articles, sitemap и robots отвечают HTTP 200; mixed-content
+  references на контрольных страницах не найдены.
+- Обнаружена одна ошибка: stale Next runtime cache содержит удалённый
+  route `/wordpress-editorial-test`, а внутренняя ссылка на него
+  возвращает 404. Два предупреждения относятся только к title длиной
+  68 и 70 символов. Staging cache/build не изменялись.
+- `revelations.me` и `www.revelations.me` остаются на Base44; DNS TTL
+  равен 600 секунд. На сервере `revelations-prod` нет active Nginx
+  vhost, service или SSL certificate для основного домена.
+- Base44, DNS, domain binding, reverse proxy, SSL и основной домен
+  этой задачей не изменялись.
