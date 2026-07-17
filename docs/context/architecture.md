@@ -95,6 +95,24 @@
   становятся текущими, поэтому панель и Human Review hash используют
   именно восстановленное состояние.
 
+## AI generation diagnostics
+
+- `test-editorial-ai-generation-integration.php` запускает реальный
+  production pipeline конфигурации, профилей и prompt, structured
+  response parsing, validation, Gutenberg conversion, version
+  backup/restore и Human Review hash против in-memory WordPress stores.
+- Внешние WordPress posts/meta/categories, `$wpdb`, HTTP transport и
+  cache заменены изолированными stubs. Fake transport только считает
+  вызовы и возвращает заранее заданный structured response; сеть,
+  WordPress bootstrap и база не используются.
+- Integration scenarios покрывают pre-transport blocking, успешную
+  генерацию пяти sections, validation failures без writes,
+  regeneration, restore и legacy-version compatibility.
+- `test-editorial-ai-generation-suite.sh` последовательно запускает
+  component diagnostics этапов 1–7 и integration diagnostic. Global
+  scanner AI gate запускается тем же runner как отдельная upstream
+  regression-проверка и не смешивается с generation integration.
+
 ## Порядок обработки истории
 
 1. Нормализовать section и limits.

@@ -314,6 +314,40 @@
 - Локальная и удалённая уникальные `/tmp`-директории удалены. Live
   WordPress, база, OpenAI API и deploy не использовались.
 
+## Этап 8: Combined AI generation diagnostics
+
+- Добавлен автономный
+  `test-editorial-ai-generation-integration.php` с in-memory WordPress
+  stores и fake OpenAI transport. Diagnostic вызывает реальные
+  production-функции config guard, profiles/prompt, schema parsing,
+  validation, Gutenberg conversion, backup/restore и Human Review
+  hash; production logic в test не копируется.
+- Fake transport не обращается к сети, считает attempts и возвращает
+  заранее заданный structured response. Disabled, missing key/model,
+  пустой/неизвестный section и legacy podcast подтверждённо дают
+  transport count 0 и не меняют WordPress state в памяти.
+- Успешный pipeline проверен для News, Tech, People, Places и Unspoken.
+  Validation failures, regeneration, current metadata, review
+  invalidation, restore и legacy version без новых metadata также
+  покрыты.
+- Integration diagnostics: 79 passed, 0 failed, exit code 0.
+- Общий `test-editorial-ai-generation-suite.sh` сохраняет отдельные
+  результаты component diagnostics этапов 1–7, integration result и
+  отдельный upstream AI gate result; любой failed suite даёт итоговый
+  non-zero exit code.
+- Component diagnostics: AI config 26/26, action UI 26/26,
+  candidate-save 28/28, profiles 35/35, schema/storage 48/48,
+  validation 37/37 и review metadata 23/23. Отдельный upstream AI gate:
+  23/23. Полный runner завершился с exit code 0.
+- Локальные и удалённые Node syntax checks прошли. Удалённая среда:
+  PHP 8.5.4, `mbstring=yes`, Node 22.22.1.
+- На `revelations-prod` в уникальной `/tmp`-директории PHP lint прошёл
+  для всех 45 переданных production и diagnostic PHP-файлов.
+- Локальная и удалённая временные директории удалены, отсутствие обеих
+  проверено. OpenAI API, сеть из PHP diagnostic, WordPress bootstrap,
+  база, live WordPress, scanner runtime, scanner dry-run и deploy не
+  использовались.
+
 ## Подтверждённая интеграция AI gate
 
 - Gate определён и вызывается один раз в общем scanner engine.
@@ -335,7 +369,9 @@
 
 ## Следующий безопасный шаг
 
-После синхронизации этапа 7 выполнить read-only анализ этапа 8:
-`Run combined AI generation diagnostics`. OpenAI API test,
+После синхронизации этапа 8 выполнить read-only анализ полноценного
+Unspoken scanner и preview: source profile, RSS sources, scoring,
+AI gate, reputational safeguards, preview, shared candidate-save и
+diagnostics. Код Unspoken не менять до согласования плана. OpenAI API,
 WordPress/DB runtime, scanner dry-run и deploy не выполнять без
 отдельного согласования.
