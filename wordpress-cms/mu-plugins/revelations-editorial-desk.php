@@ -349,6 +349,14 @@ $ai_readiness = function_exists(
 
             if (
                 function_exists(
+                    'revelations_editorial_render_people_preview'
+                )
+            ) {
+                revelations_editorial_render_people_preview();
+            }
+
+            if (
+                function_exists(
                     'revelations_editorial_render_tech_preview'
                 )
             ) {
@@ -390,7 +398,7 @@ $ai_readiness = function_exists(
         <div class="revelations-desk__notice">
             <strong>Editorial Desk is operational.</strong>
 
-            Private candidate storage, News and Tech RSS previews, and source snapshots are active.
+            Private candidate storage, News, People and Tech RSS previews, and source snapshots are active.
             AI draft generation is active. Publication remains manual.
         </div>
     </div>

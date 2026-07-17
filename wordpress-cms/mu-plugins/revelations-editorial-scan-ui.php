@@ -46,6 +46,7 @@ function revelations_editorial_render_scan_progress_ui(): void {
 
             const supportedActions = new Set([
                 'revelations_preview_news_scan',
+                'revelations_preview_people_scan',
                 'revelations_preview_tech_scan'
             ]);
 
