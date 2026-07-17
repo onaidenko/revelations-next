@@ -637,8 +637,255 @@ function revelations_editorial_default_scanner_settings(): array {
             ),
         ),
 
-        'places' =>
-            revelations_editorial_empty_scanner_profile(),
+        'places' => array(
+            'enabled' =>
+                false,
+
+            'preview_limit' =>
+                5,
+
+            'active_sources' => array(
+                array(
+                    'name' =>
+                        'ArchDaily',
+
+                    'url' =>
+                        'https://www.archdaily.com/rss',
+                ),
+
+                array(
+                    'name' =>
+                        'Sleeper Magazine',
+
+                    'url' =>
+                        'https://www.sleepermagazine.com/feed/',
+                ),
+
+                array(
+                    'name' =>
+                        'Hospitality Design',
+
+                    'url' =>
+                        'https://hospitalitydesign.com/feed/',
+                ),
+
+                array(
+                    'name' =>
+                        'Designboom',
+
+                    'url' =>
+                        'https://www.designboom.com/feed/',
+                ),
+            ),
+
+            'disabled_sources' => array(
+                array(
+                    'name' =>
+                        'Dezeen',
+
+                    'reason' =>
+                        'RSS response contains invalid XML.',
+                ),
+
+                array(
+                    'name' =>
+                        'The Spaces',
+
+                    'reason' =>
+                        'RSS endpoint returns HTTP 403.',
+                ),
+
+                array(
+                    'name' =>
+                        'Wallpaper',
+
+                    'reason' =>
+                        'RSS endpoint returns HTTP 403.',
+                ),
+
+                array(
+                    'name' =>
+                        'Hospitality Net',
+
+                    'reason' =>
+                        'RSS endpoint returns HTTP 404.',
+                ),
+
+                array(
+                    'name' =>
+                        'Travel + Leisure',
+
+                    'reason' =>
+                        'RSS endpoint returns HTTP 403.',
+                ),
+            ),
+
+            'keywords' => array(
+                'relevance' => array(
+                    'hotel',
+                    'resort',
+                    'lodge',
+                    'villa',
+                    'restaurant',
+                    'cafe',
+                    'bar',
+                    'club',
+                    'museum',
+                    'gallery',
+                    'cultural centre',
+                    'cultural center',
+                    'cultural complex',
+                    'theatre',
+                    'theater',
+                    'cinema',
+                    'spa',
+                    'wellness retreat',
+                    'public space',
+                    'park',
+                    'plaza',
+                    'pavilion',
+                    'library',
+                    'airport',
+                    'station',
+                    'terminal',
+                    'tower',
+                    'skyscraper',
+                    'mixed-use',
+                    'district',
+                    'neighbourhood',
+                    'neighborhood',
+                    'campus',
+                    'residence',
+                    'hospitality',
+                    'destination',
+                    'landmark',
+                    'venue',
+                    'cemetery',
+                ),
+
+                'implementation' => array(
+                    'opens',
+                    'opened',
+                    'opening',
+                    'unveils',
+                    'unveiled',
+                    'launches',
+                    'launched',
+                    'completes',
+                    'completed',
+                    'renovates',
+                    'renovated',
+                    'renovation',
+                    'reopens',
+                    'restored',
+                    'approved',
+                    'built',
+                    'designed',
+                    'transforms',
+                    'transformed',
+                    'converted',
+                    'expands',
+                    'demolition',
+                    'demolished',
+                    'welcomes',
+                    'debut',
+                    'emerges',
+                ),
+
+                'speculative' => array(
+                    'proposed',
+                    'proposal',
+                    'concept',
+                    'plans',
+                    'planned',
+                    'could',
+                    'may',
+                    'might',
+                    'expected',
+                    'envisioned',
+                    'competition entry',
+                    'rendering',
+                    'renderings',
+                ),
+
+                'impact' => array(
+                    'first',
+                    'largest',
+                    'tallest',
+                    'historic',
+                    'heritage',
+                    'adaptive reuse',
+                    'net-zero',
+                    'carbon-neutral',
+                    'sustainable',
+                    'public',
+                    'cultural',
+                    'landmark',
+                    'million',
+                    'billion',
+                    'hectares',
+                    'acres',
+                    'rooms',
+                    'keys',
+                    'luxury',
+                ),
+
+                'product_launch' =>
+                    array(),
+
+                'avoid' => array(
+                    'registration',
+                    'register now',
+                    'tickets',
+                    'conference',
+                    'webinar',
+                    'cityscene',
+                    'bdny',
+                    'award winners',
+                    'awards shortlist',
+                    '12 restaurants',
+                    'top 10',
+                    'best hotels',
+                    'leadership team',
+                    'appointed',
+                    'joins',
+                    'new role',
+                    'furniture',
+                    'textile',
+                    'material',
+                    'lamp',
+                    'chair',
+                    'tableware',
+                    'watch',
+                    'smartphone',
+                    'vehicle',
+                    'car',
+                    'pot',
+                ),
+            ),
+
+            'thresholds' => array(
+                'places_signal' => array(
+                    'total_score' =>
+                        4.6,
+
+                    'relevance_score' =>
+                        2.5,
+
+                    'freshness_score' =>
+                        3.0,
+
+                    'implementation_score' =>
+                        2.0,
+
+                    'impact_score' =>
+                        4.0,
+
+                    'strong_relevance_score' =>
+                        7.5,
+                ),
+            ),
+        ),
 
         'unspoken' =>
             revelations_editorial_empty_scanner_profile(),
@@ -936,6 +1183,7 @@ function revelations_editorial_scanner_section_is_editable(
         array(
             'news',
             'people',
+            'places',
             'tech',
         ),
         true

@@ -61,6 +61,20 @@ function revelations_editorial_preview_sections(): array {
             'scan_callback' =>
                 'revelations_editorial_people_scan_dry_run',
         ),
+
+        'places' => array(
+            'label' =>
+                'Places',
+
+            'default_enabled' =>
+                false,
+
+            'default_preview_limit' =>
+                5,
+
+            'scan_callback' =>
+                'revelations_editorial_places_scan_dry_run',
+        ),
     );
 }
 
