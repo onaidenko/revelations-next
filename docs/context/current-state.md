@@ -26,6 +26,10 @@
   (`Add section-specific generation profiles`) и отправлен в
   `origin/admin-editorial`; после функционального push ветки были
   синхронизированы.
+- Этап 5 зафиксирован отдельным коммитом `ba262a9`
+  (`Extend editorial generation schema`) и отправлен в
+  `origin/admin-editorial`; после функционального push ветки были
+  синхронизированы.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
