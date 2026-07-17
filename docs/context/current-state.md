@@ -42,6 +42,9 @@
   (`Add AI generation integration diagnostics`) и отправлен в
   `origin/admin-editorial`; после функционального push ветки были
   синхронизированы.
+- Unspoken scanner и preview зафиксированы отдельным коммитом
+  `9643e3e` (`Complete Unspoken scanner and preview`) и отправлены в
+  `origin/admin-editorial`; deploy не выполнялся.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
@@ -380,6 +383,8 @@ scanner dry-run, controlled OpenAI generation test, deployment dry-run
 
 ## Этап 9: Unspoken scanner and preview
 
+- Функциональная реализация зафиксирована коммитом `9643e3e` и
+  отправлена в `origin/admin-editorial`.
 - Добавлены отдельные Unspoken scanner и read-only preview поверх
   общего scanner/preview engine и shared candidate-save backend.
 - Profile выключен по умолчанию. Source pool содержит только MIT
