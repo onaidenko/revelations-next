@@ -6,9 +6,12 @@
 
 - Репозиторий: `/Users/admin/Projects/revelations-next`.
 - Ветка: `admin-editorial`.
-- Локальный `HEAD`: `38722d1` (`Document AI generation contract`);
-  `origin/admin-editorial` остаётся на `3959936`, push нового коммита
-  не выполнялся.
+- Контракт AI generation зафиксирован коммитом `38722d1`
+  (`Document AI generation contract`), этап 1 — отдельным коммитом
+  `440f2b3` (`Stabilize AI generation controls`).
+- Оба коммита отправлены в `origin/admin-editorial`; после
+  функционального push локальная ветка и origin были синхронизированы
+  на `440f2b3`.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
@@ -26,8 +29,7 @@
 - Проверка не изменила PHP-файлы: SHA-256 до и после совпадают.
 - Все шесть PHP-файлов и diagnostic script входят только в отдельный
   функциональный коммит.
-- Предыдущий этап был отправлен; текущие context/code изменения не
-  отправлялись. Deploy не выполнялся.
+- Deploy не выполнялся.
 
 ## Актуальный контракт AI generation
 
@@ -74,8 +76,8 @@
 
 ## Этап 1: AI generation controls
 
-- Незакоммиченная реализация добавляет единый server-side resolver для
-  API key, model и enabled flag.
+- Реализация зафиксирована отдельным коммитом `440f2b3` и добавляет
+  единый server-side resolver для API key, model и enabled flag.
 - Readiness, connection test и generation используют общий resolver и
   request guard; environment fallback теперь одинаков для потребителей.
 - `REVELATIONS_AI_GENERATION_ENABLED` больше не включается кодом:
@@ -123,7 +125,8 @@
 
 ## Следующий безопасный шаг
 
-Проверить итоговый diff этапа 1 и после отдельного разрешения создать
-локальный функциональный commit. Push, OpenAI API test, WordPress/DB
-runtime, Unspoken scanner, scanner dry-run и deploy не выполнять без
-отдельного согласования.
+Этап 1 завершён и отправлен в origin. Этап 2
+`Repair source-draft and generation UI` ещё не начат и должен быть
+отдельной задачей. OpenAI API test, WordPress/DB runtime, Unspoken
+scanner, scanner dry-run и deploy не выполнять без отдельного
+согласования.
