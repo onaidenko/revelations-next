@@ -11,13 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-if ( ! defined( 'REVELATIONS_AI_GENERATION_ENABLED' ) ) {
-    define(
-        'REVELATIONS_AI_GENERATION_ENABLED',
-        true
-    );
-}
-
 /**
  * User-specific generation result.
  */
@@ -453,6 +446,32 @@ function revelations_editorial_ai_blocks_to_gutenberg(
 function revelations_editorial_generate_draft_with_ai(
     int $draft_id
 ) {
+    if (
+        ! function_exists(
+            'revelations_editorial_ai_request_config'
+        )
+    ) {
+        return new WP_Error(
+            'ai_config_unavailable',
+            'AI configuration resolver is unavailable.'
+        );
+    }
+
+    $config =
+        revelations_editorial_ai_request_config();
+
+    if ( is_wp_error( $config ) ) {
+        return $config;
+    }
+
+    $api_key = trim(
+        (string) $config['api_key']
+    );
+
+    $model = trim(
+        (string) $config['model']
+    );
+
     $draft = get_post( $draft_id );
 
     if (
@@ -518,54 +537,6 @@ function revelations_editorial_generate_draft_with_ai(
         return new WP_Error(
             'source_not_ready',
             'Fetch the complete source text before AI generation.'
-        );
-    }
-
-    if (
-        ! function_exists(
-            'revelations_editorial_ai_readiness'
-        )
-    ) {
-        return new WP_Error(
-            'readiness_unavailable',
-            'AI readiness configuration is unavailable.'
-        );
-    }
-
-    $readiness =
-        revelations_editorial_ai_readiness();
-
-    if (
-        empty( $readiness['key_configured'] ) ||
-        empty( $readiness['model_configured'] )
-    ) {
-        return new WP_Error(
-            'ai_not_configured',
-            'The server API key or model is not configured.'
-        );
-    }
-
-    $api_key = defined(
-        'REVELATIONS_OPENAI_API_KEY'
-    )
-        ? trim(
-            (string) REVELATIONS_OPENAI_API_KEY
-        )
-        : '';
-
-    $model = trim(
-        (string) (
-            $readiness['model'] ?? ''
-        )
-    );
-
-    if (
-        '' === $api_key ||
-        '' === $model
-    ) {
-        return new WP_Error(
-            'private_config_empty',
-            'The private AI configuration is empty.'
         );
     }
 

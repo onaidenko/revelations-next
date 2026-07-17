@@ -6,8 +6,9 @@
 
 - Репозиторий: `/Users/admin/Projects/revelations-next`.
 - Ветка: `admin-editorial`.
-- До текущего незакоммиченного обновления контекста `HEAD` и
-  `origin/admin-editorial` синхронизированы на `3959936`.
+- Локальный `HEAD`: `38722d1` (`Document AI generation contract`);
+  `origin/admin-editorial` остаётся на `3959936`, push нового коммита
+  не выполнялся.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
@@ -25,7 +26,8 @@
 - Проверка не изменила PHP-файлы: SHA-256 до и после совпадают.
 - Все шесть PHP-файлов и diagnostic script входят только в отдельный
   функциональный коммит.
-- Push выполнен; deploy не выполнялся.
+- Предыдущий этап был отправлен; текущие context/code изменения не
+  отправлялись. Deploy не выполнялся.
 
 ## Актуальный контракт AI generation
 
@@ -66,10 +68,39 @@
   отсутствуют, что также соответствует контракту.
 - Unspoken поддержан storage, ручным candidate intake и общей AI
   schema, но scanner backend и preview отсутствуют.
-- Дополнительно требуют стабилизации: единый resolver AI config,
-  server-side enforcement generation switch, повреждённый
-  source-draft progress script, дублирующиеся submit handlers и
-  размещение общего candidate-save handler в Tech preview.
+- Повреждённый source-draft progress script, дублирующиеся submit
+  handlers и размещение общего candidate-save handler в Tech preview
+  остаются для следующих отдельных этапов.
+
+## Этап 1: AI generation controls
+
+- Незакоммиченная реализация добавляет единый server-side resolver для
+  API key, model и enabled flag.
+- Readiness, connection test и generation используют общий resolver и
+  request guard; environment fallback теперь одинаков для потребителей.
+- `REVELATIONS_AI_GENERATION_ENABLED` больше не включается кодом:
+  если WordPress-константа определена, только boolean `true` включает
+  requests, а boolean `false` имеет приоритет над environment.
+- Если константа не определена, environment values `1` и `true`
+  (case-insensitive, после trim) включают requests; `0`, `false`,
+  пустое и любое другое значение оставляют `enabled=false`.
+- Если ни константа, ни environment не заданы, default — false.
+- Общий backend guard блокирует внешний AI request при отсутствующем
+  key/model или disabled flag. Generation function вызывает guard до
+  чтения WordPress draft и до обращения к OpenAI.
+- Readiness не возвращает API key. В logs не добавлены key, prompt или
+  полный source text.
+- Editorial schema, prompts, section logic и generation UI не
+  изменялись.
+- На `revelations-prod` в уникальной `/tmp`-директории PHP 8.5.4 с
+  `mbstring=yes` выполнил `php -l` для пяти изменённых/новых PHP-файлов:
+  все exit code 0.
+- После уточнения enabled semantics изолированный
+  `test-editorial-ai-config.php` выполнил 26 synthetic cases:
+  26 passed, 0 failed, exit code 0.
+- Diagnostic не загружал WordPress, не обращался к API, сети или базе и
+  не создавал WordPress-записей.
+- Локальная и удалённая временные директории удалены.
 
 ## Подтверждённая интеграция AI gate
 
@@ -92,8 +123,7 @@
 
 ## Следующий безопасный шаг
 
-Подготовить небольшими этапами техническую стабилизацию AI generation
-и новый structured generation contract без image pipeline. Сначала
-использовать изолированные static/synthetic checks без OpenAI API и
-записи в WordPress. Unspoken scanner, scanner dry-run и deploy не
-выполнять без отдельного согласования.
+Проверить итоговый diff этапа 1 и после отдельного разрешения создать
+локальный функциональный commit. Push, OpenAI API test, WordPress/DB
+runtime, Unspoken scanner, scanner dry-run и deploy не выполнять без
+отдельного согласования.

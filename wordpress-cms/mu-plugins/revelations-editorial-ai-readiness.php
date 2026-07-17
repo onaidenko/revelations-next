@@ -17,85 +17,46 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return array<string, mixed>
  */
 function revelations_editorial_ai_readiness(): array {
-    $api_key    = '';
-    $key_source = 'none';
-
     if (
-        defined( 'REVELATIONS_OPENAI_API_KEY' ) &&
-        is_string( REVELATIONS_OPENAI_API_KEY )
+        ! function_exists(
+            'revelations_editorial_ai_config'
+        )
     ) {
-        $api_key = trim(
-            REVELATIONS_OPENAI_API_KEY
+        return array(
+            'provider'         => 'openai',
+            'status'           => 'not_configured',
+            'label'            => 'Not configured',
+            'message'          =>
+                'AI configuration resolver is unavailable.',
+            'key_configured'   => false,
+            'key_source'       => 'none',
+            'model_configured' => false,
+            'model'            => '',
+            'requests_enabled' => false,
         );
-
-        $key_source = 'wordpress_constant';
-    } else {
-        $environment_key = getenv(
-            'OPENAI_API_KEY'
-        );
-
-        if ( is_string( $environment_key ) ) {
-            $api_key = trim(
-                $environment_key
-            );
-
-            if ( '' !== $api_key ) {
-                $key_source = 'environment';
-            }
-        }
     }
 
-    $model = '';
+    $config =
+        revelations_editorial_ai_config();
 
-    if (
-        defined( 'REVELATIONS_OPENAI_MODEL' ) &&
-        is_string( REVELATIONS_OPENAI_MODEL )
-    ) {
-        $model = sanitize_text_field(
-            REVELATIONS_OPENAI_MODEL
-        );
-    } else {
-        $environment_model = getenv(
-            'OPENAI_MODEL'
-        );
-
-        if ( is_string( $environment_model ) ) {
-            $model = sanitize_text_field(
-                $environment_model
-            );
-        }
-    }
-
-    $key_configured =
-        strlen( $api_key ) >= 20;
-
-    $model_configured =
-        '' !== trim( $model );
-
-    $requests_enabled =
-        defined(
-            'REVELATIONS_AI_GENERATION_ENABLED'
-        ) &&
-        true === REVELATIONS_AI_GENERATION_ENABLED;
-
-    if ( ! $key_configured ) {
+    if ( empty( $config['key_configured'] ) ) {
         $status  = 'not_configured';
         $label   = 'Not configured';
         $message =
             'Server API key is not configured. '
             . 'No external AI requests can be made.';
-    } elseif ( ! $model_configured ) {
+    } elseif ( empty( $config['model_configured'] ) ) {
         $status  = 'model_required';
         $label   = 'Model required';
         $message =
             'A server API key was detected, but no model '
             . 'has been selected. Requests remain disabled.';
-    } elseif ( ! $requests_enabled ) {
-        $status  = 'ready_for_test';
-        $label   = 'Ready for test';
+    } elseif ( empty( $config['requests_enabled'] ) ) {
+        $status  = 'disabled';
+        $label   = 'Disabled';
         $message =
             'Server key and model were detected. '
-            . 'AI generation is not enabled.';
+            . 'External AI requests are disabled.';
     } else {
         $status  = 'ready';
         $label   = 'Ready';
@@ -103,20 +64,25 @@ function revelations_editorial_ai_readiness(): array {
             'Server key, model and AI generation are ready.';
     }
 
-    /*
-     * This flag deliberately remains false.
-     * No request handler exists at this stage.
-     */
     return array(
         'provider'         => 'openai',
         'status'           => $status,
         'label'            => $label,
         'message'          => $message,
-        'key_configured'   => $key_configured,
-        'key_source'       => $key_source,
-        'model_configured' => $model_configured,
-        'model'            => $model,
-        'requests_enabled' => $requests_enabled,
+        'key_configured'   =>
+            ! empty( $config['key_configured'] ),
+        'key_source'       =>
+            (string) (
+                $config['key_source'] ?? 'none'
+            ),
+        'model_configured' =>
+            ! empty( $config['model_configured'] ),
+        'model'            =>
+            (string) (
+                $config['model'] ?? ''
+            ),
+        'requests_enabled' =>
+            ! empty( $config['requests_enabled'] ),
     );
 }
 

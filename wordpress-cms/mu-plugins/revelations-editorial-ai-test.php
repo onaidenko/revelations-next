@@ -105,7 +105,7 @@ add_action(
 
         if (
             ! function_exists(
-                'revelations_editorial_ai_readiness'
+                'revelations_editorial_ai_request_config'
             )
         ) {
             set_transient(
@@ -113,7 +113,7 @@ add_action(
                 array(
                     'ok'      => false,
                     'message' =>
-                        'AI readiness module is unavailable.',
+                        'AI configuration resolver is unavailable.',
                 ),
                 10 * MINUTE_IN_SECONDS
             );
@@ -121,19 +121,18 @@ add_action(
             $redirect( 'error' );
         }
 
-        $readiness =
-            revelations_editorial_ai_readiness();
+        $config =
+            revelations_editorial_ai_request_config();
 
-        if (
-            empty( $readiness['key_configured'] ) ||
-            empty( $readiness['model_configured'] )
-        ) {
+        if ( is_wp_error( $config ) ) {
             set_transient(
                 revelations_editorial_ai_test_key(),
                 array(
                     'ok'      => false,
                     'message' =>
-                        'API key or model is not configured.',
+                        $config->get_error_message(),
+                    'code'    =>
+                        $config->get_error_code(),
                 ),
                 10 * MINUTE_IN_SECONDS
             );
@@ -141,31 +140,13 @@ add_action(
             $redirect( 'error' );
         }
 
-        $api_key = defined(
-            'REVELATIONS_OPENAI_API_KEY'
-        )
-            ? trim(
-                (string) REVELATIONS_OPENAI_API_KEY
-            )
-            : '';
-
-        $model = trim(
-            (string) $readiness['model']
+        $api_key = trim(
+            (string) $config['api_key']
         );
 
-        if ( '' === $api_key || '' === $model ) {
-            set_transient(
-                revelations_editorial_ai_test_key(),
-                array(
-                    'ok'      => false,
-                    'message' =>
-                        'Private AI configuration is empty.',
-                ),
-                10 * MINUTE_IN_SECONDS
-            );
-
-            $redirect( 'error' );
-        }
+        $model = trim(
+            (string) $config['model']
+        );
 
         $request_body = array(
             'model' => $model,
