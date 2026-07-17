@@ -38,6 +38,10 @@
   (`Expose AI editorial review metadata`) и отправлен в
   `origin/admin-editorial`; после функционального push ветки были
   синхронизированы.
+- Этап 8 зафиксирован отдельным коммитом `be9002c`
+  (`Add AI generation integration diagnostics`) и отправлен в
+  `origin/admin-editorial`; после функционального push ветки были
+  синхронизированы.
 - Функциональная реализация global AI relevance gate зафиксирована
   отдельным коммитом `9b67687` (`Refine global AI relevance gate`).
 - `git diff --check` проходит.
