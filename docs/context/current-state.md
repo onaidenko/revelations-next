@@ -80,8 +80,8 @@
   при отсутствии выбранного автора.
 - Image pipeline исключён из текущего этапа; featured image остаётся
   ручным.
-- Unspoken не отменён: его scanner и preview будут отдельным будущим
-  этапом после согласования плана.
+- Unspoken поддержан отдельными scanner и preview; его profile
+  выключен по умолчанию.
 
 ## Расхождения текущего кода с контрактом
 
@@ -100,8 +100,8 @@
 - Присвоение `Julia U.` только пустому author уже соответствует
   контракту. Image generation, batch generation и auto-publish
   отсутствуют, что также соответствует контракту.
-- Unspoken поддержан storage, ручным candidate intake и общей AI
-  schema, но scanner backend и preview отсутствуют.
+- Unspoken поддержан storage, ручным candidate intake, общей AI
+  schema, scanner backend и preview.
 
 ## Этап 1: AI generation controls
 
@@ -367,15 +367,54 @@
 
 ## Непроверенные риски
 
-- `ai_gate_filtered` возвращается engine, но не отображается текущими preview UI и не сохраняется в run log.
+- `ai_gate_filtered` отображается в Unspoken preview, но не сохраняется
+  в run log; preview других разделов это поле не показывает.
 - Keyword-based gate остаётся эвристикой и может потребовать настройки после проверки на реальных RSS summaries.
 - Полный scanner dry-run и взаимодействие с реальными feeds не проверялись.
 
 ## Следующий безопасный шаг
 
-После синхронизации этапа 8 выполнить read-only анализ полноценного
-Unspoken scanner и preview: source profile, RSS sources, scoring,
-AI gate, reputational safeguards, preview, shared candidate-save и
-diagnostics. Код Unspoken не менять до согласования плана. OpenAI API,
-WordPress/DB runtime, scanner dry-run и deploy не выполнять без
-отдельного согласования.
+После отдельного разрешения последовательно выполнить controlled
+scanner dry-run, controlled OpenAI generation test, deployment dry-run
+и только затем production deploy с live CMS smoke test.
+
+## Этап 9: Unspoken scanner and preview
+
+- Добавлены отдельные Unspoken scanner и read-only preview поверх
+  общего scanner/preview engine и shared candidate-save backend.
+- Profile выключен по умолчанию. Source pool содержит только MIT
+  Technology Review, WIRED, BBC Technology и The Verge.
+- 2026-07-17 отдельные безопасные GET-проверки вернули HTTP 200 и
+  валидный RSS/Atom для всех четырёх feeds. В каждом feed обнаружены
+  title, link, date и usable summary; production scanner dry-run не
+  запускался.
+- Scorer поддерживает ровно пять утверждённых tracks без catch-all.
+  Global AI gate выполняется раньше scorer; далее обязательны
+  harm/failure, confirmed-event, evidence/attribution, freshness и
+  significance gates. Total threshold `5.2` выше максимального
+  действующего threshold остальных разделов `4.8`.
+- Opinion, speculation, promotional material, anonymous unsupported
+  allegations, headline-only sensationalism, stale stories и
+  нецентральные AI-сюжеты hard-reject. Общий engine по-прежнему
+  удаляет duplicates до AI gate и section scoring.
+- Негативный центральный сюжет остаётся Unspoken; optional
+  `secondary_section` не меняет сохраняемый раздел. Attributed
+  single-source allegations получают preview-only safeguards и
+  evidence type без утверждения об истинности.
+- Unspoken зарегистрирован в preview engine, Editorial Desk и
+  server-side shared candidate-save registry. Используются общий
+  action, section-specific nonce, user transient, duplicate checks и
+  прежний candidate/meta storage contract.
+- Component diagnostics: scorer 27/27, Unspoken preview 11/11,
+  shared candidate-save 31/31 и editorial action UI 26/26; все
+  завершились с exit code 0.
+- На `revelations-prod` в уникальной `/tmp`-директории PHP 8.5.4 с
+  `mbstring=yes` выполнил lint всех 48 переданных production и
+  diagnostic PHP-файлов: 48 passed, 0 failed. Bash syntax и Node
+  syntax checks также прошли.
+- Полный regression runner сохранил успешные результаты всех прежних
+  component/integration suites, новых Unspoken suites 27/27 и 11/11,
+  а также upstream AI gate 23/23; итоговый exit code 0.
+- Feed snapshots и локальные/удалённые scorer test-директории удалены.
+  Candidates, WordPress/DB writes, OpenAI API, production scanner
+  dry-run, live WordPress и deploy не использовались.

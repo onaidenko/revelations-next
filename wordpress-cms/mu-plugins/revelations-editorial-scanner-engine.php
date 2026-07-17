@@ -958,6 +958,51 @@ function revelations_editorial_scanner_format_story(
             (string) (
                 $story['scoring_reason'] ?? ''
             ),
+
+        'secondary_section' =>
+            sanitize_key(
+                (string) (
+                    $story['secondary_section'] ?? ''
+                )
+            ),
+
+        'single_source_allegation' =>
+            true === (
+                $story[
+                    'single_source_allegation'
+                ] ?? false
+            ),
+
+        'requires_reputational_review' =>
+            true === (
+                $story[
+                    'requires_reputational_review'
+                ] ?? false
+            ),
+
+        'evidence_type' =>
+            sanitize_key(
+                (string) (
+                    $story['evidence_type'] ?? ''
+                )
+            ),
+
+        'evidence_signals' =>
+            array_values(
+                array_filter(
+                    array_map(
+                        'sanitize_text_field',
+                        is_array(
+                            $story['evidence_signals']
+                            ?? null
+                        )
+                            ? $story[
+                                'evidence_signals'
+                            ]
+                            : array()
+                    )
+                )
+            ),
     );
 }
 

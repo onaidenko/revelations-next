@@ -68,6 +68,16 @@ run_suite \
     "$PHP_BIN" \
     "$SCRIPT_DIR/test-editorial-ai-generation-integration.php"
 
+run_suite \
+    'Unspoken component: strict scanner policy' \
+    "$PHP_BIN" \
+    "$SCRIPT_DIR/test-editorial-unspoken-scanner.php"
+
+run_suite \
+    'Unspoken component: preview and candidate-save integration' \
+    "$NODE_BIN" \
+    "$SCRIPT_DIR/test-editorial-unspoken-preview.mjs"
+
 printf '\n=== Separate upstream regression ===\n'
 printf 'The global AI gate is upstream and is not part of the generation integration count.\n'
 

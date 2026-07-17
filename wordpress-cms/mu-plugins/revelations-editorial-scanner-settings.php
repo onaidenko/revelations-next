@@ -887,8 +887,173 @@ function revelations_editorial_default_scanner_settings(): array {
             ),
         ),
 
-        'unspoken' =>
-            revelations_editorial_empty_scanner_profile(),
+        'unspoken' => array(
+            'enabled' =>
+                false,
+
+            'preview_limit' =>
+                5,
+
+            'active_sources' => array(
+                array(
+                    'name' =>
+                        'MIT Technology Review',
+
+                    'url' =>
+                        'https://www.technologyreview.com/feed/',
+                ),
+
+                array(
+                    'name' =>
+                        'WIRED',
+
+                    'url' =>
+                        'https://www.wired.com/feed/rss',
+                ),
+
+                array(
+                    'name' =>
+                        'BBC Technology',
+
+                    'url' =>
+                        'https://feeds.bbci.co.uk/news/technology/rss.xml',
+                ),
+
+                array(
+                    'name' =>
+                        'The Verge',
+
+                    'url' =>
+                        'https://www.theverge.com/rss/index.xml',
+                ),
+            ),
+
+            'disabled_sources' =>
+                array(),
+
+            'keywords' => array(
+                'relevance' => array(
+                    'harm',
+                    'harmed',
+                    'failure',
+                    'failed',
+                    'bias',
+                    'discrimination',
+                    'privacy breach',
+                    'data breach',
+                    'misinformation',
+                    'unsafe',
+                    'injury',
+                    'conflict of interest',
+                    'hidden cost',
+                    'job losses',
+                    'layoffs',
+                    'surveillance',
+                    'exploitation',
+                    'lawsuit',
+                    'regulator',
+                    'court',
+                    'investigation',
+                    'withdraws',
+                    'shutdown',
+                    'outage',
+                    'unprofitable',
+                    'losses',
+                ),
+
+                'implementation' => array(
+                    'filed',
+                    'ruled',
+                    'ordered',
+                    'published',
+                    'released',
+                    'withdrew',
+                    'withdraws',
+                    'shut down',
+                    'suspended',
+                    'recalled',
+                    'reported',
+                    'found',
+                    'disclosed',
+                    'confirmed',
+                    'responded',
+                    'announced',
+                    'launched an investigation',
+                    'laid off',
+                    'cut jobs',
+                    'banned',
+                    'settled',
+                ),
+
+                'speculative' => array(
+                    'could',
+                    'may',
+                    'might',
+                    'predicts',
+                    'prediction',
+                    'future risk',
+                    'hypothetical',
+                    'what if',
+                    'potentially',
+                    'experts fear',
+                ),
+
+                'impact' => array(
+                    'workers',
+                    'users',
+                    'children',
+                    'patients',
+                    'public',
+                    'jobs',
+                    'privacy',
+                    'safety',
+                    'rights',
+                    'million',
+                    'billion',
+                    'nationwide',
+                    'global',
+                    'systemic',
+                ),
+
+                'product_launch' =>
+                    array(),
+
+                'avoid' => array(
+                    'opinion:',
+                    'commentary:',
+                    'sponsored',
+                    'advertisement',
+                    'partner content',
+                    'press release',
+                    'anonymous sources',
+                    'unnamed sources',
+                    'rumor',
+                    'rumour',
+                ),
+            ),
+
+            'thresholds' => array(
+                'unspoken_signal' => array(
+                    'total_score' =>
+                        5.2,
+
+                    'freshness_score' =>
+                        4.0,
+
+                    'relevance_score' =>
+                        4.0,
+
+                    'implementation_score' =>
+                        4.0,
+
+                    'impact_score' =>
+                        2.5,
+
+                    'strong_relevance_score' =>
+                        6.0,
+                ),
+            ),
+        ),
     );
 }
 
@@ -1185,6 +1350,7 @@ function revelations_editorial_scanner_section_is_editable(
             'people',
             'places',
             'tech',
+            'unspoken',
         ),
         true
     );

@@ -370,6 +370,14 @@ $ai_readiness = function_exists(
             ) {
                 revelations_editorial_render_tech_preview();
             }
+
+            if (
+                function_exists(
+                    'revelations_editorial_render_unspoken_preview'
+                )
+            ) {
+                revelations_editorial_render_unspoken_preview();
+            }
             ?>
         <?php elseif ( 'drafts' === $active_view ) : ?>
             <?php

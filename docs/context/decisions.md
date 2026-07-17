@@ -80,13 +80,23 @@
 
 ## Unspoken backend
 
-- **Решение:** Unspoken является полноценным разделом, но его scanner
-  backend и preview ещё не завершены.
-- **Решение:** отдельный будущий этап должен покрыть scanner profile,
-  источники, scoring, preview, строгие thresholds, репутационные
-  safeguards и обязательный human review.
-- **Ограничение:** не реализовывать Unspoken scanner без отдельного
-  согласованного плана.
+- **Решение:** Unspoken scanner использует только MIT Technology
+  Review, WIRED, BBC Technology и The Verge и остаётся выключенным по
+  умолчанию.
+- **Решение:** допустимы только tracks `documented_harm`,
+  `failure_or_reversal`, `economic_model_failure`,
+  `legal_or_governance_conflict` и `labor_or_social_cost`; catch-all
+  отсутствует.
+- **Решение:** кроме global AI gate обязательны конкретный негативный
+  сигнал, подтверждённое событие, attribution/evidence, свежесть и
+  значимость. Высокий score не заменяет ни один обязательный gate.
+- **Решение:** если негативный аспект является центральной новостью,
+  основным разделом остаётся Unspoken. `secondary_section` является
+  только рекомендацией; фактический раздел меняет оператор.
+- **Решение:** single-source allegation допускается только в preview
+  при явном evidence signal и маркируется `Single-source allegation`
+  и `Requires reputational review`. Scanner не подтверждает истинность
+  обвинения и не заменяет Human Review.
 
 ## Безопасность автоматизации
 

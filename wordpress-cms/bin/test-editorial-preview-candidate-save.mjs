@@ -107,7 +107,8 @@ const sections = [
     'news',
     'people',
     'tech',
-    'places'
+    'places',
+    'unspoken'
 ];
 
 for (const section of sections) {
@@ -213,7 +214,7 @@ check(
             (section) =>
                 previewEngine.includes(`'${section}' => array(`)
         ),
-    'handler retains server-side four-section registry'
+    'handler retains server-side five-section registry'
 );
 
 const hookPosition = backend.indexOf(
