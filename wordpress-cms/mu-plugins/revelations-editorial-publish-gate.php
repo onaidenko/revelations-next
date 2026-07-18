@@ -80,6 +80,25 @@ function revelations_editorial_publish_gate_rest_text(
 }
 
 /**
+ * WordPress performs an internal wp_insert_post() after REST validation.
+ * Keep the REST gate authoritative and do not run the classic fallback twice.
+ */
+function revelations_editorial_publish_gate_is_rest_request(): bool {
+    if ( function_exists( 'wp_is_serving_rest_request' ) ) {
+        return wp_is_serving_rest_request();
+    }
+
+    return defined( 'REST_REQUEST' ) && REST_REQUEST;
+}
+
+/** Normalize classic/WP-CLI request text before saved-state comparison. */
+function revelations_editorial_publish_gate_unslashed_text( mixed $value ): string {
+    return revelations_editorial_publish_gate_normalize_text(
+        (string) wp_unslash( $value )
+    );
+}
+
+/**
  * Check whether proposed editorial fields differ from the reviewed draft.
  *
  * Only fields present in $proposal are checked.
@@ -575,6 +594,10 @@ add_filter(
         array $data,
         array $postarr
     ): array {
+        if ( revelations_editorial_publish_gate_is_rest_request() ) {
+            return $data;
+        }
+
         $requested_status = (string) (
             $data['post_status'] ?? ''
         );
@@ -606,17 +629,17 @@ add_filter(
 
         $proposal = array(
             'title' =>
-                (string) (
+                revelations_editorial_publish_gate_unslashed_text(
                     $data['post_title'] ?? ''
                 ),
 
             'content' =>
-                (string) (
+                revelations_editorial_publish_gate_unslashed_text(
                     $data['post_content'] ?? ''
                 ),
 
             'excerpt' =>
-                (string) (
+                revelations_editorial_publish_gate_unslashed_text(
                     $data['post_excerpt'] ?? ''
                 ),
         );

@@ -201,6 +201,11 @@
 - `revelations-editorial-publish-gate.php` validates incoming REST and
   classic publish proposals, blocks invalid category state, and compares
   incoming editorial fields to the saved reviewed version.
+- `rest_pre_insert_post` is the sole publication gate for Gutenberg REST
+  requests. The `wp_insert_post_data` fallback detects REST through
+  `wp_is_serving_rest_request()` with `REST_REQUEST` fallback and skips
+  the internal second save; classic/WP-CLI input is `wp_unslash`-normalized
+  before comparison.
 - `revelations-cms-editor.js` removes the standard category checklist for
   Articles and provides one Gutenberg select backed by the editor data API.
 

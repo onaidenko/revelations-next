@@ -157,3 +157,7 @@
   per-field SHA-256 fingerprints. Featured Image, post status, revision
   и modified timestamps исключены; image остаётся отдельным readiness
   requirement.
+- **Решение:** Gutenberg REST publication проверяется только в
+  `rest_pre_insert_post`. Его internal save не проходит повторно classic
+  fallback; non-REST classic/WP-CLI path сохраняет guard и нормализует
+  slashed request text через `wp_unslash`.

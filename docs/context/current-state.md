@@ -902,3 +902,23 @@ Base44 и DNS/domain cutover.
   is absent and a single Editorial category select shows News; do not save
   or publish during that visual verification. Deploy rollback path is the
   backup above; no rollback was required.
+
+## REST editorial publication double-gate hotfix
+
+- Production diagnosis of draft 214 proved that review status, common hash
+  and all nine per-field fingerprints were current. The exact saved proposal
+  passed; only the internally slashed Gutenberg content produced a false
+  `content` difference in the classic fallback.
+- `revelations-editorial-publish-gate.php` now treats
+  `rest_pre_insert_post` as the single REST publication authority. Its
+  `wp_insert_post_data` fallback detects REST through
+  `wp_is_serving_rest_request()` with a `REST_REQUEST` compatibility
+  fallback, including autosaves, and returns without a second comparison.
+  Classic editor and WP-CLI retain their guard; title/content/excerpt are
+  normalized through `wp_unslash` before comparison.
+- Focused isolated REST diagnostic: 6/6 passed, including unchanged REST
+  acceptance, fallback bypass, slashed-content reproduction/normalization,
+  classic/WP-CLI protection and a real content-change block. Node publication
+  contract diagnostics: 18/18; PHP lint and full isolated AI regression suite
+  passed. No production CMS, DB, OpenAI, scanner, frontend or staging change
+  occurred. The hotfix is committed/pushed but requires a separate CMS deploy.
