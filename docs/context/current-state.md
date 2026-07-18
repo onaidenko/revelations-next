@@ -866,3 +866,39 @@ Base44 и DNS/domain cutover.
   lint passed for four modified PHP files; full isolated AI regression suite
   passed. No deploy, CMS/DB write, OpenAI, scanner, frontend or staging
   action occurred.
+
+## CMS editorial publishing production rollout 2026-07-18
+
+- Deployed functional commit `0d0dc3173a04857457a4b18872a23f63d2a4bed1`
+  to `/var/www/revelations-cms/public/wp-content/mu-plugins`: category
+  contract, editorial review, publish gate, CMS core and editor JS only.
+  Live SHA-256 values matched Git source for all five files; owner/mode is
+  `root:www-data` and `0640`.
+- Rollback backup:
+  `/root/revelations-editorial-publishing-before-20260718-223341`.
+  It preserves four former files, their checksum/permission manifest,
+  baseline health and a procedure that removes the newly added category
+  contract on rollback.
+- PHP 8.5.4 lint passed for every changed PHP file and all 41 production
+  MU-plugin PHP files. CMS health/articles/sections returned HTTP 200;
+  PHP-FPM and Nginx stayed active, with no new fatal/parse/warning log
+  matches. CMS login remains Basic-Auth protected (HTTP 401 unauthenticated).
+- Runtime registry resolves six existing allowed terms: News, People, Tech,
+  Places, Unspoken and Podcast. Uncategorized is not allowed (and has no
+  current production term). Synthetic empty/multiple/not-allowed inputs
+  returned their expected category codes; deployed JS syntax and the
+  publication contract diagnostic passed 12/12.
+- Read-only draft 214 remained `draft`, category `news`, no tags, Featured
+  Image 285 and current editorial review. Its modified timestamp and
+  stored/current common hash stayed unchanged; legacy absence of per-field
+  hashes remains valid. Editor data exposes six editorial categories,
+  saved category/tags/displayed author and current review state.
+- Repeated category audit remains: published 0/50/0 for zero/one/multiple;
+  Uncategorized and draft/pending multiple-category records remain 0.
+  Persistent AI generation remains disabled. No post, metadata, category,
+  DB, OpenAI, scanner, frontend or staging change occurred; no publication
+  or review action was executed.
+- Manual next check: open draft 214, confirm the standard category checklist
+  is absent and a single Editorial category select shows News; do not save
+  or publish during that visual verification. Deploy rollback path is the
+  backup above; no rollback was required.
