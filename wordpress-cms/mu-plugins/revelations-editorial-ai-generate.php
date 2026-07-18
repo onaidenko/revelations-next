@@ -195,6 +195,7 @@ function revelations_editorial_ai_article_schema(): array {
 
             'fact_check_flags' => array(
                 'type' => 'array',
+                'maxItems' => 0,
 
                 'items' => array(
                     'type' => 'object',
@@ -233,7 +234,7 @@ function revelations_editorial_ai_article_schema(): array {
                 ),
 
                 'description' =>
-                    'Exactly one flag per generated paragraph, quote or list-item unit containing sensitive claims. A flag does not mean the claims are false.',
+                    'Reserved server-owned field. The model must return an empty array; the server derives sensitive fact-check flags from block evidence.',
             ),
 
             'direct_quotes' => array(
@@ -311,6 +312,19 @@ function revelations_editorial_ai_article_schema(): array {
                             'description' =>
                                 'List items. Empty for non-list blocks.',
                         ),
+
+                        'evidence_ids' => array(
+                            'type' => 'array',
+
+                            'items' => array(
+                                'type' => 'string',
+                            ),
+
+                            'minItems' => 1,
+
+                            'description' =>
+                                'One or more supplied source paragraph IDs supporting this complete block.',
+                        ),
                     ),
 
                     'required' => array(
@@ -318,6 +332,7 @@ function revelations_editorial_ai_article_schema(): array {
                         'text',
                         'heading_level',
                         'items',
+                        'evidence_ids',
                     ),
 
                     'additionalProperties' => false,
@@ -840,23 +855,15 @@ function revelations_editorial_generate_draft_with_ai(
         "Treat section mismatch fields as editorial advice only; the server " .
         "keeps the assigned source section and WordPress category unchanged.\n\n" .
 
-        "Flag sensitive claims that require manual verification. " .
-        "A fact-check flag does not mean that a claim is false. " .
-        "The sensitive categories are number, date, amount, investment, " .
-        "valuation, quote, superlative, benchmark, medical, legal, " .
-        "regulatory and reputational claims. " .
-        "Fact-check flags use a body-unit contract. " .
-        "Return exactly one fact-check flag per generated body unit " .
-        "that contains one or more sensitive claims. Eligible units are " .
-        "paragraph blocks, quote blocks and individual list items. " .
-        "Do not create fact-check flags for titles, excerpts, SEO fields or headings. " .
-        "If one eligible unit contains several sensitive claims, combine all " .
-        "supporting source paragraph IDs into that one flag. Put the stable " .
-        "body-unit ID in claim_unit_id and set requires_manual_verification " .
-        "to true. Valid body-unit IDs are blocks.N.text for paragraph or " .
-        "quote blocks and blocks.N.items.M for individual list items, using " .
-        "zero-based indexes. Never invent a generated-unit ID or source " .
-        "paragraph ID, and never return source evidence text. " .
+        "Set fact_check_flags to an empty array. " .
+        "The server derives sensitive fact-check flags from block evidence. " .
+        "For every article body block, return one or more supplied source " .
+        "paragraph IDs in the block's evidence_ids field. " .
+        "Every paragraph, heading, quote and list block must have at least one evidence ID. " .
+        "For a list block, include all source paragraph IDs needed to support its items. " .
+        "Evidence IDs must support the complete meaning of the block, including " .
+        "its numbers, dates, amounts and attributed statements. " .
+        "Never invent a source paragraph ID and never return source evidence text. " .
         "Return only direct quotes actually used in the article. For each " .
         "quote, copy quote_text exactly from one supplied paragraph and " .
         "return that paragraph's evidence_id. The server reconstructs " .

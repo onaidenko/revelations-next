@@ -919,6 +919,86 @@ revelations_validation_test(
     'repeated raw body-unit references merge their evidence IDs'
 );
 
+
+$block_evidence_article =
+    $referenced_article;
+
+$block_evidence_article[
+    'fact_check_flags'
+] = array();
+
+$block_evidence_article[
+    'blocks'
+][0]['evidence_ids'] = array(
+    'p001',
+    'p002',
+);
+
+$block_evidence_resolution =
+    revelations_editorial_ai_resolve_evidence_references(
+        $block_evidence_article,
+        $evidence_units
+    );
+
+$block_evidence_flags =
+    $block_evidence_resolution[
+        'article'
+    ]['fact_check_flags'] ?? array();
+
+revelations_validation_test(
+    true === (
+        $block_evidence_resolution[
+            'valid'
+        ] ?? false
+    ) &&
+    1 === count(
+        $block_evidence_flags
+    ) &&
+    'blocks.0.text' === (
+        $block_evidence_flags[0][
+            'claim_unit_id'
+        ] ?? ''
+    ) &&
+    array(
+        'p001',
+        'p002',
+    ) === (
+        $block_evidence_flags[0][
+            'evidence_ids'
+        ] ?? array()
+    ),
+    'server derives sensitive flags from generated block evidence'
+);
+
+$unknown_block_evidence_article =
+    $block_evidence_article;
+
+$unknown_block_evidence_article[
+    'blocks'
+][0]['evidence_ids'] = array(
+    'p999',
+);
+
+$unknown_block_evidence_result =
+    revelations_editorial_ai_resolve_evidence_references(
+        $unknown_block_evidence_article,
+        $evidence_units
+    );
+
+revelations_validation_test(
+    false === (
+        $unknown_block_evidence_result[
+            'valid'
+        ] ?? true
+    ) &&
+    'invalid_fact_check_evidence' === (
+        $unknown_block_evidence_result[
+            'code'
+        ] ?? ''
+    ),
+    'unknown generated block evidence is rejected'
+);
+
 $unknown_reference_article = $referenced_article;
 $unknown_reference_article['fact_check_flags'][0][
     'evidence_ids'

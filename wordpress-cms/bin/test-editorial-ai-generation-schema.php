@@ -125,23 +125,19 @@ $required =
 revelations_schema_test(
     str_contains(
         $generation_source,
-        'Fact-check flags use a body-unit contract.'
+        'Set fact_check_flags to an empty array.'
     ) &&
     str_contains(
         $generation_source,
-        'Return exactly one fact-check flag per generated body unit '
+        'The server derives sensitive fact-check flags from block evidence.'
     ) &&
     str_contains(
         $generation_source,
-        'Do not create fact-check flags for titles, excerpts, SEO fields or headings.'
+        "block's evidence_ids field"
     ) &&
     str_contains(
         $generation_source,
-        'supporting source paragraph IDs into that one flag.'
-    ) &&
-    str_contains(
-        $generation_source,
-        'claim_unit_id'
+        'Every paragraph, heading, quote and list block must have at least one evidence ID.'
     ) &&
     str_contains(
         $generation_source,
@@ -272,6 +268,9 @@ $fact_flag_properties =
     $fact_flag_item['properties'] ?? array();
 
 revelations_schema_test(
+    0 === (
+        $fact_flags['maxItems'] ?? null
+    ) &&
     array(
         'claim_unit_id',
         'requires_manual_verification',
@@ -293,7 +292,7 @@ revelations_schema_test(
             'additionalProperties'
         ] ?? true
     ),
-    'model fact-check flags use the evidence reference contract'
+    'model fact-check flags are reserved as an empty server-owned field'
 );
 
 revelations_schema_test(
@@ -377,6 +376,40 @@ revelations_schema_test(
         $direct_quote_properties
     ),
     'model cannot control verbatim_match or source_fragment'
+);
+
+
+$blocks_schema =
+    $properties['blocks'] ?? array();
+
+$block_item =
+    $blocks_schema['items'] ?? array();
+
+$block_properties =
+    $block_item['properties'] ?? array();
+
+revelations_schema_test(
+    in_array(
+        'evidence_ids',
+        $block_item['required'] ?? array(),
+        true
+    ) &&
+    'array' === (
+        $block_properties[
+            'evidence_ids'
+        ]['type'] ?? ''
+    ) &&
+    1 === (
+        $block_properties[
+            'evidence_ids'
+        ]['minItems'] ?? 0
+    ) &&
+    'string' === (
+        $block_properties[
+            'evidence_ids'
+        ]['items']['type'] ?? ''
+    ),
+    'every generated block requires source evidence IDs'
 );
 
 $generation_function =

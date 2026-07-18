@@ -394,6 +394,180 @@ function revelations_editorial_ai_resolve_evidence_references(
         }
     }
 
+    $blocks = is_array(
+        $article['blocks'] ?? null
+    )
+        ? $article['blocks']
+        : array();
+
+    $blocks_with_evidence = 0;
+
+    foreach ( $blocks as $block ) {
+        if (
+            is_array( $block ) &&
+            array_key_exists(
+                'evidence_ids',
+                $block
+            )
+        ) {
+            $blocks_with_evidence++;
+        }
+    }
+
+    if (
+        $blocks_with_evidence > 0 &&
+        $blocks_with_evidence !==
+            count( $blocks )
+    ) {
+        return revelations_editorial_ai_validation_failure(
+            'invalid_fact_check_evidence',
+            'Every generated article block must include evidence IDs.'
+        );
+    }
+
+    $uses_block_evidence =
+        array() !== $blocks &&
+        count( $blocks ) ===
+            $blocks_with_evidence;
+
+    if ( $uses_block_evidence ) {
+        /*
+         * The model maps every complete body block to source paragraph
+         * IDs. The server, not the model, determines which generated
+         * units contain sensitive claims.
+         */
+        $raw_flags = array();
+
+        foreach (
+            $blocks
+            as $block_index => $block
+        ) {
+            $block_evidence_ids = is_array(
+                $block['evidence_ids'] ?? null
+            )
+                ? array_values(
+                    $block['evidence_ids']
+                )
+                : array();
+
+            if (
+                array() === $block_evidence_ids ||
+                count( $block_evidence_ids ) !==
+                    count(
+                        array_unique(
+                            $block_evidence_ids,
+                            SORT_STRING
+                        )
+                    )
+            ) {
+                return revelations_editorial_ai_validation_failure(
+                    'invalid_fact_check_evidence',
+                    'A generated article block has invalid evidence IDs.'
+                );
+            }
+
+            foreach (
+                $block_evidence_ids
+                as $block_evidence_id
+            ) {
+                if (
+                    ! is_string(
+                        $block_evidence_id
+                    ) ||
+                    1 !== preg_match(
+                        '/^p[0-9]{3,}$/',
+                        $block_evidence_id
+                    ) ||
+                    ! isset(
+                        $evidence_map[
+                            $block_evidence_id
+                        ]
+                    )
+                ) {
+                    return revelations_editorial_ai_validation_failure(
+                        'invalid_fact_check_evidence',
+                        'A generated article block references unknown source evidence.'
+                    );
+                }
+            }
+        }
+
+        foreach (
+            revelations_editorial_ai_required_fact_check_units(
+                $article
+            ) as $generated_unit
+        ) {
+            $claim_types =
+                revelations_editorial_ai_detect_claim_types(
+                    (string) (
+                        $generated_unit['text']
+                        ?? ''
+                    ),
+                    (string) (
+                        $generated_unit['kind']
+                        ?? ''
+                    )
+                );
+
+            if ( array() === $claim_types ) {
+                continue;
+            }
+
+            $unit_id = (string) (
+                $generated_unit['id'] ?? ''
+            );
+
+            if (
+                1 !== preg_match(
+                    '/^blocks\.([0-9]+)\.(?:text|items\.[0-9]+)$/',
+                    $unit_id,
+                    $unit_matches
+                )
+            ) {
+                return revelations_editorial_ai_validation_failure(
+                    'invalid_fact_check_flag',
+                    'A generated claim unit ID is invalid.'
+                );
+            }
+
+            $block_index =
+                (int) $unit_matches[1];
+
+            if (
+                ! isset(
+                    $blocks[
+                        $block_index
+                    ]
+                ) ||
+                ! is_array(
+                    $blocks[
+                        $block_index
+                    ]
+                )
+            ) {
+                return revelations_editorial_ai_validation_failure(
+                    'invalid_fact_check_flag',
+                    'A generated claim unit references an unavailable block.'
+                );
+            }
+
+            $raw_flags[] = array(
+                'claim_unit_id' =>
+                    $unit_id,
+
+                'requires_manual_verification' =>
+                    true,
+
+                'evidence_ids' =>
+                    array_values(
+                        $blocks[
+                            $block_index
+                        ]['evidence_ids']
+                    ),
+            );
+        }
+    }
+
     $resolved_flags = array();
 
     foreach ( $raw_flags as $flag ) {
