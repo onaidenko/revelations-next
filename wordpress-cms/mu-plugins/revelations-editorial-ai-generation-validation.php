@@ -367,6 +367,11 @@ function revelations_editorial_ai_resolve_evidence_references(
         );
     }
 
+    $claim_unit_map =
+        revelations_editorial_ai_generated_claim_unit_map(
+            $article
+        );
+
     $raw_flags = is_array(
         $article['fact_check_flags'] ?? null
     )
@@ -399,9 +404,53 @@ function revelations_editorial_ai_resolve_evidence_references(
             );
         }
 
-        $claim = (string) (
-            $flag['claim'] ?? ''
+        $claim_unit_id = (string) (
+            $flag['claim_unit_id'] ?? ''
         );
+
+        $claim = '';
+
+        if (
+            '' !== $claim_unit_id &&
+            isset(
+                $claim_unit_map[
+                    $claim_unit_id
+                ]
+            )
+        ) {
+            $claim =
+                $claim_unit_map[
+                    $claim_unit_id
+                ]['text'];
+        } else {
+            /*
+             * Backward compatibility for old tests and stored
+             * pre-reference payloads containing literal claim text.
+             */
+            $legacy_claim = (string) (
+                $flag['claim'] ?? ''
+            );
+
+            foreach (
+                $claim_unit_map
+                as $legacy_unit_id =>
+                    $generated_unit
+            ) {
+                if (
+                    '' !== trim( $legacy_claim ) &&
+                    str_contains(
+                        $generated_unit['text'],
+                        $legacy_claim
+                    )
+                ) {
+                    $claim_unit_id =
+                        $legacy_unit_id;
+                    $claim =
+                        $legacy_claim;
+                    break;
+                }
+            }
+        }
 
         $evidence_ids = is_array(
             $flag['evidence_ids'] ?? null
@@ -413,6 +462,7 @@ function revelations_editorial_ai_resolve_evidence_references(
 
         if (
             '' === trim( $claim ) ||
+            '' === $claim_unit_id ||
             true !== (
                 $flag[
                     'requires_manual_verification'
@@ -486,6 +536,8 @@ function revelations_editorial_ai_resolve_evidence_references(
         foreach ( $claim_types as $claim_type ) {
             $resolved_flags[] = array(
                 'claim' => $claim,
+                'claim_unit_id' =>
+                    $claim_unit_id,
                 'claim_type' => $claim_type,
                 'source_evidence' =>
                     implode( "\n\n", $evidence ),
@@ -559,7 +611,7 @@ function revelations_editorial_ai_resolve_evidence_references(
  * Return all generated visible-text and metadata claim units.
  *
  * @param array<string, mixed> $article Parsed article.
- * @return array<int, array{kind: string, text: string}>
+ * @return array<int, array{id: string, kind: string, text: string}>
  */
 function revelations_editorial_ai_generated_claim_units(
     array $article
@@ -580,6 +632,7 @@ function revelations_editorial_ai_generated_claim_units(
 
         if ( '' !== trim( $text ) ) {
             $units[] = array(
+                'id' => $field,
                 'kind' => $field,
                 'text' => $text,
             );
@@ -592,12 +645,16 @@ function revelations_editorial_ai_generated_claim_units(
     if ( is_array( $alternative_titles ) ) {
         foreach (
             $alternative_titles
-            as $alternative_title
+            as $alternative_index =>
+                $alternative_title
         ) {
             $text = (string) $alternative_title;
 
             if ( '' !== trim( $text ) ) {
                 $units[] = array(
+                    'id' =>
+                        'alternative_titles.' .
+                        $alternative_index,
                     'kind' =>
                         'alternative_title',
                     'text' =>
@@ -613,7 +670,10 @@ function revelations_editorial_ai_generated_claim_units(
         return $units;
     }
 
-    foreach ( $blocks as $block ) {
+    foreach (
+        $blocks
+        as $block_index => $block
+    ) {
         if ( ! is_array( $block ) ) {
             continue;
         }
@@ -639,6 +699,10 @@ function revelations_editorial_ai_generated_claim_units(
 
             if ( '' !== trim( $text ) ) {
                 $units[] = array(
+                    'id' =>
+                        'blocks.' .
+                        $block_index .
+                        '.text',
                     'kind' => $type,
                     'text' => $text,
                 );
@@ -661,11 +725,19 @@ function revelations_editorial_ai_generated_claim_units(
             continue;
         }
 
-        foreach ( $block['items'] as $item ) {
+        foreach (
+            $block['items']
+            as $item_index => $item
+        ) {
             $text = (string) $item;
 
             if ( '' !== trim( $text ) ) {
                 $units[] = array(
+                    'id' =>
+                        'blocks.' .
+                        $block_index .
+                        '.items.' .
+                        $item_index,
                     'kind' => 'list_item',
                     'text' => $text,
                 );
@@ -674,6 +746,42 @@ function revelations_editorial_ai_generated_claim_units(
     }
 
     return $units;
+}
+
+/**
+ * Index generated article units by stable IDs.
+ *
+ * @param array<string, mixed> $article Parsed article.
+ * @return array<string, array{kind: string, text: string}>
+ */
+function revelations_editorial_ai_generated_claim_unit_map(
+    array $article
+): array {
+    $map = array();
+
+    foreach (
+        revelations_editorial_ai_generated_claim_units(
+            $article
+        ) as $unit
+    ) {
+        if (
+            ! is_array( $unit ) ||
+            ! is_string( $unit['id'] ?? null ) ||
+            ! is_string( $unit['kind'] ?? null ) ||
+            ! is_string( $unit['text'] ?? null ) ||
+            '' === $unit['id'] ||
+            '' === trim( $unit['text'] )
+        ) {
+            continue;
+        }
+
+        $map[ $unit['id'] ] = array(
+            'kind' => $unit['kind'],
+            'text' => $unit['text'],
+        );
+    }
+
+    return $map;
 }
 
 /**
@@ -1056,6 +1164,10 @@ function revelations_editorial_ai_validate_generated_article(
             $flag['claim'] ?? ''
         );
 
+        $claim_unit_id = (string) (
+            $flag['claim_unit_id'] ?? ''
+        );
+
         $claim_type = (string) (
             $flag['claim_type'] ?? ''
         );
@@ -1102,6 +1214,20 @@ function revelations_editorial_ai_validate_generated_article(
         $claim_is_used = false;
 
         foreach ( $claim_units as $unit ) {
+            if ( '' !== $claim_unit_id ) {
+                if (
+                    $unit['id'] ===
+                        $claim_unit_id &&
+                    $unit['text'] ===
+                        $claim
+                ) {
+                    $claim_is_used = true;
+                    break;
+                }
+
+                continue;
+            }
+
             if (
                 str_contains(
                     $unit['text'],
@@ -1187,6 +1313,8 @@ function revelations_editorial_ai_validate_generated_article(
         $validated_flags[] = array(
             'claim' =>
                 $claim,
+            'claim_unit_id' =>
+                $claim_unit_id,
             'claim_type' =>
                 $claim_type,
             'source_evidence' =>
@@ -1229,9 +1357,29 @@ function revelations_editorial_ai_validate_generated_article(
                         $detected_type,
                         $flag['claim_type']
                     ) &&
-                    str_contains(
-                        $unit['text'],
-                        $flag['claim']
+                    (
+                        (
+                            '' !== (
+                                $flag[
+                                    'claim_unit_id'
+                                ] ?? ''
+                            ) &&
+                            $unit['id'] ===
+                                $flag[
+                                    'claim_unit_id'
+                                ]
+                        ) ||
+                        (
+                            '' === (
+                                $flag[
+                                    'claim_unit_id'
+                                ] ?? ''
+                            ) &&
+                            str_contains(
+                                $unit['text'],
+                                $flag['claim']
+                            )
+                        )
                     )
                 ) {
                     $matching_flag_exists = true;

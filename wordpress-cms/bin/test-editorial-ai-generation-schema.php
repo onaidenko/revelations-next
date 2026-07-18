@@ -125,15 +125,27 @@ $required =
 revelations_schema_test(
     str_contains(
         $generation_source,
-        'supplied paragraph IDs in evidence_ids'
+        'stable generated-unit ID'
     ) &&
     str_contains(
         $generation_source,
-        'Never create an ID'
+        'claim_unit_id'
     ) &&
     str_contains(
         $generation_source,
-        'server reconstructs'
+        'source paragraph IDs in evidence_ids'
+    ) &&
+    str_contains(
+        $generation_source,
+        'Never invent a generated-unit ID or source '
+    ) &&
+    str_contains(
+        $generation_source,
+        'paragraph ID, and never return source evidence text'
+    ) &&
+    str_contains(
+        $generation_source,
+        'The server reconstructs'
     ),
     'prompt requires server-owned evidence references'
 );
@@ -261,11 +273,20 @@ $fact_flag_properties =
 
 revelations_schema_test(
     array(
-        'claim',
+        'claim_unit_id',
         'requires_manual_verification',
         'evidence_ids',
     ) === (
         $fact_flag_item['required'] ?? null
+    ) &&
+    'string' === (
+        $fact_flag_properties[
+            'claim_unit_id'
+        ]['type'] ?? ''
+    ) &&
+    ! array_key_exists(
+        'claim',
+        $fact_flag_properties
     ) &&
     false === (
         $fact_flag_item[

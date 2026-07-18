@@ -200,10 +200,10 @@ function revelations_editorial_ai_article_schema(): array {
                     'type' => 'object',
 
                     'properties' => array(
-                        'claim' => array(
+                        'claim_unit_id' => array(
                             'type' => 'string',
                             'description' =>
-                                'Exact claim text used in the generated article.',
+                                'Stable generated-unit ID containing the sensitive claim.',
                         ),
 
                         'requires_manual_verification' => array(
@@ -224,7 +224,7 @@ function revelations_editorial_ai_article_schema(): array {
                     ),
 
                     'required' => array(
-                        'claim',
+                        'claim_unit_id',
                         'requires_manual_verification',
                         'evidence_ids',
                     ),
@@ -845,10 +845,14 @@ function revelations_editorial_generate_draft_with_ai(
         "Include a flag for every sensitive number, date, amount, " .
         "investment, valuation, quote, superlative, benchmark, medical, " .
         "legal, regulatory or reputational claim used in the output. " .
-        "For every fact-check flag, copy the exact claim as it appears in " .
-        "your generated article, set requires_manual_verification to true, " .
-        "and reference one or more supplied paragraph IDs in evidence_ids. " .
-        "Never create an ID and never return source evidence text. " .
+        "For every fact-check flag, return the stable generated-unit ID " .
+        "in claim_unit_id, set requires_manual_verification to true, and " .
+        "reference one or more supplied source paragraph IDs in evidence_ids. " .
+        "Valid generated-unit IDs are recommended_title, " .
+        "alternative_titles.0, alternative_titles.1, excerpt, seo_title, " .
+        "seo_description, blocks.N.text, and blocks.N.items.M, using " .
+        "zero-based indexes. Never invent a generated-unit ID or source " .
+        "paragraph ID, and never return source evidence text. " .
         "Return only direct quotes actually used in the article. For each " .
         "quote, copy quote_text exactly from one supplied paragraph and " .
         "return that paragraph's evidence_id. The server reconstructs " .
@@ -1149,6 +1153,14 @@ function revelations_editorial_generate_draft_with_ai(
             }
 
             $fact_check_flags[] = array(
+                'claim_unit_id' =>
+                    sanitize_text_field(
+                        (string) (
+                            $flag['claim_unit_id']
+                            ?? ''
+                        )
+                    ),
+
                 'claim' =>
                     (string) (
                         $flag['claim'] ?? ''

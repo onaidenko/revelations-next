@@ -806,8 +806,8 @@ $referenced_article =
 
 $referenced_article['fact_check_flags'] = array(
     array(
-        'claim' =>
-            'Morocco’s AI orchestration uses 25 systems.',
+        'claim_unit_id' =>
+            'blocks.0.text',
         'requires_manual_verification' => true,
         'evidence_ids' => array(
             'p001',
@@ -831,6 +831,10 @@ revelations_validation_test(
     array( 'p001', 'p002' ) === (
         $resolved_flags[0]['evidence_ids']
         ?? array()
+    ) &&
+    'blocks.0.text' === (
+        $resolved_flags[0]['claim_unit_id']
+        ?? ''
     ) &&
     (
         "First & stable paragraph.\n\n" .
