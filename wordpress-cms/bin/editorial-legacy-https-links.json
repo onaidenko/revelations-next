@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "replacements": [
+    {
+      "post_id": 73,
+      "slug": "the-brands-and-speakers-you-dont-want-to-miss-at-global-tech-weekend-tbilisi-2026",
+      "old_url": "http://gtwt.ge",
+      "new_url": "https://gtwt.ge"
+    },
+    {
+      "post_id": 73,
+      "slug": "the-brands-and-speakers-you-dont-want-to-miss-at-global-tech-weekend-tbilisi-2026",
+      "old_url": "http://TKT.GE",
+      "new_url": "https://TKT.GE"
+    },
+    {
+      "post_id": 73,
+      "slug": "the-brands-and-speakers-you-dont-want-to-miss-at-global-tech-weekend-tbilisi-2026",
+      "old_url": "http://Biletebi.ge",
+      "new_url": "https://Biletebi.ge"
+    },
+    {
+      "post_id": 74,
+      "slug": "global-tech-weekend-tbilisi-returns-on-june-19-21",
+      "old_url": "http://biletebi.ge/",
+      "new_url": "https://biletebi.ge/"
+    },
+    {
+      "post_id": 74,
+      "slug": "global-tech-weekend-tbilisi-returns-on-june-19-21",
+      "old_url": "http://instagram.com/global.tech.weekend.tbilisi?utm_source=ig_web_button_share_sheet&amp;igsh=ZDNlZDc0MzIxNw==",
+      "new_url": "https://instagram.com/global.tech.weekend.tbilisi?utm_source=ig_web_button_share_sheet&amp;igsh=ZDNlZDc0MzIxNw=="
+    }
+  ]
+}

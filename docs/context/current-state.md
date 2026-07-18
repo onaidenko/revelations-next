@@ -699,3 +699,77 @@ Base44 и DNS/domain cutover.
   Backup Certbot-generated vhost перед canonical cleanup:
   `/root/revelations-production-vhost-before-canonical-20260718-090447`.
 - AI generation и ESLint в рамках cutover не изменялись.
+
+## Final post-launch cleanup 2026-07-18
+
+- Реализация разделена на три согласованных commits:
+  `Decode WordPress text entities`,
+  `Use deterministic AI evidence references` и
+  `Fix frontend lint and legacy links`. После итогового context amend
+  ветка отправлена в `origin/admin-editorial`; functional source
+  staging и production соответствует тому же tree и lockfile.
+- Общий frontend mapper декодирует WordPress plain-text entities ровно
+  один раз через `he`; HTML article content decoder не затрагивает.
+  `npm test`, ESLint 9 flat config и production build прошли без
+  ошибок или warnings.
+- Новая AI schema использует server-generated evidence units
+  `p001`, `p002`, … . Модель возвращает evidence IDs, сервер
+  восстанавливает source evidence, а direct quotes проверяются только
+  точным substring без fuzzy/semantic matching. Legacy metadata
+  остаётся читаемой.
+- Полная изолированная PHP suite прошла: config 26/26, action UI
+  26/26, candidate-save 31/31, profiles 35/35, schema 49/49,
+  validation 47/47, review 23/23, integration 79/79, Unspoken scanner
+  27/27, Unspoken preview 11/11, scanner runtime 49/49 и global AI
+  gate 23/23. Production lint всех 40 MU plugins прошёл.
+- CMS backup:
+  `/root/revelations-mu-plugins-before-postlaunch-20260718-095013.tar.gz`.
+  Три изменённых AI MU plugins развернуты; live checksums совпали с
+  Git source, CMS health/articles API отвечают HTTP 200, generation
+  постоянно остаётся disabled.
+- Legacy-link backup:
+  `/root/revelations-legacy-links-before-migration-20260718-0950-c78081c`.
+  В posts 73 и 74 точечно заменены пять проверенных HTTP navigation
+  links на HTTPS; повторный migration dry-run возвращает ноль
+  изменений. Title, excerpt, slug, status, author и categories
+  сохранены.
+- Staging и production собраны из одного functional commit и lockfile
+  SHA-256
+  `83e118c53343e7d5d4fcbd3a211d6b4724b8e93e58290a261c1ad4c5d0b5c5c5`
+  с разными site URL. Build IDs: staging
+  `bXG0hOp0zPZs7O8HZaerF`, production
+  `hDsyU_OEvSh7Hwb-GM3Xn`.
+- Full public audit: 62 production pages и sitemap URLs, 57 images и
+  11 Next assets прошли без failures; canonical, robots и metadata не
+  содержат staging URL, noindex, active HTTP resources или 5xx.
+  Staging остаётся HTTP 200 и сохраняет `X-Robots-Tag: noindex`.
+- `Morocco&#8217;s Tower Reaches for Tomorrow` теперь отображается как
+  `Morocco’s Tower Reaches for Tomorrow` на странице, в cards, title,
+  Open Graph и JSON-LD; literal entity на staging/production не
+  обнаружена.
+- Final frontend rollback:
+  `/root/revelations-frontend-final-before-20260718-1025-2175d3f`.
+  Предшествующий полный frontend backup также сохранён в
+  `/root/revelations-frontend-postlaunch-20260718-1010-501796b`.
+
+## Final deterministic-evidence AI smoke
+
+- После production deploy выполнен ровно один разрешённый OpenAI
+  request с process-local enabled flag. Постоянный resolver до и после
+  теста возвращает `requests_enabled=false`.
+- Request использовал disposable Tech candidate 227 и draft 228,
+  deterministic evidence contract и production model. OpenAI
+  transport был вызван ровно один раз; retry не выполнялся.
+- Ответ отклонён до draft update и private version backup с
+  `invalid_fact_check_evidence: Fact-check evidence could not be
+  verified.` Новые evidence IDs дошли до server resolution; по
+  фактической ветке validation оставшийся blocker — model claim не
+  найден как точный substring в сгенерированных editorial fields.
+  Validation не изменялась и fuzzy matching не добавлялся.
+- Candidate и draft возвращены в Trash. Baseline title/content/excerpt
+  и актуальный Human Review не изменились; active private versions —
+  0, generation lock отсутствует, публикаций и AI run artifacts нет.
+- Оставшаяся проблема: production AI generation всё ещё блокируется
+  строгой проверкой точного использования fact-check claim. Следующее
+  изменение контракта или validation требует отдельного продуктового
+  решения и нового явно разрешённого API test.

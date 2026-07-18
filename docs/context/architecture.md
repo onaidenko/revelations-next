@@ -87,6 +87,13 @@
   advisory section invariants, различие excerpt/SEO description,
   структуру и source evidence fact-check flags, high-confidence
   sensitive claims и Unspoken safeguards.
+- Source snapshot разбивается на стабильные нормализованные paragraph
+  units `p001`, `p002`, … . Новая model schema возвращает для
+  fact-check flags только claim, обязательность ручной проверки и
+  `evidence_ids`; точный `source_evidence` восстанавливает сервер.
+  Direct quote ссылается на одну evidence unit и принимается только
+  как точный substring этой unit. Неизвестные и пустые references
+  отклоняются; fuzzy или semantic matching отсутствует.
 - Quote validation использует только CRLF/LF normalization и HTML
   entity decoding; case, punctuation и wording не меняются. Quote
   blocks и `direct_quotes` сопоставляются как multiset, а успешно
@@ -130,6 +137,16 @@
   component diagnostics этапов 1–7 и integration diagnostic. Global
   scanner AI gate запускается тем же runner как отдельная upstream
   regression-проверка и не смешивается с generation integration.
+
+## Public frontend content mapping
+
+- `lib/cms-articles.js` преобразует WordPress REST payload в единый
+  article model для страниц, cards, metadata и JSON-LD.
+- Общий `lib/decode-wordpress-text.js` декодирует HTML entities ровно
+  один раз через `he` только в plain-text полях WordPress: title,
+  excerpt, SEO, author/section/tag names и image alt.
+- Gutenberg/HTML article content не передаётся в plain-text decoder и
+  продолжает проходить отдельный existing render/sanitization path.
 
 ## Порядок обработки истории
 

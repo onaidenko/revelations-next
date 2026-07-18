@@ -20,7 +20,13 @@ const NAV_LINKS = [
 export default function SiteHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuState, setMenuState] = useState({
+    pathname,
+    open: false,
+  });
+  const menuOpen =
+    menuState.pathname === pathname &&
+    menuState.open;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -30,10 +36,6 @@ export default function SiteHeader() {
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   return (
     <header
@@ -115,7 +117,12 @@ export default function SiteHeader() {
 
             <button
               type="button"
-              onClick={() => setMenuOpen((current) => !current)}
+              onClick={() =>
+                setMenuState({
+                  pathname,
+                  open: !menuOpen,
+                })
+              }
               aria-label="Toggle menu"
               aria-expanded={menuOpen}
               className="flex h-10 w-10 items-center justify-center"

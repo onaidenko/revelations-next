@@ -1,29 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
+
+const THEME_KEY = 'revelations-theme';
+const THEME_EVENT = 'revelations-theme-change';
+
+function subscribeToTheme(callback) {
+  window.addEventListener('storage', callback);
+  window.addEventListener(THEME_EVENT, callback);
+
+  return () => {
+    window.removeEventListener('storage', callback);
+    window.removeEventListener(THEME_EVENT, callback);
+  };
+}
+
+function getThemeSnapshot() {
+  return localStorage.getItem(THEME_KEY) || 'dark';
+}
+
+function getServerThemeSnapshot() {
+  return 'dark';
+}
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState('dark');
+  const theme = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    getServerThemeSnapshot
+  );
 
   useEffect(() => {
-    const saved =
-      localStorage.getItem('revelations-theme') || 'dark';
-
-    setTheme(saved);
-    document.documentElement.className = saved;
-  }, []);
+    document.documentElement.className = theme;
+  }, [theme]);
 
   function toggle() {
     const next =
       theme === 'dark' ? 'light' : 'dark';
 
-    setTheme(next);
-    localStorage.setItem(
-      'revelations-theme',
-      next
-    );
-
-    document.documentElement.className = next;
+    localStorage.setItem(THEME_KEY, next);
+    window.dispatchEvent(new Event(THEME_EVENT));
   }
 
   const label =
