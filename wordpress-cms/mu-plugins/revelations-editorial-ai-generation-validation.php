@@ -497,15 +497,55 @@ function revelations_editorial_ai_resolve_evidence_references(
                 $article
             ) as $generated_unit
         ) {
+            $generated_unit_text =
+                (string) (
+                    $generated_unit['text']
+                    ?? ''
+                );
+
+            $generated_unit_kind =
+                (string) (
+                    $generated_unit['kind']
+                    ?? ''
+                );
+
             $claim_types =
                 revelations_editorial_ai_detect_claim_types(
-                    (string) (
-                        $generated_unit['text']
-                        ?? ''
-                    ),
-                    (string) (
-                        $generated_unit['kind']
-                        ?? ''
+                    $generated_unit_text,
+                    $generated_unit_kind
+                );
+
+            $normalized_generated_unit_text =
+                revelations_editorial_ai_normalize_quote(
+                    $generated_unit_text
+                );
+
+            foreach (
+                $quote_texts
+                as $quote_text
+            ) {
+                $normalized_quote_text =
+                    revelations_editorial_ai_normalize_quote(
+                        (string) $quote_text
+                    );
+
+                if (
+                    '' !== trim(
+                        $normalized_quote_text
+                    ) &&
+                    str_contains(
+                        $normalized_generated_unit_text,
+                        $normalized_quote_text
+                    )
+                ) {
+                    $claim_types[] = 'quote';
+                }
+            }
+
+            $claim_types =
+                array_values(
+                    array_unique(
+                        $claim_types
                     )
                 );
 
@@ -680,18 +720,40 @@ function revelations_editorial_ai_resolve_evidence_references(
                 $evidence_map[ $evidence_id ];
         }
 
+        $claim_kind =
+            (string) (
+                $claim_unit_map[
+                    $claim_unit_id
+                ]['kind'] ?? 'paragraph'
+            );
+
         $claim_types =
             revelations_editorial_ai_detect_claim_types(
                 $claim,
-                'paragraph'
+                $claim_kind
+            );
+
+        $normalized_claim =
+            revelations_editorial_ai_normalize_quote(
+                $claim
             );
 
         foreach ( $quote_texts as $quote_text ) {
+            $normalized_quote_text =
+                revelations_editorial_ai_normalize_quote(
+                    (string) $quote_text
+                );
+
             if (
-                '' !== $claim &&
+                '' !== trim(
+                    $normalized_claim
+                ) &&
+                '' !== trim(
+                    $normalized_quote_text
+                ) &&
                 str_contains(
-                    $quote_text,
-                    $claim
+                    $normalized_claim,
+                    $normalized_quote_text
                 )
             ) {
                 $claim_types[] = 'quote';
@@ -1740,17 +1802,53 @@ function revelations_editorial_ai_validate_generated_article(
         );
 
     $quote_blocks = array();
+    $quote_usage_units = array();
 
-    foreach ( $blocks as $block ) {
+    foreach (
+        $required_fact_check_units
+        as $quote_usage_unit
+    ) {
+        $quote_usage_text =
+            revelations_editorial_ai_normalize_quote(
+                (string) (
+                    $quote_usage_unit['text']
+                    ?? ''
+                )
+            );
+
         if (
-            is_array( $block ) &&
-            'quote' === (
-                $block['type'] ?? ''
+            '' === trim(
+                $quote_usage_text
             )
         ) {
-            $quote_blocks[] = (string) (
-                $block['text'] ?? ''
-            );
+            continue;
+        }
+
+        $quote_usage_units[] = array(
+            'id' =>
+                (string) (
+                    $quote_usage_unit['id']
+                    ?? ''
+                ),
+
+            'kind' =>
+                (string) (
+                    $quote_usage_unit['kind']
+                    ?? ''
+                ),
+
+            'text' =>
+                $quote_usage_text,
+        );
+
+        if (
+            'quote' === (
+                $quote_usage_unit['kind']
+                ?? ''
+            )
+        ) {
+            $quote_blocks[] =
+                $quote_usage_text;
         }
     }
 
@@ -1828,14 +1926,74 @@ function revelations_editorial_ai_validate_generated_article(
             );
         }
 
+        $quote_usage_unit_ids =
+            array();
+
+        foreach (
+            $quote_usage_units
+            as $quote_usage_unit
+        ) {
+            if (
+                str_contains(
+                    $quote_usage_unit['text'],
+                    $quote_text
+                )
+            ) {
+                $quote_usage_unit_ids[] =
+                    $quote_usage_unit['id'];
+            }
+        }
+
+        if (
+            array() ===
+            $quote_usage_unit_ids
+        ) {
+            return revelations_editorial_ai_validation_failure(
+                'direct_quote_usage_mismatch',
+                'Direct quote evidence is not used verbatim in the article body.'
+            );
+        }
+
         $quote_flag_exists = false;
 
         foreach ( $validated_flags as $flag ) {
+            $flag_unit_id =
+                (string) (
+                    $flag['claim_unit_id']
+                    ?? ''
+                );
+
+            $normalized_flag_claim =
+                revelations_editorial_ai_normalize_quote(
+                    (string) (
+                        $flag['claim']
+                        ?? ''
+                    )
+                );
+
             if (
-                'quote' === $flag['claim_type'] &&
-                str_contains(
-                    $quote_text,
-                    $flag['claim']
+                'quote' === (
+                    $flag['claim_type']
+                    ?? ''
+                ) &&
+                (
+                    (
+                        '' !==
+                        $flag_unit_id &&
+                        in_array(
+                            $flag_unit_id,
+                            $quote_usage_unit_ids,
+                            true
+                        )
+                    ) ||
+                    (
+                        '' ===
+                        $flag_unit_id &&
+                        str_contains(
+                            $normalized_flag_claim,
+                            $quote_text
+                        )
+                    )
                 )
             ) {
                 $quote_flag_exists = true;
@@ -1871,21 +2029,44 @@ function revelations_editorial_ai_validate_generated_article(
         }
     }
 
-    $quote_block_counts = array_count_values(
-        $quote_blocks
-    );
+    $unmatched_quote_blocks =
+        array_values(
+            $quote_blocks
+        );
 
-    $quote_item_counts = array_count_values(
+    foreach (
         $quote_item_texts
-    );
+        as $quote_item_text
+    ) {
+        foreach (
+            $unmatched_quote_blocks
+            as $quote_block_index =>
+                $quote_block_text
+        ) {
+            if (
+                str_contains(
+                    $quote_block_text,
+                    $quote_item_text
+                )
+            ) {
+                unset(
+                    $unmatched_quote_blocks[
+                        $quote_block_index
+                    ]
+                );
 
-    ksort( $quote_block_counts );
-    ksort( $quote_item_counts );
+                break;
+            }
+        }
+    }
 
-    if ( $quote_block_counts !== $quote_item_counts ) {
+    if (
+        array() !==
+        $unmatched_quote_blocks
+    ) {
         return revelations_editorial_ai_validation_failure(
             'direct_quote_usage_mismatch',
-            'Direct quote evidence does not match article quote blocks.'
+            'A quote block is missing matching direct quote evidence.'
         );
     }
 

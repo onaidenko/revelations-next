@@ -722,13 +722,17 @@ $unused_item_article['blocks'] = array(
             'paragraph',
         'text' =>
             'The article paraphrases the source before noting that ' .
-            $quote_text,
+            'the team changed its workflow.',
         'heading_level' =>
             0,
         'items' =>
             array(),
     ),
 );
+
+$unused_item_article[
+    'fact_check_flags'
+] = array();
 
 $result = revelations_validation_run(
     $unused_item_article,
@@ -1016,6 +1020,106 @@ revelations_validation_test(
         $unknown_result['code'] ?? ''
     ),
     'unknown evidence IDs are rejected without fuzzy fallback'
+);
+
+
+$inline_quote_text =
+    'Keep people in control.';
+
+$inline_quote_article =
+    revelations_validation_article();
+
+$inline_quote_article[
+    'blocks'
+] = array(
+    array(
+        'type' =>
+            'paragraph',
+
+        'text' =>
+            'The instruction was explicit: ' .
+            $inline_quote_text,
+
+        'heading_level' =>
+            0,
+
+        'items' =>
+            array(),
+
+        'evidence_ids' =>
+            array( 'p003' ),
+    ),
+);
+
+$inline_quote_article[
+    'fact_check_flags'
+] = array();
+
+$inline_quote_article[
+    'direct_quotes'
+] = array(
+    array(
+        'quote_text' =>
+            $inline_quote_text,
+
+        'evidence_id' =>
+            'p003',
+    ),
+);
+
+$inline_quote_resolution =
+    revelations_editorial_ai_resolve_evidence_references(
+        $inline_quote_article,
+        $evidence_units
+    );
+
+$inline_quote_validation =
+    ! empty(
+        $inline_quote_resolution[
+            'valid'
+        ]
+    )
+        ? revelations_validation_run(
+            $inline_quote_resolution[
+                'article'
+            ],
+            'people',
+            $evidence_snapshot
+        )
+        : $inline_quote_resolution;
+
+$inline_quote_flags =
+    $inline_quote_validation[
+        'article'
+    ]['fact_check_flags'] ?? array();
+
+revelations_validation_test(
+    true === (
+        $inline_quote_validation[
+            'valid'
+        ] ?? false
+    ) &&
+    1 === count(
+        $inline_quote_flags
+    ) &&
+    'quote' === (
+        $inline_quote_flags[0][
+            'claim_type'
+        ] ?? ''
+    ) &&
+    'blocks.0.text' === (
+        $inline_quote_flags[0][
+            'claim_unit_id'
+        ] ?? ''
+    ) &&
+    true === (
+        $inline_quote_validation[
+            'article'
+        ]['direct_quotes'][0][
+            'verbatim_match'
+        ] ?? false
+    ),
+    'inline direct quote receives a server-derived quote flag'
 );
 
 $quote_article = revelations_validation_article();
