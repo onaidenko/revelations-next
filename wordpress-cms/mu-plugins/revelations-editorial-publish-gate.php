@@ -90,10 +90,15 @@ function revelations_editorial_publish_gate_proposal_changed(
     int $post_id,
     array $proposal
 ): bool {
+    return array() !== revelations_editorial_publish_gate_changed_fields( $post_id, $proposal );
+}
+
+/** @return string[] */
+function revelations_editorial_publish_gate_changed_fields( int $post_id, array $proposal ): array {
     $post = get_post( $post_id );
 
     if ( ! $post instanceof WP_Post ) {
-        return true;
+        return array( 'content' );
     }
 
     $text_fields = array(
@@ -118,7 +123,7 @@ function revelations_editorial_publish_gate_proposal_changed(
             );
 
         if ( $proposed_value !== $saved_value ) {
-            return true;
+            $changed[] = $key;
         }
     }
 
@@ -138,20 +143,23 @@ function revelations_editorial_publish_gate_proposal_changed(
         sort( $saved_categories );
         sort( $proposed_categories );
 
-        if (
-            $saved_categories !==
-            $proposed_categories
-        ) {
-            return true;
-        }
+        if ( $saved_categories !== $proposed_categories ) $changed[] = 'category';
     }
 
+    if ( array_key_exists( 'tags', $proposal ) ) {
+        $saved_tags = array_map( 'absint', wp_get_post_tags( $post_id, array( 'fields' => 'ids' ) ) );
+        $proposed_tags = array_map( 'absint', (array) $proposal['tags'] ); sort( $saved_tags ); sort( $proposed_tags );
+        if ( $saved_tags !== $proposed_tags ) $changed[] = 'tags';
+    }
     $meta_fields = array(
         'seo_title' =>
             'revelations_seo_title',
 
         'seo_description' =>
             'revelations_seo_description',
+
+        'displayed_author' =>
+            'revelations_author',
     );
 
     foreach ( $meta_fields as $proposal_key => $meta_key ) {
@@ -174,11 +182,15 @@ function revelations_editorial_publish_gate_proposal_changed(
             (string) $proposal[ $proposal_key ] !==
             $saved_value
         ) {
-            return true;
+            $changed[] = $proposal_key;
         }
     }
 
-    return false;
+    return array_values( array_unique( $changed ?? array() ) );
+}
+
+function revelations_editorial_publish_gate_changed_field_label( string $key ): string {
+    return array( 'title' => 'Title', 'content' => 'Article content', 'excerpt' => 'Excerpt', 'category' => 'Category', 'tags' => 'Tags', 'seo_title' => 'SEO title', 'seo_description' => 'SEO description', 'displayed_author' => 'Displayed author', 'ai_review_metadata' => 'AI editorial review metadata' )[ $key ] ?? 'Article content';
 }
 
 /**
@@ -273,9 +285,9 @@ function revelations_editorial_publish_gate_missing_requirements(
         )
     );
 
-    if ( array() === $categories ) {
-        $missing[] = 'category';
-    }
+    $category_check = function_exists( 'revelations_editorial_category_contract_validate' )
+        ? revelations_editorial_category_contract_validate( $categories ) : array( 'code' => array() === $categories ? 'category_missing' : '' );
+    if ( '' !== (string) $category_check['code'] ) $missing[] = revelations_editorial_category_contract_message( (string) $category_check['code'] );
 
     $seo_title = array_key_exists(
         'seo_title',
@@ -347,6 +359,10 @@ function revelations_editorial_publish_gate_reason(
             'The article was not published.';
     }
 
+    $category_ids = array_key_exists( 'categories', $proposal ) ? (array) $proposal['categories'] : wp_get_post_categories( $post_id );
+    $category_check = function_exists( 'revelations_editorial_category_contract_validate' )
+        ? revelations_editorial_category_contract_validate( $category_ids ) : array( 'code' => '' );
+    if ( '' !== (string) $category_check['code'] ) return revelations_editorial_category_contract_message( (string) $category_check['code'] );
     $review =
         revelations_editorial_review_status(
             $post_id
@@ -377,15 +393,12 @@ function revelations_editorial_publish_gate_reason(
             '. The article was not published.';
     }
 
-    if (
-        revelations_editorial_publish_gate_proposal_changed(
-            $post_id,
-            $proposal
-        )
-    ) {
+    $changed_fields = revelations_editorial_publish_gate_changed_fields( $post_id, $proposal );
+    if ( array() !== $changed_fields ) {
+        if ( empty( $review['field_hashes'] ) ) return 'The article changed after its editorial review. The older review record does not identify the exact field. Save the draft and review the current version again.';
+        $labels = array_map( 'revelations_editorial_publish_gate_changed_field_label', $changed_fields );
         return
-            'The article changed after its editorial review. ' .
-            'Save the changes as a draft and mark the new version as reviewed.';
+            'The following fields changed after editorial review: ' . implode( ', ', $labels ) . '. Save the draft and mark the current version as reviewed.';
     }
 
     return '';
@@ -397,6 +410,15 @@ function revelations_editorial_publish_gate_reason(
  * @param stdClass|WP_Error $prepared_post Prepared post object.
  * @return WP_Post|WP_Error
  */
+add_filter( 'rest_pre_insert_post', static function ( $prepared_post, WP_REST_Request $request ) {
+    if ( is_wp_error( $prepared_post ) || ! $request->has_param( 'categories' ) ) return $prepared_post;
+    $post_id = absint( $request->get_param( 'id' ) );
+    if ( ! revelations_editorial_publish_gate_applies( $post_id ) ) return $prepared_post;
+    $check = revelations_editorial_category_contract_validate( (array) $request->get_param( 'categories' ) );
+    if ( 'category_multiple' !== $check['code'] && 'category_not_allowed' !== $check['code'] && 'category_uncategorized' !== $check['code'] ) return $prepared_post;
+    return new WP_Error( 'revelations_editorial_category_invalid', revelations_editorial_category_contract_message( $check['code'] ), array( 'status' => 400 ) );
+}, 98, 2 );
+
 add_filter(
     'rest_pre_insert_post',
     static function (
@@ -458,6 +480,8 @@ add_filter(
                     'categories'
                 );
         }
+
+        if ( $request->has_param( 'tags' ) ) $proposal['tags'] = (array) $request->get_param( 'tags' );
 
         if (
             $request->has_param(
@@ -609,6 +633,8 @@ add_filter(
                 ];
         }
 
+        if ( array_key_exists( 'tags_input', $postarr ) ) $proposal['tags'] = (array) $postarr['tags_input'];
+
         if (
             array_key_exists(
                 '_thumbnail_id',
@@ -758,3 +784,7 @@ add_action(
         <?php
     }
 );
+
+add_action( 'wp_after_insert_post', static function ( int $post_id, WP_Post $post ): void {
+    if ( 'publish' === $post->post_status && revelations_editorial_publish_gate_applies( $post_id ) ) delete_post_meta( $post_id, '_revelations_editorial_review_changed_fields' );
+}, 100, 2 );

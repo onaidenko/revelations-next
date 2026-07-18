@@ -24,6 +24,13 @@
         return;
     }
 
+    if (wp.data && wp.data.dispatch) {
+        const editPost = wp.data.dispatch('core/edit-post');
+        if (editPost && editPost.removeEditorPanel) {
+            editPost.removeEditorPanel('taxonomy-panel-category');
+        }
+    }
+
     function normalizeText(value) {
         if (
             value &&
@@ -179,6 +186,11 @@
                             'categories'
                         ) || [],
 
+                    tags:
+                        editor.getEditedPostAttribute(
+                            'tags'
+                        ) || [],
+
                     featuredMedia:
                         Number(
                             editor.getEditedPostAttribute(
@@ -231,6 +243,11 @@
                     state.categories,
                     snapshot.categories
                 ) ||
+
+                !sameIds(state.tags, snapshot.tags || []) ||
+
+                normalizeText(meta.revelations_author) !==
+                    normalizeText(snapshot.displayedAuthor) ||
 
                 normalizeText(
                     meta.revelations_seo_title
@@ -316,13 +333,11 @@
                 ready:
                     normalizeIds(
                         state.categories
-                    ).length > 0,
+                    ).length === 1,
                 detail:
-                    normalizeIds(
-                        state.categories
-                    ).length > 0
+                    normalizeIds(state.categories).length === 1
                         ? 'Selected'
-                        : 'Required before publication',
+                        : 'Select exactly one editorial category',
             },
             {
                 key: 'seo-title',
@@ -413,7 +428,7 @@
                             isDismissible: false,
                         },
                         allReady
-                            ? 'Ready to publish.'
+                            ? 'Saved version is ready to publish'
                             : (
                                 readyCount +
                                 ' of ' +
@@ -447,6 +462,22 @@
                             'revelations_author',
                             value
                         );
+                    },
+                }),
+
+                el(components.SelectControl, {
+                    label: 'Editorial category',
+                    help: 'Select exactly one editorial category.',
+                    value: String(normalizeIds(state.categories)[0] || ''),
+                    options: [{ label: 'Select a category', value: '' }].concat(
+                        (editorData.editorialCategories || []).map(
+                            function (term) {
+                                return { label: term.name, value: String(term.id) };
+                            }
+                        )
+                    ),
+                    onChange: function (value) {
+                        editor.editPost({ categories: value ? [Number(value)] : [] });
                     },
                 }),
 

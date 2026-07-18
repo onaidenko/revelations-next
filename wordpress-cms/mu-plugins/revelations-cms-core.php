@@ -114,6 +114,7 @@ function revelations_cms_editor_data(
         'reviewIsCurrent'         => false,
         'reviewStatus'            => 'not_required',
         'reviewedSnapshot'        => null,
+        'editorialCategories'     => function_exists( 'revelations_editorial_category_contract_allowed_terms' ) ? revelations_editorial_category_contract_allowed_terms() : array(),
     );
 
     if (
@@ -210,6 +211,10 @@ function revelations_cms_editor_data(
         'categories' =>
             $categories,
 
+        'tags' => array_map( 'absint', wp_get_post_tags( $post_id, array( 'fields' => 'ids' ) ) ),
+
+        'displayedAuthor' => (string) get_post_meta( $post_id, 'revelations_author', true ),
+
         'seoTitle' =>
             (string) get_post_meta(
                 $post_id,
@@ -247,6 +252,7 @@ add_action(
             plugin_dir_url( __FILE__ ) . 'revelations-cms-editor.js',
             array(
                 'wp-components',
+                'wp-core-data',
                 'wp-data',
                 'wp-edit-post',
                 'wp-editor',

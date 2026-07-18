@@ -190,4 +190,18 @@
 10. Отдельно учесть section hard filters, отсортировать scores и выбрать qualified stories.
 11. Вернуть dry-run result без создания кандидатов.
 
+## Publication review and category contract
+
+- `revelations-editorial-category-contract.php` normalizes category IDs
+  and validates one allowed category against `revelations_editorial_sections()`.
+  It applies only to editorial `post` workflow, not internal post types.
+- `revelations-editorial-review.php` keeps the legacy common review hash
+  for compatibility and stores optional per-field hashes for new reviews.
+  Featured Image is intentionally not in either review fingerprint.
+- `revelations-editorial-publish-gate.php` validates incoming REST and
+  classic publish proposals, blocks invalid category state, and compares
+  incoming editorial fields to the saved reviewed version.
+- `revelations-cms-editor.js` removes the standard category checklist for
+  Articles and provides one Gutenberg select backed by the editor data API.
+
 Глобальный AI gate расположен в общем engine непосредственно перед `call_user_func($score_story, $story)`, поэтому он предшествует section-specific scoring для News, People, Tech, Places и Unspoken.

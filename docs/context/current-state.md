@@ -846,3 +846,23 @@ Base44 и DNS/domain cutover.
   staging changes or functional code changes. No automatic rollback was
   needed. Remaining SEO limitation: fresh News and no-cover social
   fallback need a later live recheck when matching published data exists.
+
+## CMS Publication Review Synchronization and Single Category
+
+- Production read-only diagnosis of draft 214: `post`/`draft`, one `news`
+  category, Featured Image 285, current review hash equals stored hash,
+  review is current, 312 words; no AI review metadata keys were present.
+  The legacy common hash cannot identify a historical changed field.
+- Read-only category audit: 50 published posts have exactly one category;
+  zero/multiple/Uncategorized and draft/pending multi-category records are
+  absent. Used editorial slugs: news, people, tech, places, unspoken,
+  podcast. No production data was changed.
+- Local implementation adds per-field review fingerprints, exact incoming
+  field comparisons, single-category Gutenberg select and server category
+  validation. Featured Image remains excluded from review hashes but is
+  required by publication readiness. Legacy common-hash records remain
+  fail-closed and compatible when their hash matches.
+- Local Node publication-contract diagnostics: 12 passed. Remote PHP 8.5.4
+  lint passed for four modified PHP files; full isolated AI regression suite
+  passed. No deploy, CMS/DB write, OpenAI, scanner, frontend or staging
+  action occurred.

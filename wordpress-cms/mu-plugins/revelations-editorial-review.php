@@ -101,6 +101,36 @@ function revelations_editorial_review_content_hash(
     );
 }
 
+/** @return array<string,string> */
+function revelations_editorial_review_field_hashes( int $draft_id ): array {
+    $post = get_post( $draft_id );
+    if ( ! $post instanceof WP_Post ) return array();
+    $tags = array_map( 'absint', wp_get_post_tags( $draft_id, array( 'fields' => 'ids' ) ) ); sort( $tags );
+    $categories = function_exists( 'revelations_editorial_category_contract_normalize_ids' )
+        ? revelations_editorial_category_contract_normalize_ids( wp_get_post_categories( $draft_id ) )
+        : array_values( array_unique( array_map( 'absint', wp_get_post_categories( $draft_id ) ) ) );
+    $values = array(
+        'title' => $post->post_title, 'content' => $post->post_content, 'excerpt' => $post->post_excerpt,
+        'category' => 1 === count( $categories ) ? $categories[0] : $categories,
+        'tags' => $tags,
+        'seo_title' => (string) get_post_meta( $draft_id, 'revelations_seo_title', true ),
+        'seo_description' => (string) get_post_meta( $draft_id, 'revelations_seo_description', true ),
+        'displayed_author' => (string) get_post_meta( $draft_id, 'revelations_author', true ),
+        'ai_review_metadata' => function_exists( 'revelations_editorial_ai_review_metadata_for_draft' ) ? revelations_editorial_ai_review_metadata_for_draft( $draft_id ) : array(),
+    );
+    $hashes = array(); foreach ( $values as $key => $value ) $hashes[ $key ] = hash( 'sha256', wp_json_encode( $value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
+    return $hashes;
+}
+
+/** @return array<string,string> */
+function revelations_editorial_review_stored_field_hashes( int $draft_id ): array {
+    $raw = get_post_meta( $draft_id, '_revelations_editorial_review_field_hashes', true );
+    $value = is_string( $raw ) ? json_decode( $raw, true ) : $raw;
+    if ( ! is_array( $value ) ) return array();
+    $result = array(); foreach ( revelations_editorial_review_field_hashes( $draft_id ) as $key => $_ ) if ( isset( $value[ $key ] ) && is_string( $value[ $key ] ) ) $result[ $key ] = $value[ $key ];
+    return $result;
+}
+
 /**
  * Return the current review state.
  *
@@ -134,13 +164,15 @@ function revelations_editorial_review_status(
         'reviewed' === $stored_status &&
         '' !== $stored_hash;
 
+    $field_hashes = revelations_editorial_review_stored_field_hashes( $draft_id );
+    $fields_current = array() === $field_hashes || $field_hashes === revelations_editorial_review_field_hashes( $draft_id );
     $is_current =
         $was_reviewed &&
         '' !== $current_hash &&
         hash_equals(
             $stored_hash,
             $current_hash
-        );
+        ) && $fields_current;
 
     return array(
         'status' =>
@@ -186,6 +218,7 @@ function revelations_editorial_review_status(
 
         'current_hash' =>
             $current_hash,
+        'field_hashes' => $field_hashes,
     );
 }
 
@@ -283,6 +316,9 @@ add_action(
             );
         }
 
+        $category_check = function_exists( 'revelations_editorial_category_contract_validate' )
+            ? revelations_editorial_category_contract_validate( wp_get_post_categories( $draft_id ) ) : array( 'code' => '' );
+        if ( '' !== (string) $category_check['code'] ) revelations_editorial_review_redirect( array( 'review_error' => 'category' ) );
         $content_hash =
             revelations_editorial_review_content_hash(
                 $draft_id
@@ -308,6 +344,11 @@ add_action(
 
             '_revelations_editorial_review_hash' =>
                 $content_hash,
+
+            '_revelations_editorial_review_field_hashes' =>
+                wp_json_encode( revelations_editorial_review_field_hashes( $draft_id ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
+
+            '_revelations_editorial_review_changed_fields' => '',
 
             '_revelations_editorial_review_word_count' =>
                 revelations_editorial_current_draft_word_count(

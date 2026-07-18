@@ -145,3 +145,15 @@
 - **Решение:** WebSite и Organization используют стабильные IDs
   `/#website` и `/#organization`; SearchAction и неподтверждённые
   Organization details не публикуются.
+
+## Publication review and categories
+
+- **Решение:** Article имеет ровно одну editorial category из registry
+  `revelations_editorial_sections()`; `Uncategorized`, пустой,
+  неизвестный и multiple selection блокируют publication. Tags остаются
+  множественными. Legacy published records не мигрируются автоматически.
+- **Решение:** Human Review покрывает title, content, excerpt, category,
+  tags, SEO meta, displayed author и current AI review metadata через
+  per-field SHA-256 fingerprints. Featured Image, post status, revision
+  и modified timestamps исключены; image остаётся отдельным readiness
+  requirement.
