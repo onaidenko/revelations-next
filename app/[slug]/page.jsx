@@ -16,10 +16,18 @@ import {
 
 import { SECTIONS } from '@/lib/sections';
 import {
+  BRAND_LOGO_URL,
   DEFAULT_IMAGE,
+  ORGANIZATION_ID,
   SITE_NAME,
   SITE_URL,
 } from '@/lib/site';
+import {
+  buildArticleBreadcrumbJsonLd,
+  buildArticleJsonLd,
+  buildArticleMetadata,
+  serializeJsonLd,
+} from '@/lib/seo';
 
 export async function generateStaticParams() {
   return (await getPublishedArticles()).map(({ slug }) => ({ slug }));
@@ -39,45 +47,11 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const seoTitle =
-    article.seo_title || article.title;
-
-  const seoDescription =
-    article.seo_description ||
-    article.excerpt ||
-    `Read ${article.title} on REVELATIONS.`;
-
-  const image = article.cover_image || DEFAULT_IMAGE;
-
-  return {
-    title: seoTitle,
-    description: seoDescription,
-
-    alternates: {
-      canonical: `/${article.slug}`,
-    },
-
-    openGraph: {
-      type: 'article',
-      title: seoTitle,
-      description: seoDescription,
-      url: `/${article.slug}`,
-      images: [image],
-      publishedTime: article.publication_date,
-      modifiedTime: article.updated_date,
-      authors: article.author ? [article.author] : undefined,
-      section:
-        article.section_name || article.section,
-      tags: article.tags,
-    },
-
-    twitter: {
-      card: 'summary_large_image',
-      title: seoTitle,
-      description: seoDescription,
-      images: [image],
-    },
-  };
+  return buildArticleMetadata(article, {
+    siteUrl: SITE_URL,
+    fallbackImage: DEFAULT_IMAGE,
+    siteName: SITE_NAME,
+  });
 }
 
 export default async function ArticlePage({ params }) {
@@ -92,54 +66,32 @@ export default async function ArticlePage({ params }) {
   const related = await getRelatedArticles(article);
   const canonical = `${SITE_URL}/${article.slug}`;
 
-  const publicationDate =
-    article.publication_date || article.created_date;
-
-  const modifiedDate =
-    article.updated_date || publicationDate;
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type':
-      article.section === 'news'
-        ? 'NewsArticle'
-        : 'Article',
-
-    headline: article.title,
-    description: article.excerpt || undefined,
-    image: article.cover_image || DEFAULT_IMAGE,
-    datePublished: publicationDate,
-    dateModified: modifiedDate,
-
-    author: {
-      '@type': 'Person',
-      name: article.author || SITE_NAME,
-    },
-
-    publisher: {
-      '@type': 'Organization',
-      name: SITE_NAME,
-      url: SITE_URL,
-    },
-
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': canonical,
-    },
-
-    articleSection:
-      article.section_name || article.section,
-    keywords: article.tags,
-  };
+  const publicationDate = article.publication_date || article.created_date;
+  const jsonLd = buildArticleJsonLd(article, {
+    siteUrl: SITE_URL,
+    siteName: SITE_NAME,
+    logoUrl: BRAND_LOGO_URL,
+    organizationId: ORGANIZATION_ID,
+  });
+  const breadcrumbs = buildArticleBreadcrumbJsonLd(article, SITE_URL);
 
   return (
     <div className="min-h-screen bg-background">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
+          __html: serializeJsonLd(jsonLd),
         }}
       />
+
+      {breadcrumbs && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: serializeJsonLd(breadcrumbs),
+          }}
+        />
+      )}
 
       <SiteHeader />
 

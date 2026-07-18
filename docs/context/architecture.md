@@ -148,6 +148,34 @@
 - Gutenberg/HTML article content не передаётся в plain-text decoder и
   продолжает проходить отдельный existing render/sanitization path.
 
+## SEO foundation
+
+- Public CMS `/articles` endpoint принимает `page` и `per_page` (до
+  100) и возвращает `items` plus `pagination.page`, `per_page`,
+  `total` и `total_pages`; backend выбирает только `publish` posts.
+  Frontend запрашивает все страницы последовательно, использует
+  metadata при наличии, останавливается на пустой/неполной странице
+  без metadata и защищён finite limit/repeated-page guard.
+- `lib/seo.js` является общим pure layer для canonical URL, дат,
+  sitemap, XML escaping, social image и JSON-LD. Site-relative assets
+  становятся абсолютными только от normalized `SITE_URL`; внешние
+  HTTP(S) cover URLs сохраняются.
+- `app/sitemap.js` включает только public static routes, public section
+  routes и deduplicated published articles. Static routes не получают
+  synthetic current `lastModified`; section route получает дату самой
+  новой article в section, article — real modified date с publication
+  fallback.
+- `app/news-sitemap.xml/route.js` отдаёт валидный Google News sitemap
+  только для News articles, опубликованных в последние 48 часов по
+  publication date. Revalidation равна 300 seconds.
+- Article metadata использует cover image для Open Graph/Twitter; при
+  её отсутствии применяется только branded social fallback. Article
+  JSON-LD добавляет `image` только для фактической cover image.
+- Root layout публикует один стабильный WebSite/Organization graph с
+  `/#website` и `/#organization`. Article page публикует NewsArticle
+  для News, Article для остальных sections и BreadcrumbList
+  Home → known Section → Article.
+
 ## Порядок обработки истории
 
 1. Нормализовать section и limits.

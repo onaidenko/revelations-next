@@ -773,3 +773,26 @@ Base44 и DNS/domain cutover.
   строгой проверкой точного использования fact-check claim. Следующее
   изменение контракта или validation требует отдельного продуктового
   решения и нового явно разрешённого API test.
+
+## SEO Stage 1A 2026-07-19
+
+- Frontend pagination теперь получает весь published CMS collection:
+  endpoint pagination metadata используется при наличии, а
+  empty/incomplete-page fallback и repeated-page guard не допускают
+  бесконечный loop. Legacy fallback merge не менялся.
+- Main sitemap включает canonical public static/section/article URLs
+  без duplicates и fake current dates. Section `lastModified` берётся
+  из newest article; article date использует modified с publication
+  fallback. Добавлен `/news-sitemap.xml`: только News за последние 48
+  часов по publication date, Google News XML с escaping и cache 300 s.
+- Общий SEO helper нормализует site URL и абсолютные asset URLs.
+  Cover Image используется для Open Graph/Twitter; logo применяется
+  только как social fallback и publisher logo, не как Article image.
+- Article JSON-LD различает NewsArticle/Article, truthful author,
+  timestamps and cover image; добавлен BreadcrumbList. Root layout
+  публикует один stable WebSite/Organization graph.
+- Выполнены `npm test` (18 passing), `npm run lint` и `npm run build`.
+  Build запускался локально вне sandbox из-за Turbopack process/port
+  restriction и успешно сгенерировал `/news-sitemap.xml`. Deploy,
+  SSH/scp, production CMS/frontend changes и external API calls не
+  выполнялись.

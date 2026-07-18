@@ -1,43 +1,32 @@
 import { getPublishedArticles } from '@/lib/cms-articles';
 import { SITE_URL } from '@/lib/site';
+import { buildMainSitemapEntries } from '@/lib/seo';
+
+const SECTION_PATHS = [
+  'news',
+  'people',
+  'tech',
+  'places',
+  'unspoken',
+  'podcast',
+];
+
+const STATIC_PATHS = [
+  '',
+  'about',
+  'advertise',
+  'access',
+  'contact',
+  'archive',
+];
 
 export default async function sitemap() {
-  const staticPaths = [
-    '',
-    'news',
-    'people',
-    'tech',
-    'places',
-    'unspoken',
-    'podcast',
-    'about',
-    'advertise',
-    'access',
-    'contact',
-    'archive',
-  ];
+  const articles = await getPublishedArticles();
 
-  const staticPages = staticPaths.map((pathname) => ({
-    url:
-      pathname === ''
-        ? `${SITE_URL}/`
-        : `${SITE_URL}/${pathname}`,
-    lastModified: new Date(),
-  }));
-
-  const articlePages = (await getPublishedArticles()).map(
-    (article) => ({
-      url: `${SITE_URL}/${article.slug}`,
-      lastModified: new Date(
-        article.updated_date ||
-          article.publication_date ||
-          article.created_date
-      ),
-    })
-  );
-
-  return [
-    ...staticPages,
-    ...articlePages,
-  ];
+  return buildMainSitemapEntries({
+    articles,
+    siteUrl: SITE_URL,
+    staticPaths: STATIC_PATHS,
+    sectionPaths: SECTION_PATHS,
+  });
 }

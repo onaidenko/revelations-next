@@ -125,3 +125,23 @@
 - **Причина:** одинаковые decoded значения должны использоваться в
   UI, metadata, JSON-LD и accessibility attributes без raw HTML
   rendering или двойного декодирования.
+
+## SEO Stage 1A
+
+- **Решение:** frontend получает полный published CMS collection через
+  pagination, а не только первую страницу из 100 items. Pagination
+  metadata используется, когда endpoint её возвращает; fallback и
+  loop guard сохраняют безопасное поведение при её отсутствии.
+- **Решение:** sitemap содержит только canonical public routes. Static
+  routes не получают искусственную текущую дату; section/article dates
+  происходят только из реальных article timestamps.
+- **Решение:** News sitemap ограничен 48 часами от publication date;
+  modified date не может вернуть старую новость в Google News sitemap.
+- **Решение:** Cover Image — единственный article-specific social
+  image. Branded logo допустим только как Open Graph/Twitter fallback,
+  но не как `Article.image`.
+- **Решение:** author без displayed author представляется ссылкой на
+  publisher Organization, а не вымышленным Person `REVELATIONS`.
+- **Решение:** WebSite и Organization используют стабильные IDs
+  `/#website` и `/#organization`; SearchAction и неподтверждённые
+  Organization details не публикуются.
