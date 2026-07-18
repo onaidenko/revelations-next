@@ -79,7 +79,7 @@ export default async function SectionPage({ sectionId }) {
                       <div className="relative hidden h-[55vh] min-h-[380px] overflow-hidden md:block">
                         <img
                           src={featured.cover_image}
-                          alt={featured.title}
+                          alt={featured.cover_image_alt}
                           className="h-full w-full object-contain grayscale transition-all duration-1000 group-hover:grayscale-0"
                         />
 
@@ -106,7 +106,7 @@ export default async function SectionPage({ sectionId }) {
                         <div className="mb-4 overflow-hidden">
                           <img
                             src={featured.cover_image}
-                            alt={featured.title}
+                            alt={featured.cover_image_alt}
                             className="w-full object-contain grayscale transition-all duration-1000 group-hover:grayscale-0"
                           />
                         </div>

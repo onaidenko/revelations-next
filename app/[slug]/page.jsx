@@ -66,7 +66,8 @@ export async function generateMetadata({ params }) {
       publishedTime: article.publication_date,
       modifiedTime: article.updated_date,
       authors: article.author ? [article.author] : undefined,
-      section: article.section,
+      section:
+        article.section_name || article.section,
       tags: article.tags,
     },
 
@@ -126,7 +127,8 @@ export default async function ArticlePage({ params }) {
       '@id': canonical,
     },
 
-    articleSection: article.section,
+    articleSection:
+      article.section_name || article.section,
     keywords: article.tags,
   };
 
@@ -146,7 +148,7 @@ export default async function ArticlePage({ params }) {
           <div className="mx-auto mb-12 max-w-6xl px-6 md:px-12">
             <img
               src={article.cover_image}
-              alt={article.title}
+              alt={article.cover_image_alt}
               className="h-[40vh] w-full object-contain md:h-[60vh]"
               loading="eager"
               fetchPriority="high"
@@ -160,7 +162,7 @@ export default async function ArticlePage({ params }) {
               href={`/${article.section}`}
               className="font-mono text-[10px] uppercase tracking-[0.2em] text-rose transition-colors hover:text-foreground"
             >
-              {section?.title || article.section}
+              {article.section_name || section?.title || article.section}
             </Link>
 
             <span className="h-3 w-px bg-border" />

@@ -22,7 +22,7 @@ export default function SectionArticleCard({
           <div className="mb-5 h-64 w-full overflow-hidden md:h-80">
             <img
               src={article.cover_image}
-              alt={article.title}
+              alt={article.cover_image_alt}
               className="h-full w-full object-contain grayscale transition-all duration-1000 group-hover:grayscale-0"
               loading="lazy"
             />
@@ -31,7 +31,7 @@ export default function SectionArticleCard({
 
         <div className="mb-3 flex flex-wrap items-center gap-4">
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-rose">
-            {section?.title || article.section}
+            {article.section_name || section?.title || article.section}
           </span>
 
           <span className="font-mono text-[10px] tracking-[0.1em] text-muted-foreground">
@@ -67,7 +67,7 @@ export default function SectionArticleCard({
         <div className="h-36 w-full shrink-0 overflow-hidden md:h-32 md:w-48">
           <img
             src={article.cover_image}
-            alt={article.title}
+            alt={article.cover_image_alt}
             className="h-full w-full object-contain grayscale transition-all duration-700 group-hover:grayscale-0"
             loading="lazy"
           />
@@ -77,7 +77,7 @@ export default function SectionArticleCard({
       <div className="min-w-0 flex-1">
         <div className="mb-2 flex flex-wrap items-center gap-4">
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-rose">
-            {section?.title || article.section}
+            {article.section_name || section?.title || article.section}
           </span>
 
           <span className="font-mono text-[10px] tracking-[0.1em] text-muted-foreground">

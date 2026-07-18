@@ -1,2 +1,56 @@
-import Link from 'next/link'; import { formatDate } from '@/lib/cms-articles'; import { SECTIONS } from '@/lib/sections';
-export default function ArticleCard({article,large=false}){const section=SECTIONS[article.section];return <Link href={`/${article.slug}`} className="group block">{article.cover_image&&<div className={`${large?'h-64 md:h-80':'h-52'} overflow-hidden mb-5`}><img src={article.cover_image} alt={article.title} className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-700" loading="lazy"/></div>}<div className="flex items-center gap-4 mb-3"><span className="font-mono text-[10px] tracking-[0.2em] uppercase text-rose">{section?.title||article.section}</span><span className="font-mono text-[10px] text-muted-foreground">{formatDate(article.publication_date,'short')}</span></div><h3 className={`${large?'text-3xl md:text-4xl':'text-xl md:text-2xl'} font-display group-hover:text-rose transition-colors leading-tight mb-3`}>{article.title}</h3>{article.excerpt&&<p className="font-body text-sm text-muted-foreground leading-relaxed line-clamp-2">{article.excerpt}</p>}</Link>}
+import Link from 'next/link';
+
+import { formatDate } from '@/lib/cms-articles';
+import { SECTIONS } from '@/lib/sections';
+
+export default function ArticleCard({
+  article,
+  large = false,
+}) {
+  const section = SECTIONS[article.section];
+
+  return (
+    <Link href={`/${article.slug}`} className="group block">
+      {article.cover_image && (
+        <div
+          className={`${
+            large ? 'h-64 md:h-80' : 'h-52'
+          } mb-5 overflow-hidden`}
+        >
+          <img
+            src={article.cover_image}
+            alt={article.cover_image_alt}
+            className="h-full w-full object-contain grayscale transition-all duration-700 group-hover:grayscale-0"
+            loading="lazy"
+          />
+        </div>
+      )}
+
+      <div className="mb-3 flex items-center gap-4">
+        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-rose">
+          {article.section_name || section?.title || article.section}
+        </span>
+
+        <span className="font-mono text-[10px] text-muted-foreground">
+          {formatDate(article.publication_date, 'short')}
+        </span>
+      </div>
+
+      <h3
+        className={`${
+          large
+            ? 'text-3xl md:text-4xl'
+            : 'text-xl md:text-2xl'
+        } mb-3 font-display leading-tight transition-colors group-hover:text-rose`}
+      >
+        {article.title}
+      </h3>
+
+      {article.excerpt && (
+        <p className="line-clamp-2 font-body text-sm leading-relaxed text-muted-foreground">
+          {article.excerpt}
+        </p>
+      )}
+    </Link>
+  );
+}

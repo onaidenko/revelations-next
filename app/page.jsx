@@ -89,7 +89,7 @@ export default async function HomePage() {
               >
                 <img
                   src={hero.cover_image}
-                  alt={hero.title}
+                  alt={hero.cover_image_alt}
                   className="h-full w-full object-contain grayscale transition-all duration-1000 group-hover:grayscale-0"
                   loading="eager"
                 />
@@ -113,7 +113,7 @@ export default async function HomePage() {
                     <div className="mb-5 h-52 overflow-hidden md:h-64">
                       <img
                         src={article.cover_image}
-                        alt={article.title}
+                        alt={article.cover_image_alt}
                         className="h-full w-full object-contain grayscale transition-all duration-700 group-hover:grayscale-0"
                         loading="lazy"
                       />
