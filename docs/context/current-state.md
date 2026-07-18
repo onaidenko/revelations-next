@@ -662,7 +662,40 @@ Base44 и DNS/domain cutover.
   В нём сохранены release archive с SHA-256
   `6625514f233ad568937d8e21a6a0588695e9a096d5a1b63619896b4887ceeed0`,
   unit и vhost.
-- Authoritative Base44 rollback records остаются без изменений:
+- До cutover authoritative Base44 rollback records были:
   apex `A 137.66.32.95` TTL 600 и `www A 137.66.32.95` TTL 600.
-  Целевой server IPv4 — `192.248.179.164`; DNS, Base44 binding и
-  certificates apex/www не изменялись.
+  Целевой server IPv4 был определён как `192.248.179.164`; на этапе
+  подготовки DNS, Base44 binding и certificates apex/www ещё не
+  изменялись.
+
+## Production frontend cutover
+
+- 2026-07-18 authoritative GoDaddy nameservers и публичные resolvers
+  подтвердили `A 192.248.179.164` с TTL 600 для
+  `revelations.me` и `www.revelations.me`.
+- Snap Certbot 5.7.0 с nginx plugin выпустил отдельный ECDSA lineage
+  `/etc/letsencrypt/live/revelations.me`, покрывающий apex и www.
+  Сертификат действует до 2026-10-16 08:04:33 UTC.
+- Production Nginx vhost обслуживает apex по HTTPS через
+  `127.0.0.1:3002`. HTTP apex, HTTP www и HTTPS www возвращают
+  прямой 301 на `https://revelations.me` с сохранением path/query.
+  `nginx -t` и reload прошли.
+- Full public audit прошёл без failures: homepage, 5 categories,
+  62/62 sitemap URLs, 55 articles, 57 images, 11 Next assets,
+  `robots.txt`, `sitemap.xml` и CMS API вернули ожидаемые ответы.
+  Canonical URLs используют production apex; staging URLs, noindex,
+  active mixed content и 5xx не обнаружены.
+- В двух legacy articles по-прежнему присутствуют пять обычных
+  внешних HTTP navigation links; они не загружаются как page
+  resources и остаются content backlog.
+- `staging.revelations.me` не изменён: homepage, все пять categories,
+  sitemap и robots возвращают HTTP 200; staging service active.
+- Production lineage использует `authenticator=nginx` и
+  `installer=nginx`. Отдельный renewal dry-run для apex/www прошёл.
+  Snap renewal timer enabled/active; устаревший apt timer остаётся
+  disabled/inactive.
+- Pre-certificate Nginx backup:
+  `/root/revelations-production-https-before-20260718-090258`.
+  Backup Certbot-generated vhost перед canonical cleanup:
+  `/root/revelations-production-vhost-before-canonical-20260718-090447`.
+- AI generation и ESLint в рамках cutover не изменялись.
