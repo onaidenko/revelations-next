@@ -586,8 +586,83 @@ Base44 и DNS/domain cutover.
   route `/wordpress-editorial-test`, а внутренняя ссылка на него
   возвращает 404. Два предупреждения относятся только к title длиной
   68 и 70 символов. Staging cache/build не изменялись.
-- `revelations.me` и `www.revelations.me` остаются на Base44; DNS TTL
-  равен 600 секунд. На сервере `revelations-prod` нет active Nginx
-  vhost, service или SSL certificate для основного домена.
-- Base44, DNS, domain binding, reverse proxy, SSL и основной домен
-  этой задачей не изменялись.
+- На момент baseline `revelations.me` и `www.revelations.me`
+  обслуживались только Base44 с DNS TTL 600; production Nginx vhost,
+  service и SSL certificate на `revelations-prod` отсутствовали.
+- Baseline-аудит не изменял Base44, DNS, domain binding, reverse
+  proxy, SSL или основной домен.
+
+## AI evidence production follow-up
+
+- Strict evidence hardening зафиксирован коммитом `da4cb12`
+  (`Harden AI fact-check evidence validation`) и отправлен в
+  `origin/admin-editorial`.
+- Два изменённых MU plugins точечно развернуты в production CMS после
+  backup
+  `/root/revelations-ai-evidence-before-deploy-20260718-082419`.
+  Live PHP lint и checksum verification прошли.
+- Выполнен ровно один дополнительный разрешённый OpenAI request на
+  disposable candidate `227` и draft `228`. Ответ снова отклонён с
+  `invalid_fact_check_evidence` до draft update и version backup.
+- Третий API request не выполнялся. Prompt-only требование дословного
+  evidence оказалось недостаточным: модель по-прежнему вернула
+  evidence, не совпадающее со snapshot после разрешённой технической
+  нормализации. Strict validation и защита от semantic/fuzzy matching
+  сохранены.
+- Candidate `227` и draft `228` возвращены в Trash; private AI
+  versions для draft отсутствуют. Full live generation workflow
+  остаётся заблокированным до отдельного решения о более
+  детерминированном evidence contract.
+
+## Certbot normalization
+
+- Существующие certificate lineage CMS и staging сохранены без
+  изменения serial или validity.
+- Устаревший apt `certbot.timer`, запускавший `/usr/bin/certbot 4.0.0`
+  без nginx plugin, отключён и неактивен.
+- Существующий snap `certbot 5.7.0` и
+  `snap.certbot.renew.timer` остаются enabled/active. Его предыдущие
+  scheduled runs завершались успешно.
+- `/snap/bin/certbot renew --dry-run --no-random-sleep-on-renew`
+  успешно проверил `cms.revelations.me` и
+  `staging.revelations.me`; `nginx -t` и оба endpoint после dry-run
+  сохранили ожидаемое состояние.
+- Rollback/config backup:
+  `/root/revelations-certbot-normalization-before-20260718-082929`.
+
+## Prepared production frontend
+
+- Fresh Next.js 16.2.10 standalone build
+  `Nd9Sm_9gLnbrDWgglMXxm` создан с
+  `NEXT_PUBLIC_SITE_URL=https://revelations.me` и прежним public CMS
+  API. Build не содержит staging URL или stale
+  `/wordpress-editorial-test`; этот path возвращает 404.
+- Production clone работает из `/var/www/revelations-production` под
+  `deploy:deploy`, service `revelations-production.service` enabled и
+  active на `127.0.0.1:3002`. Staging service и port 3001 не
+  изменялись.
+- HTTP-only pre-certificate Nginx vhost
+  `/etc/nginx/sites-available/revelations-production` включён:
+  apex proxy использует staging headers/timeouts, `www` возвращает
+  301 на apex, production `noindex` отсутствует. DNS всё ещё ведёт на
+  Base44, поэтому production TLS/SNI и certificate issuance намеренно
+  остаются шагом финального cutover.
+- Host audit прошёл: 62/62 sitemap URLs, 55 articles, все 5 sections,
+  51 images и 10 Next assets; CMS API — 200, canonical и robots
+  используют production apex, staging URLs, active mixed content,
+  noindex и 5xx не найдены.
+- В двух legacy articles остаются пять обычных внешних HTTP navigation
+  links. Они не являются загружаемыми mixed-content resources, но
+  зафиксированы как content backlog.
+- `npm run build` прошёл. `npm run lint` не запустился из-за
+  существующего отсутствия ESLint 9 flat configuration; frontend code
+  этой задачей для исправления lint tooling не менялся.
+- Production rollback/release:
+  `/root/revelations-production-rollout-20260718-083930`.
+  В нём сохранены release archive с SHA-256
+  `6625514f233ad568937d8e21a6a0588695e9a096d5a1b63619896b4887ceeed0`,
+  unit и vhost.
+- Authoritative Base44 rollback records остаются без изменений:
+  apex `A 137.66.32.95` TTL 600 и `www A 137.66.32.95` TTL 600.
+  Целевой server IPv4 — `192.248.179.164`; DNS, Base44 binding и
+  certificates apex/www не изменялись.
