@@ -147,6 +147,26 @@ revelations_schema_test(
 );
 
 revelations_schema_test(
+    str_contains(
+        $generation_source,
+        'Required article length: '
+    ) &&
+    str_contains(
+        $generation_source,
+        'words. Aim for '
+    ) &&
+    str_contains(
+        $generation_source,
+        'words so the result stays safely inside the required range.'
+    ) &&
+    str_contains(
+        $generation_source,
+        'Never return fewer than '
+    ),
+    'prompt uses a preferred range inside hard word-count limits'
+);
+
+revelations_schema_test(
     ! array_key_exists( 'title', $properties ) &&
     ! in_array( 'title', $required, true ),
     'schema no longer contains legacy title'

@@ -750,6 +750,20 @@ function revelations_editorial_generate_draft_with_ai(
         )
     );
 
+    /*
+     * Give the model an internal buffer while preserving the exact
+     * configured limits enforced later by server-side validation.
+     */
+    $preferred_minimum_words = min(
+        $maximum_words,
+        $minimum_words + 50
+    );
+
+    $preferred_maximum_words = max(
+        $preferred_minimum_words,
+        $maximum_words - 50
+    );
+
     $editorial_policy = trim(
         (string) (
             $settings['editorial_policy'] ?? ''
@@ -832,9 +846,18 @@ function revelations_editorial_generate_draft_with_ai(
         "Paraphrase the source. Do not reproduce long passages verbatim. " .
         "Do not include a source-credit line; the application adds it automatically.\n\n" .
 
-        "Target article length: " .
+        "Required article length: " .
         $minimum_words .
         " to " .
+        $maximum_words .
+        " words. Aim for " .
+        $preferred_minimum_words .
+        " to " .
+        $preferred_maximum_words .
+        " words so the result stays safely inside the required range. " .
+        "Never return fewer than " .
+        $minimum_words .
+        " or more than " .
         $maximum_words .
         " words.\n\n" .
 
