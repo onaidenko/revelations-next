@@ -549,6 +549,123 @@ function revelations_editorial_ai_resolve_evidence_references(
         }
     }
 
+    /*
+     * The model may return one item per sensitive claim even though
+     * claim_unit_id references a complete generated body unit.
+     * Coalesce repeated unit/type pairs and preserve the union of
+     * their server-resolved source evidence IDs.
+     */
+    $merged_flags = array();
+
+    foreach ( $resolved_flags as $resolved_flag ) {
+        $merge_key =
+            (string) (
+                $resolved_flag[
+                    'claim_unit_id'
+                ] ?? ''
+            ) .
+            "\0" .
+            (string) (
+                $resolved_flag[
+                    'claim_type'
+                ] ?? ''
+            );
+
+        if (
+            ! isset(
+                $merged_flags[
+                    $merge_key
+                ]
+            )
+        ) {
+            $merged_flags[
+                $merge_key
+            ] = $resolved_flag;
+
+            continue;
+        }
+
+        $merged_evidence_ids = array();
+
+        foreach (
+            array_merge(
+                is_array(
+                    $merged_flags[
+                        $merge_key
+                    ]['evidence_ids'] ?? null
+                )
+                    ? $merged_flags[
+                        $merge_key
+                    ]['evidence_ids']
+                    : array(),
+                is_array(
+                    $resolved_flag[
+                        'evidence_ids'
+                    ] ?? null
+                )
+                    ? $resolved_flag[
+                        'evidence_ids'
+                    ]
+                    : array()
+            )
+            as $merged_evidence_id
+        ) {
+            if (
+                ! is_string(
+                    $merged_evidence_id
+                ) ||
+                in_array(
+                    $merged_evidence_id,
+                    $merged_evidence_ids,
+                    true
+                )
+            ) {
+                continue;
+            }
+
+            $merged_evidence_ids[] =
+                $merged_evidence_id;
+        }
+
+        $merged_evidence = array();
+
+        foreach (
+            $merged_evidence_ids
+            as $merged_evidence_id
+        ) {
+            if (
+                isset(
+                    $evidence_map[
+                        $merged_evidence_id
+                    ]
+                )
+            ) {
+                $merged_evidence[] =
+                    $evidence_map[
+                        $merged_evidence_id
+                    ];
+            }
+        }
+
+        $merged_flags[
+            $merge_key
+        ]['evidence_ids'] =
+            $merged_evidence_ids;
+
+        $merged_flags[
+            $merge_key
+        ]['source_evidence'] =
+            implode(
+                "\n\n",
+                $merged_evidence
+            );
+    }
+
+    $resolved_flags =
+        array_values(
+            $merged_flags
+        );
+
     $resolved_quotes = array();
 
     foreach ( $raw_quotes as $quote ) {
@@ -782,6 +899,45 @@ function revelations_editorial_ai_generated_claim_unit_map(
     }
 
     return $map;
+}
+
+/**
+ * Return body units that require sensitive-claim coverage.
+ *
+ * Titles, descriptions and headings are excluded because they are
+ * metadata or structural summaries of the reviewed article body.
+ *
+ * @param array<string, mixed> $article Parsed article.
+ * @return array<int, array{id: string, kind: string, text: string}>
+ */
+function revelations_editorial_ai_required_fact_check_units(
+    array $article
+): array {
+    $required = array();
+
+    foreach (
+        revelations_editorial_ai_generated_claim_units(
+            $article
+        ) as $unit
+    ) {
+        if (
+            ! in_array(
+                $unit['kind'] ?? '',
+                array(
+                    'paragraph',
+                    'quote',
+                    'list_item',
+                ),
+                true
+            )
+        ) {
+            continue;
+        }
+
+        $required[] = $unit;
+    }
+
+    return $required;
 }
 
 /**
@@ -1121,6 +1277,11 @@ function revelations_editorial_ai_validate_generated_article(
             $validated_article
         );
 
+    $required_fact_check_units =
+        revelations_editorial_ai_required_fact_check_units(
+            $validated_article
+        );
+
     $flags = is_array(
         $article['fact_check_flags'] ?? null
     )
@@ -1335,7 +1496,10 @@ function revelations_editorial_ai_validate_generated_article(
         }
     }
 
-    foreach ( $claim_units as $unit ) {
+    foreach (
+        $required_fact_check_units
+        as $unit
+    ) {
         $detected_types =
             revelations_editorial_ai_detect_claim_types(
                 $unit['text'],

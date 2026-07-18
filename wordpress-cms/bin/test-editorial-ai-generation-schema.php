@@ -125,23 +125,23 @@ $required =
 revelations_schema_test(
     str_contains(
         $generation_source,
-        'stable generated-unit ID'
+        'Fact-check flags use a body-unit contract.'
+    ) &&
+    str_contains(
+        $generation_source,
+        'Return exactly one fact-check flag per generated body unit '
+    ) &&
+    str_contains(
+        $generation_source,
+        'Do not create fact-check flags for titles, excerpts, SEO fields or headings.'
+    ) &&
+    str_contains(
+        $generation_source,
+        'supporting source paragraph IDs into that one flag.'
     ) &&
     str_contains(
         $generation_source,
         'claim_unit_id'
-    ) &&
-    str_contains(
-        $generation_source,
-        'source paragraph IDs in evidence_ids'
-    ) &&
-    str_contains(
-        $generation_source,
-        'Never invent a generated-unit ID or source '
-    ) &&
-    str_contains(
-        $generation_source,
-        'paragraph ID, and never return source evidence text'
     ) &&
     str_contains(
         $generation_source,

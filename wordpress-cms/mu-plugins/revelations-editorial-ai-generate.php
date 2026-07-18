@@ -203,7 +203,7 @@ function revelations_editorial_ai_article_schema(): array {
                         'claim_unit_id' => array(
                             'type' => 'string',
                             'description' =>
-                                'Stable generated-unit ID containing the sensitive claim.',
+                                'Stable paragraph, quote or list-item unit ID containing one or more sensitive claims.',
                         ),
 
                         'requires_manual_verification' => array(
@@ -233,7 +233,7 @@ function revelations_editorial_ai_article_schema(): array {
                 ),
 
                 'description' =>
-                    'Claims recommended for mandatory manual verification. A flag does not mean the claim is false.',
+                    'Exactly one flag per generated paragraph, quote or list-item unit containing sensitive claims. A flag does not mean the claims are false.',
             ),
 
             'direct_quotes' => array(
@@ -842,15 +842,19 @@ function revelations_editorial_generate_draft_with_ai(
 
         "Flag sensitive claims that require manual verification. " .
         "A fact-check flag does not mean that a claim is false. " .
-        "Include a flag for every sensitive number, date, amount, " .
-        "investment, valuation, quote, superlative, benchmark, medical, " .
-        "legal, regulatory or reputational claim used in the output. " .
-        "For every fact-check flag, return the stable generated-unit ID " .
-        "in claim_unit_id, set requires_manual_verification to true, and " .
-        "reference one or more supplied source paragraph IDs in evidence_ids. " .
-        "Valid generated-unit IDs are recommended_title, " .
-        "alternative_titles.0, alternative_titles.1, excerpt, seo_title, " .
-        "seo_description, blocks.N.text, and blocks.N.items.M, using " .
+        "The sensitive categories are number, date, amount, investment, " .
+        "valuation, quote, superlative, benchmark, medical, legal, " .
+        "regulatory and reputational claims. " .
+        "Fact-check flags use a body-unit contract. " .
+        "Return exactly one fact-check flag per generated body unit " .
+        "that contains one or more sensitive claims. Eligible units are " .
+        "paragraph blocks, quote blocks and individual list items. " .
+        "Do not create fact-check flags for titles, excerpts, SEO fields or headings. " .
+        "If one eligible unit contains several sensitive claims, combine all " .
+        "supporting source paragraph IDs into that one flag. Put the stable " .
+        "body-unit ID in claim_unit_id and set requires_manual_verification " .
+        "to true. Valid body-unit IDs are blocks.N.text for paragraph or " .
+        "quote blocks and blocks.N.items.M for individual list items, using " .
         "zero-based indexes. Never invent a generated-unit ID or source " .
         "paragraph ID, and never return source evidence text. " .
         "Return only direct quotes actually used in the article. For each " .

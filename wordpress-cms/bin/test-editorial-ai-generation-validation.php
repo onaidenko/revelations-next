@@ -182,6 +182,25 @@ revelations_validation_test(
     'three normalized titles are unique'
 );
 
+
+$metadata_sensitive_article =
+    revelations_validation_article();
+
+$metadata_sensitive_article[
+    'recommended_title'
+] =
+    'First AI Investment Reaches $18 Million in July 2026';
+
+$result = revelations_validation_run(
+    $metadata_sensitive_article,
+    'news'
+);
+
+revelations_validation_test(
+    true === ( $result['valid'] ?? false ),
+    'sensitive metadata does not require a duplicate body fact-check flag'
+);
+
 $article = revelations_validation_article();
 $article['alternative_titles'][0] =
     'AI — Systems, Move Into Daily Operations!';
@@ -844,6 +863,60 @@ revelations_validation_test(
             ?? ''
         ),
     'multiple known evidence IDs are reconstructed server-side in model order'
+);
+
+
+$repeated_reference_article =
+    $referenced_article;
+
+$repeated_reference_article[
+    'fact_check_flags'
+] = array(
+    array(
+        'claim_unit_id' =>
+            'blocks.0.text',
+        'requires_manual_verification' =>
+            true,
+        'evidence_ids' =>
+            array( 'p001' ),
+    ),
+    array(
+        'claim_unit_id' =>
+            'blocks.0.text',
+        'requires_manual_verification' =>
+            true,
+        'evidence_ids' =>
+            array( 'p002' ),
+    ),
+);
+
+$repeated_resolution =
+    revelations_editorial_ai_resolve_evidence_references(
+        $repeated_reference_article,
+        $evidence_units
+    );
+
+$repeated_flags =
+    $repeated_resolution[
+        'article'
+    ]['fact_check_flags'] ?? array();
+
+revelations_validation_test(
+    true === (
+        $repeated_resolution[
+            'valid'
+        ] ?? false
+    ) &&
+    1 === count( $repeated_flags ) &&
+    array(
+        'p001',
+        'p002',
+    ) === (
+        $repeated_flags[0][
+            'evidence_ids'
+        ] ?? array()
+    ),
+    'repeated raw body-unit references merge their evidence IDs'
 );
 
 $unknown_reference_article = $referenced_article;
