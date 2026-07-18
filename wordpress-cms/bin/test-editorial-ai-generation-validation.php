@@ -406,6 +406,103 @@ revelations_validation_test(
     'source evidence absent from snapshot is rejected'
 );
 
+$inkling_source_evidence =
+    'Inkling is a mixture-of-experts system with 975 billion ' .
+    'total parameters, though it only draws on a fraction of ' .
+    'that — about 41 billion — for any given task, a common ' .
+    'design that keeps very large models faster and cheaper to ' .
+    'run.';
+
+$article = revelations_validation_with_claim(
+    revelations_validation_article(),
+    $benchmark_claim
+);
+
+$article['fact_check_flags'] = array(
+    revelations_validation_flag(
+        $benchmark_claim,
+        'benchmark',
+        "Inkling is a mixture-of-experts system with 975 billion\r\n" .
+        "total parameters, though it only draws on a fraction of " .
+        "that &mdash; about 41 billion &mdash; for any given task, " .
+        "a common design that keeps very large models faster and " .
+        "cheaper to run."
+    ),
+);
+
+$result = revelations_validation_run(
+    $article,
+    'tech',
+    $inkling_source_evidence
+);
+
+revelations_validation_test(
+    true === ( $result['valid'] ?? false ),
+    'production Inkling evidence accepts only transport normalization'
+);
+
+$article['fact_check_flags'][0][
+    'source_evidence'
+] = str_replace(
+    '975 billion',
+    'nearly one trillion',
+    $article['fact_check_flags'][0]['source_evidence']
+);
+
+$result = revelations_validation_run(
+    $article,
+    'tech',
+    $inkling_source_evidence
+);
+
+revelations_validation_test(
+    'invalid_fact_check_evidence' === (
+        $result['code'] ?? ''
+    ),
+    'semantic evidence paraphrase remains rejected'
+);
+
+$article['fact_check_flags'][0][
+    'source_evidence'
+] = mb_strtolower(
+    $inkling_source_evidence,
+    'UTF-8'
+);
+
+$result = revelations_validation_run(
+    $article,
+    'tech',
+    $inkling_source_evidence
+);
+
+revelations_validation_test(
+    'invalid_fact_check_evidence' === (
+        $result['code'] ?? ''
+    ),
+    'source evidence case changes remain rejected'
+);
+
+$article['fact_check_flags'][0][
+    'source_evidence'
+] = str_replace(
+    '—',
+    '-',
+    $inkling_source_evidence
+);
+
+$result = revelations_validation_run(
+    $article,
+    'tech',
+    $inkling_source_evidence
+);
+
+revelations_validation_test(
+    'invalid_fact_check_evidence' === (
+        $result['code'] ?? ''
+    ),
+    'source evidence punctuation changes remain rejected'
+);
+
 $article['fact_check_flags'][0] =
     revelations_validation_flag(
         'A claim absent from generated text.',

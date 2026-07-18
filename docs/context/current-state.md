@@ -542,6 +542,32 @@ Base44 и DNS/domain cutover.
   versions, AI run logs и публикации не созданы; editorial locks
   отсутствуют. Временный local/remote runner удалён.
 
+## AI fact-check evidence hardening
+
+- Причина production `invalid_fact_check_evidence` локализована в
+  сравнении model-provided evidence с raw source snapshot без
+  технической нормализации. Test source `227` содержит 7096 символов
+  plain text и LF-разделители; source snapshot остаётся обязательным
+  и единственным основанием проверки.
+- Evidence comparison теперь допускает только HTML entity decoding,
+  CRLF/LF normalization и сворачивание незначащего whitespace. Регистр,
+  слова и пунктуация не нормализуются; semantic и fuzzy matching
+  отсутствуют.
+- Prompt и JSON Schema явно требуют копировать `source_evidence`
+  дословно с сохранением слов, регистра и пунктуации.
+- Regression fixture использует фактический Inkling source fragment
+  из disposable candidate. Transport-only различия проходят;
+  paraphrase, изменение регистра и пунктуации отклоняются.
+- PHP 8.5.4 lint четырёх изменённых PHP-файлов прошёл. Полная
+  AI generation regression suite прошла: stage 1 — 26/26, action UI —
+  26/26, candidate-save — 31/31, profiles — 35/35, schema/storage —
+  49/49, validation — 41/41, review metadata — 23/23, integration —
+  79/79, Unspoken scanner — 27/27, Unspoken preview — 11/11,
+  scanner runtime — 49/49 и global AI gate — 23/23.
+- Проверки выполнялись изолированно в уникальной remote `/tmp`;
+  временные local/remote директории удалены. API, production
+  WordPress и база на этом шаге не изменялись.
+
 ## Staging frontend и Base44 baseline
 
 - `staging.revelations.me` обслуживается systemd service

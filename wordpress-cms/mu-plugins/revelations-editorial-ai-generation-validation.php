@@ -201,6 +201,37 @@ function revelations_editorial_ai_normalize_quote(
 }
 
 /**
+ * Apply only permitted technical normalization to source evidence.
+ *
+ * Wording, case and punctuation remain unchanged. This only makes
+ * equivalent transport formatting comparable.
+ */
+function revelations_editorial_ai_normalize_source_evidence(
+    string $value
+): string {
+    $value = revelations_editorial_ai_normalize_quote(
+        $value
+    );
+
+    $value = str_replace(
+        array(
+            "\u{00A0}",
+            "\u{202F}",
+        ),
+        ' ',
+        $value
+    );
+
+    $value = (string) preg_replace(
+        '/\s+/u',
+        ' ',
+        $value
+    );
+
+    return trim( $value );
+}
+
+/**
  * Return all generated visible-text and metadata claim units.
  *
  * @param array<string, mixed> $article Parsed article.
@@ -678,6 +709,10 @@ function revelations_editorial_ai_validate_generated_article(
     $seen_flags = array();
     $allowed_claim_types =
         revelations_editorial_ai_fact_check_claim_types();
+    $normalized_source_snapshot =
+        revelations_editorial_ai_normalize_source_evidence(
+            $source_snapshot
+        );
 
     foreach ( $flags as $flag ) {
         if ( ! is_array( $flag ) ) {
@@ -740,11 +775,17 @@ function revelations_editorial_ai_validate_generated_article(
             }
         }
 
+        $normalized_source_evidence =
+            revelations_editorial_ai_normalize_source_evidence(
+                $source_evidence
+            );
+
         if (
             ! $claim_is_used ||
+            '' === $normalized_source_evidence ||
             ! str_contains(
-                $source_snapshot,
-                $source_evidence
+                $normalized_source_snapshot,
+                $normalized_source_evidence
             )
         ) {
             return revelations_editorial_ai_validation_failure(

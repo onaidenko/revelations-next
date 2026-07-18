@@ -226,6 +226,8 @@ function revelations_editorial_ai_article_schema(): array {
 
                         'source_evidence' => array(
                             'type' => 'string',
+                            'description' =>
+                                'A verbatim excerpt copied from the source material. Preserve its exact words, case and punctuation; do not paraphrase or summarize it.',
                         ),
 
                         'verification_required' => array(
@@ -817,6 +819,10 @@ function revelations_editorial_generate_draft_with_ai(
 
         "Flag sensitive claims that require manual verification. " .
         "A fact-check flag does not mean that a claim is false. " .
+        "For every fact-check flag, copy source_evidence verbatim from " .
+        "the supplied source material. Preserve the exact words, case " .
+        "and punctuation; never paraphrase, summarize or reconstruct " .
+        "evidence. Line breaks may be represented as spaces. " .
         "Return only direct quotes actually used in the article, with the " .
         "exact source fragment supporting each quote. Do not claim that a " .
         "quote has been verified; the server performs that check separately.\n\n" .

@@ -118,6 +118,22 @@ $required =
     $schema['required'] ?? array();
 
 revelations_schema_test(
+    str_contains(
+        $generation_source,
+        'copy source_evidence verbatim'
+    ) &&
+    str_contains(
+        $generation_source,
+        'Preserve the exact words, case'
+    ) &&
+    str_contains(
+        $generation_source,
+        'never paraphrase, summarize or reconstruct'
+    ),
+    'prompt requires verbatim fact-check evidence'
+);
+
+revelations_schema_test(
     ! array_key_exists( 'title', $properties ) &&
     ! in_array( 'title', $required, true ),
     'schema no longer contains legacy title'
