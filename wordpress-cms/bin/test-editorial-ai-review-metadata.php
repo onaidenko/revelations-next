@@ -141,6 +141,8 @@ function revelations_review_metadata_raw(): array {
                             'benchmark',
                         'source_evidence' =>
                             'The source reported 95% accuracy.',
+                        'evidence_ids' =>
+                            array( 'p004' ),
                         'verification_required' =>
                             true,
                         'reason' =>
@@ -159,6 +161,8 @@ function revelations_review_metadata_raw(): array {
                             'AI is changing how the team works.',
                         'source_fragment' =>
                             'The founder said AI is changing how the team works.',
+                        'evidence_id' =>
+                            'p006',
                         'verbatim_match' =>
                             true,
                     ),
@@ -440,6 +444,7 @@ $raw_b['_revelations_ai_fact_check_flags'] =
     ' [ { ' .
     '"reason" : "The benchmark requires editorial review.",' .
     '"verification_required" : true,' .
+    '"evidence_ids" : [ "p004" ],' .
     '"source_evidence" : "The source reported 95% accuracy.",' .
     '"claim_type" : "benchmark",' .
     '"claim" : "The system reached 95% accuracy."' .
@@ -448,6 +453,7 @@ $raw_b['_revelations_ai_fact_check_flags'] =
 $raw_b['_revelations_ai_direct_quotes'] =
     '[{' .
     '"verbatim_match":true,' .
+    '"evidence_id":"p006",' .
     '"source_fragment":"The founder said AI is changing how the team works.",' .
     '"quote_text":"AI is changing how the team works."' .
     '}]';

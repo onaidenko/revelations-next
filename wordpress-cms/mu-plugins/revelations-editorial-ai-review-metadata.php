@@ -165,6 +165,17 @@ function revelations_editorial_ai_review_normalize_metadata(
                 (string) (
                     $flag['source_evidence'] ?? ''
                 ),
+            'evidence_ids' =>
+                is_array(
+                    $flag['evidence_ids'] ?? null
+                )
+                    ? array_values(
+                        array_filter(
+                            $flag['evidence_ids'],
+                            'is_string'
+                        )
+                    )
+                    : array(),
             'verification_required' =>
                 true === (
                     $flag['verification_required']
@@ -198,6 +209,10 @@ function revelations_editorial_ai_review_normalize_metadata(
             'source_fragment' =>
                 (string) (
                     $quote['source_fragment'] ?? ''
+                ),
+            'evidence_id' =>
+                (string) (
+                    $quote['evidence_id'] ?? ''
                 ),
             'verbatim_match' =>
                 true === (

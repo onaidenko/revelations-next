@@ -232,6 +232,330 @@ function revelations_editorial_ai_normalize_source_evidence(
 }
 
 /**
+ * Split a source snapshot into stable normalized paragraph evidence units.
+ *
+ * @return array<int, array{id: string, text: string}>
+ */
+function revelations_editorial_ai_source_evidence_units(
+    string $source_snapshot
+): array {
+    $normalized =
+        revelations_editorial_ai_normalize_quote(
+            $source_snapshot
+        );
+
+    $normalized = str_replace(
+        array(
+            "\u{00A0}",
+            "\u{202F}",
+        ),
+        ' ',
+        $normalized
+    );
+
+    $paragraphs = preg_split(
+        '/\n[ \t]*\n+/u',
+        $normalized
+    );
+
+    if ( ! is_array( $paragraphs ) ) {
+        return array();
+    }
+
+    $units = array();
+
+    foreach ( $paragraphs as $paragraph ) {
+        $text = (string) preg_replace(
+            '/\s+/u',
+            ' ',
+            (string) $paragraph
+        );
+
+        $text = trim( $text );
+
+        if ( '' === $text ) {
+            continue;
+        }
+
+        $units[] = array(
+            'id' => sprintf(
+                'p%03d',
+                count( $units ) + 1
+            ),
+            'text' => $text,
+        );
+    }
+
+    return $units;
+}
+
+/**
+ * Index evidence units by their stable IDs.
+ *
+ * @param array<int, array{id: string, text: string}> $units Units.
+ * @return array<string, string>
+ */
+function revelations_editorial_ai_source_evidence_map(
+    array $units
+): array {
+    $map = array();
+
+    foreach ( $units as $unit ) {
+        if (
+            ! is_array( $unit ) ||
+            ! is_string( $unit['id'] ?? null ) ||
+            ! is_string( $unit['text'] ?? null ) ||
+            1 !== preg_match(
+                '/^p[0-9]{3,}$/',
+                $unit['id']
+            ) ||
+            '' === $unit['text']
+        ) {
+            continue;
+        }
+
+        $map[ $unit['id'] ] = $unit['text'];
+    }
+
+    return $map;
+}
+
+/**
+ * Render normalized evidence units for the model input.
+ *
+ * @param array<int, array{id: string, text: string}> $units Units.
+ */
+function revelations_editorial_ai_format_source_evidence_units(
+    array $units
+): string {
+    $lines = array();
+
+    foreach (
+        revelations_editorial_ai_source_evidence_map(
+            $units
+        ) as $id => $text
+    ) {
+        $lines[] = '[' . $id . '] ' . $text;
+    }
+
+    return implode( "\n\n", $lines );
+}
+
+/**
+ * Resolve model evidence references into server-owned review metadata.
+ *
+ * The model supplies IDs only. Source evidence and exact quote fragments are
+ * reconstructed here from the normalized snapshot units.
+ *
+ * @param array<string, mixed> $article Raw structured model output.
+ * @param array<int, array{id: string, text: string}> $units Evidence units.
+ * @return array<string, mixed>
+ */
+function revelations_editorial_ai_resolve_evidence_references(
+    array $article,
+    array $units
+): array {
+    $evidence_map =
+        revelations_editorial_ai_source_evidence_map(
+            $units
+        );
+
+    if ( array() === $evidence_map ) {
+        return revelations_editorial_ai_validation_failure(
+            'invalid_fact_check_evidence',
+            'Source evidence units are unavailable.'
+        );
+    }
+
+    $raw_flags = is_array(
+        $article['fact_check_flags'] ?? null
+    )
+        ? $article['fact_check_flags']
+        : array();
+
+    $raw_quotes = is_array(
+        $article['direct_quotes'] ?? null
+    )
+        ? $article['direct_quotes']
+        : array();
+
+    $quote_texts = array();
+
+    foreach ( $raw_quotes as $quote ) {
+        if ( is_array( $quote ) ) {
+            $quote_texts[] = (string) (
+                $quote['quote_text'] ?? ''
+            );
+        }
+    }
+
+    $resolved_flags = array();
+
+    foreach ( $raw_flags as $flag ) {
+        if ( ! is_array( $flag ) ) {
+            return revelations_editorial_ai_validation_failure(
+                'invalid_fact_check_flag',
+                'A fact-check flag is invalid.'
+            );
+        }
+
+        $claim = (string) (
+            $flag['claim'] ?? ''
+        );
+
+        $evidence_ids = is_array(
+            $flag['evidence_ids'] ?? null
+        )
+            ? array_values(
+                $flag['evidence_ids']
+            )
+            : array();
+
+        if (
+            '' === trim( $claim ) ||
+            true !== (
+                $flag[
+                    'requires_manual_verification'
+                ] ?? false
+            ) ||
+            array() === $evidence_ids ||
+            count( $evidence_ids ) !==
+                count(
+                    array_unique(
+                        $evidence_ids,
+                        SORT_STRING
+                    )
+                )
+        ) {
+            return revelations_editorial_ai_validation_failure(
+                'invalid_fact_check_flag',
+                'A fact-check flag is invalid.'
+            );
+        }
+
+        $evidence = array();
+
+        foreach ( $evidence_ids as $evidence_id ) {
+            if (
+                ! is_string( $evidence_id ) ||
+                1 !== preg_match(
+                    '/^p[0-9]{3,}$/',
+                    $evidence_id
+                ) ||
+                ! isset(
+                    $evidence_map[ $evidence_id ]
+                )
+            ) {
+                return revelations_editorial_ai_validation_failure(
+                    'invalid_fact_check_evidence',
+                    'A fact-check flag references unknown source evidence.'
+                );
+            }
+
+            $evidence[] =
+                $evidence_map[ $evidence_id ];
+        }
+
+        $claim_types =
+            revelations_editorial_ai_detect_claim_types(
+                $claim,
+                'paragraph'
+            );
+
+        foreach ( $quote_texts as $quote_text ) {
+            if (
+                '' !== $claim &&
+                str_contains(
+                    $quote_text,
+                    $claim
+                )
+            ) {
+                $claim_types[] = 'quote';
+                break;
+            }
+        }
+
+        $claim_types = array_values(
+            array_unique( $claim_types )
+        );
+
+        if ( array() === $claim_types ) {
+            $claim_types[] = 'other_sensitive';
+        }
+
+        foreach ( $claim_types as $claim_type ) {
+            $resolved_flags[] = array(
+                'claim' => $claim,
+                'claim_type' => $claim_type,
+                'source_evidence' =>
+                    implode( "\n\n", $evidence ),
+                'evidence_ids' => $evidence_ids,
+                'verification_required' => true,
+                'reason' =>
+                    'Requires manual verification.',
+            );
+        }
+    }
+
+    $resolved_quotes = array();
+
+    foreach ( $raw_quotes as $quote ) {
+        if ( ! is_array( $quote ) ) {
+            return revelations_editorial_ai_validation_failure(
+                'invalid_direct_quote',
+                'Direct quote evidence is invalid.'
+            );
+        }
+
+        $quote_text = (string) (
+            $quote['quote_text'] ?? ''
+        );
+
+        $evidence_id = (string) (
+            $quote['evidence_id'] ?? ''
+        );
+
+        if (
+            '' === trim( $quote_text ) ||
+            1 !== preg_match(
+                '/^p[0-9]{3,}$/',
+                $evidence_id
+            ) ||
+            ! isset( $evidence_map[ $evidence_id ] ) ||
+            ! str_contains(
+                $evidence_map[ $evidence_id ],
+                revelations_editorial_ai_normalize_quote(
+                    $quote_text
+                )
+            )
+        ) {
+            return revelations_editorial_ai_validation_failure(
+                'invalid_direct_quote',
+                'Direct quote evidence could not be verified.'
+            );
+        }
+
+        $resolved_quotes[] = array(
+            'quote_text' => $quote_text,
+            'evidence_id' => $evidence_id,
+            'source_fragment' =>
+                $evidence_map[ $evidence_id ],
+        );
+    }
+
+    $article['fact_check_flags'] =
+        $resolved_flags;
+
+    $article['direct_quotes'] =
+        $resolved_quotes;
+
+    return array(
+        'valid' => true,
+        'article' => $article,
+    );
+}
+
+/**
  * Return all generated visible-text and metadata claim units.
  *
  * @param array<string, mixed> $article Parsed article.
@@ -713,6 +1037,12 @@ function revelations_editorial_ai_validate_generated_article(
         revelations_editorial_ai_normalize_source_evidence(
             $source_snapshot
         );
+    $source_evidence_map =
+        revelations_editorial_ai_source_evidence_map(
+            revelations_editorial_ai_source_evidence_units(
+                $source_snapshot
+            )
+        );
 
     foreach ( $flags as $flag ) {
         if ( ! is_array( $flag ) ) {
@@ -743,6 +1073,14 @@ function revelations_editorial_ai_validate_generated_article(
                 $flag['verification_required']
                 ?? false
             );
+
+        $evidence_ids = is_array(
+            $flag['evidence_ids'] ?? null
+        )
+            ? array_values(
+                $flag['evidence_ids']
+            )
+            : array();
 
         if (
             '' === trim( $claim ) ||
@@ -780,13 +1118,51 @@ function revelations_editorial_ai_validate_generated_article(
                 $source_evidence
             );
 
+        $evidence_is_valid = false;
+
+        if ( array() !== $evidence_ids ) {
+            $resolved_evidence = array();
+
+            foreach ( $evidence_ids as $evidence_id ) {
+                if (
+                    ! is_string( $evidence_id ) ||
+                    ! isset(
+                        $source_evidence_map[
+                            $evidence_id
+                        ]
+                    )
+                ) {
+                    $resolved_evidence = array();
+                    break;
+                }
+
+                $resolved_evidence[] =
+                    $source_evidence_map[
+                        $evidence_id
+                    ];
+            }
+
+            $evidence_is_valid =
+                array() !== $resolved_evidence &&
+                count( $resolved_evidence ) ===
+                    count( $evidence_ids ) &&
+                implode(
+                    "\n\n",
+                    $resolved_evidence
+                ) === $source_evidence;
+        } else {
+            $evidence_is_valid =
+                '' !== $normalized_source_evidence &&
+                str_contains(
+                    $normalized_source_snapshot,
+                    $normalized_source_evidence
+                );
+        }
+
         if (
             ! $claim_is_used ||
             '' === $normalized_source_evidence ||
-            ! str_contains(
-                $normalized_source_snapshot,
-                $normalized_source_evidence
-            )
+            ! $evidence_is_valid
         ) {
             return revelations_editorial_ai_validation_failure(
                 'invalid_fact_check_evidence',
@@ -820,6 +1196,15 @@ function revelations_editorial_ai_validate_generated_article(
             'reason' =>
                 $reason,
         );
+
+        if ( array() !== $evidence_ids ) {
+            $validated_flags[
+                array_key_last(
+                    $validated_flags
+                )
+            ]['evidence_ids'] =
+                $evidence_ids;
+        }
     }
 
     foreach ( $claim_units as $unit ) {
@@ -917,6 +1302,23 @@ function revelations_editorial_ai_validate_generated_article(
                 )
             );
 
+        $evidence_id = (string) (
+            $direct_quote['evidence_id'] ?? ''
+        );
+
+        $quote_evidence_is_valid =
+            '' === $evidence_id ||
+            (
+                isset(
+                    $source_evidence_map[
+                        $evidence_id
+                    ]
+                ) &&
+                $source_evidence_map[
+                    $evidence_id
+                ] === $source_fragment
+            );
+
         if (
             '' === trim( $quote_text ) ||
             '' === trim( $source_fragment ) ||
@@ -931,7 +1333,8 @@ function revelations_editorial_ai_validate_generated_article(
             ! str_contains(
                 $source_fragment,
                 $quote_text
-            )
+            ) ||
+            ! $quote_evidence_is_valid
         ) {
             return revelations_editorial_ai_validation_failure(
                 'invalid_direct_quote',
@@ -971,6 +1374,15 @@ function revelations_editorial_ai_validate_generated_article(
             'verbatim_match' =>
                 true,
         );
+
+        if ( '' !== $evidence_id ) {
+            $validated_quotes[
+                array_key_last(
+                    $validated_quotes
+                )
+            ]['evidence_id'] =
+                $evidence_id;
+        }
     }
 
     $quote_block_counts = array_count_values(

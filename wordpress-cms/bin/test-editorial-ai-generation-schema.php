@@ -22,6 +22,10 @@ $generation_file =
     $plugin_dir .
     '/revelations-editorial-ai-generate.php';
 
+$validation_file =
+    $plugin_dir .
+    '/revelations-editorial-ai-generation-validation.php';
+
 $restore_file =
     $plugin_dir .
     '/revelations-editorial-version-restore.php';
@@ -31,6 +35,7 @@ $logs_file =
     '/revelations-editorial-logs.php';
 
 require_once $generation_file;
+require_once $validation_file;
 
 $generation_source =
     file_get_contents( $generation_file );
@@ -120,17 +125,17 @@ $required =
 revelations_schema_test(
     str_contains(
         $generation_source,
-        'copy source_evidence verbatim'
+        'supplied paragraph IDs in evidence_ids'
     ) &&
     str_contains(
         $generation_source,
-        'Preserve the exact words, case'
+        'Never create an ID'
     ) &&
     str_contains(
         $generation_source,
-        'never paraphrase, summarize or reconstruct'
+        'server reconstructs'
     ),
-    'prompt requires verbatim fact-check evidence'
+    'prompt requires server-owned evidence references'
 );
 
 revelations_schema_test(
@@ -257,10 +262,8 @@ $fact_flag_properties =
 revelations_schema_test(
     array(
         'claim',
-        'claim_type',
-        'source_evidence',
-        'verification_required',
-        'reason',
+        'requires_manual_verification',
+        'evidence_ids',
     ) === (
         $fact_flag_item['required'] ?? null
     ) &&
@@ -269,19 +272,37 @@ revelations_schema_test(
             'additionalProperties'
         ] ?? true
     ),
-    'fact-check flags require the complete structured contract'
+    'model fact-check flags use the evidence reference contract'
 );
 
 revelations_schema_test(
     'boolean' === (
         $fact_flag_properties[
-            'verification_required'
+            'requires_manual_verification'
         ]['type'] ?? ''
+    ) &&
+    'array' === (
+        $fact_flag_properties[
+            'evidence_ids'
+        ]['type'] ?? ''
+    ) &&
+    1 === (
+        $fact_flag_properties[
+            'evidence_ids'
+        ]['minItems'] ?? 0
     ),
-    'verification_required is boolean'
+    'manual verification and non-empty evidence IDs are required'
 );
 
 revelations_schema_test(
+    ! array_key_exists(
+        'source_evidence',
+        $fact_flag_properties
+    ) &&
+    ! array_key_exists(
+        'claim_type',
+        $fact_flag_properties
+    ) &&
     array(
         'number',
         'date',
@@ -296,12 +317,9 @@ revelations_schema_test(
         'regulatory',
         'reputational',
         'other_sensitive',
-    ) === (
-        $fact_flag_properties[
-            'claim_type'
-        ]['enum'] ?? null
-    ),
-    'all approved fact-check claim types are supported'
+    ) ===
+        revelations_editorial_ai_fact_check_claim_types(),
+    'model cannot author evidence or claim type; server supports all approved types'
 );
 
 $direct_quotes =
@@ -316,7 +334,7 @@ $direct_quote_properties =
 revelations_schema_test(
     array(
         'quote_text',
-        'source_fragment',
+        'evidence_id',
     ) === (
         $direct_quote_item['required'] ?? null
     ) &&
@@ -325,15 +343,19 @@ revelations_schema_test(
             'additionalProperties'
         ] ?? true
     ),
-    'direct quotes contain exact quote and source fragment candidates'
+    'direct quotes contain exact quote and one evidence reference'
 );
 
 revelations_schema_test(
     ! array_key_exists(
         'verbatim_match',
         $direct_quote_properties
+    ) &&
+    ! array_key_exists(
+        'source_fragment',
+        $direct_quote_properties
     ),
-    'model cannot control verbatim_match'
+    'model cannot control verbatim_match or source_fragment'
 );
 
 $generation_function =

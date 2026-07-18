@@ -754,6 +754,193 @@ revelations_validation_test(
     'Unspoken generation cannot have empty fact-check flags'
 );
 
+$evidence_snapshot =
+    "First &amp; stable paragraph.\r\n\r\n" .
+    "Morocco&#8217;s   AI\torchestration uses 25 systems.\n\n" .
+    'The director said, “Keep people in control.”';
+
+$evidence_units =
+    revelations_editorial_ai_source_evidence_units(
+        $evidence_snapshot
+    );
+
+revelations_validation_test(
+    array(
+        array(
+            'id' => 'p001',
+            'text' => 'First & stable paragraph.',
+        ),
+        array(
+            'id' => 'p002',
+            'text' =>
+                'Morocco’s AI orchestration uses 25 systems.',
+        ),
+        array(
+            'id' => 'p003',
+            'text' =>
+                'The director said, “Keep people in control.”',
+        ),
+    ) === $evidence_units,
+    'evidence units normalize entities, CRLF and insignificant whitespace deterministically'
+);
+
+revelations_validation_test(
+    $evidence_units ===
+        revelations_editorial_ai_source_evidence_units(
+            $evidence_snapshot
+        ) &&
+    str_contains(
+        revelations_editorial_ai_format_source_evidence_units(
+            $evidence_units
+        ),
+        '[p002] Morocco’s AI orchestration uses 25 systems.'
+    ),
+    'stable paragraph IDs are repeatable and rendered with their exact normalized text'
+);
+
+$referenced_article =
+    revelations_validation_with_claim(
+        revelations_validation_article(),
+        'Morocco’s AI orchestration uses 25 systems.'
+    );
+
+$referenced_article['fact_check_flags'] = array(
+    array(
+        'claim' =>
+            'Morocco’s AI orchestration uses 25 systems.',
+        'requires_manual_verification' => true,
+        'evidence_ids' => array(
+            'p001',
+            'p002',
+        ),
+    ),
+);
+
+$resolved =
+    revelations_editorial_ai_resolve_evidence_references(
+        $referenced_article,
+        $evidence_units
+    );
+
+$resolved_flags =
+    $resolved['article']['fact_check_flags']
+    ?? array();
+
+revelations_validation_test(
+    true === ( $resolved['valid'] ?? false ) &&
+    array( 'p001', 'p002' ) === (
+        $resolved_flags[0]['evidence_ids']
+        ?? array()
+    ) &&
+    (
+        "First & stable paragraph.\n\n" .
+        'Morocco’s AI orchestration uses 25 systems.'
+    ) === (
+            $resolved_flags[0]['source_evidence']
+            ?? ''
+        ),
+    'multiple known evidence IDs are reconstructed server-side in model order'
+);
+
+$unknown_reference_article = $referenced_article;
+$unknown_reference_article['fact_check_flags'][0][
+    'evidence_ids'
+] = array( 'p999' );
+
+$unknown_result =
+    revelations_editorial_ai_resolve_evidence_references(
+        $unknown_reference_article,
+        $evidence_units
+    );
+
+revelations_validation_test(
+    false === ( $unknown_result['valid'] ?? true ) &&
+    'invalid_fact_check_evidence' === (
+        $unknown_result['code'] ?? ''
+    ),
+    'unknown evidence IDs are rejected without fuzzy fallback'
+);
+
+$quote_article = revelations_validation_article();
+$quote_article['blocks'] = array(
+    array(
+        'type' => 'quote',
+        'text' => 'Keep people in control.',
+        'heading_level' => 0,
+        'items' => array(),
+    ),
+);
+$quote_article['fact_check_flags'] = array(
+    array(
+        'claim' => 'Keep people in control.',
+        'requires_manual_verification' => true,
+        'evidence_ids' => array( 'p003' ),
+    ),
+);
+$quote_article['direct_quotes'] = array(
+    array(
+        'quote_text' => 'Keep people in control.',
+        'evidence_id' => 'p003',
+    ),
+);
+
+$quote_resolution =
+    revelations_editorial_ai_resolve_evidence_references(
+        $quote_article,
+        $evidence_units
+    );
+
+$quote_validation = ! empty(
+    $quote_resolution['valid']
+)
+    ? revelations_validation_run(
+        $quote_resolution['article'],
+        'news',
+        $evidence_snapshot
+    )
+    : $quote_resolution;
+
+revelations_validation_test(
+    true === ( $quote_validation['valid'] ?? false ) &&
+    true === (
+        $quote_validation['article'][
+            'direct_quotes'
+        ][0]['verbatim_match'] ?? false
+    ) &&
+    'p003' === (
+        $quote_validation['article'][
+            'direct_quotes'
+        ][0]['evidence_id'] ?? ''
+    ),
+    'exact quote references receive server-generated verbatim_match'
+);
+
+$apostrophe_quote = $quote_article;
+$apostrophe_quote['blocks'][0]['text'] =
+    "Morocco's AI orchestration";
+$apostrophe_quote['fact_check_flags'][0]['claim'] =
+    "Morocco's AI orchestration";
+$apostrophe_quote['fact_check_flags'][0]['evidence_ids'] =
+    array( 'p002' );
+$apostrophe_quote['direct_quotes'][0] = array(
+    'quote_text' => "Morocco's AI orchestration",
+    'evidence_id' => 'p002',
+);
+
+$apostrophe_result =
+    revelations_editorial_ai_resolve_evidence_references(
+        $apostrophe_quote,
+        $evidence_units
+    );
+
+revelations_validation_test(
+    false === ( $apostrophe_result['valid'] ?? true ) &&
+    'invalid_direct_quote' === (
+        $apostrophe_result['code'] ?? ''
+    ),
+    'typographic apostrophes are not fuzzily matched to ASCII apostrophes'
+);
+
 $function_start = strpos(
     $generation_source,
     'function revelations_editorial_generate_draft_with_ai('

@@ -202,49 +202,31 @@ function revelations_editorial_ai_article_schema(): array {
                     'properties' => array(
                         'claim' => array(
                             'type' => 'string',
-                        ),
-
-                        'claim_type' => array(
-                            'type' => 'string',
-
-                            'enum' => array(
-                                'number',
-                                'date',
-                                'money',
-                                'investment',
-                                'company_valuation',
-                                'quote',
-                                'superlative',
-                                'benchmark',
-                                'medical',
-                                'legal',
-                                'regulatory',
-                                'reputational',
-                                'other_sensitive',
-                            ),
-                        ),
-
-                        'source_evidence' => array(
-                            'type' => 'string',
                             'description' =>
-                                'A verbatim excerpt copied from the source material. Preserve its exact words, case and punctuation; do not paraphrase or summarize it.',
+                                'Exact claim text used in the generated article.',
                         ),
 
-                        'verification_required' => array(
+                        'requires_manual_verification' => array(
                             'type' => 'boolean',
+                            'description' =>
+                                'Must be true for every returned sensitive claim.',
                         ),
 
-                        'reason' => array(
-                            'type' => 'string',
+                        'evidence_ids' => array(
+                            'type' => 'array',
+                            'items' => array(
+                                'type' => 'string',
+                            ),
+                            'minItems' => 1,
+                            'description' =>
+                                'One or more supplied paragraph IDs that support the claim.',
                         ),
                     ),
 
                     'required' => array(
                         'claim',
-                        'claim_type',
-                        'source_evidence',
-                        'verification_required',
-                        'reason',
+                        'requires_manual_verification',
+                        'evidence_ids',
                     ),
 
                     'additionalProperties' => false,
@@ -265,21 +247,21 @@ function revelations_editorial_ai_article_schema(): array {
                             'type' => 'string',
                         ),
 
-                        'source_fragment' => array(
+                        'evidence_id' => array(
                             'type' => 'string',
                         ),
                     ),
 
                     'required' => array(
                         'quote_text',
-                        'source_fragment',
+                        'evidence_id',
                     ),
 
                     'additionalProperties' => false,
                 ),
 
                 'description' =>
-                    'Direct quotes actually used in the article and their exact source fragments.',
+                    'Direct quotes actually used in the article and the paragraph ID containing each exact quote.',
             ),
 
             'blocks' => array(
@@ -690,6 +672,47 @@ function revelations_editorial_generate_draft_with_ai(
         );
     }
 
+    if (
+        ! function_exists(
+            'revelations_editorial_ai_source_evidence_units'
+        ) ||
+        ! function_exists(
+            'revelations_editorial_ai_format_source_evidence_units'
+        ) ||
+        ! function_exists(
+            'revelations_editorial_ai_resolve_evidence_references'
+        )
+    ) {
+        return new WP_Error(
+            'generation_validation_unavailable',
+            'Editorial evidence validation is unavailable.'
+        );
+    }
+
+    $source_input = mb_substr(
+        $source_text,
+        0,
+        20000,
+        'UTF-8'
+    );
+
+    $evidence_units =
+        revelations_editorial_ai_source_evidence_units(
+            $source_input
+        );
+
+    if ( array() === $evidence_units ) {
+        return new WP_Error(
+            'source_not_ready',
+            'Source evidence units could not be prepared.'
+        );
+    }
+
+    $formatted_evidence =
+        revelations_editorial_ai_format_source_evidence_units(
+            $evidence_units
+        );
+
     $settings = function_exists(
         'revelations_editorial_get_settings'
     )
@@ -819,13 +842,17 @@ function revelations_editorial_generate_draft_with_ai(
 
         "Flag sensitive claims that require manual verification. " .
         "A fact-check flag does not mean that a claim is false. " .
-        "For every fact-check flag, copy source_evidence verbatim from " .
-        "the supplied source material. Preserve the exact words, case " .
-        "and punctuation; never paraphrase, summarize or reconstruct " .
-        "evidence. Line breaks may be represented as spaces. " .
-        "Return only direct quotes actually used in the article, with the " .
-        "exact source fragment supporting each quote. Do not claim that a " .
-        "quote has been verified; the server performs that check separately.\n\n" .
+        "Include a flag for every sensitive number, date, amount, " .
+        "investment, valuation, quote, superlative, benchmark, medical, " .
+        "legal, regulatory or reputational claim used in the output. " .
+        "For every fact-check flag, copy the exact claim as it appears in " .
+        "your generated article, set requires_manual_verification to true, " .
+        "and reference one or more supplied paragraph IDs in evidence_ids. " .
+        "Never create an ID and never return source evidence text. " .
+        "Return only direct quotes actually used in the article. For each " .
+        "quote, copy quote_text exactly from one supplied paragraph and " .
+        "return that paragraph's evidence_id. The server reconstructs " .
+        "evidence and checks the exact quote; do not claim verification.\n\n" .
 
         "Return article body blocks only. " .
         "Do not put the article title inside the blocks. " .
@@ -844,14 +871,9 @@ function revelations_editorial_generate_draft_with_ai(
         $editorial_track .
         "\nRSS summary: " .
         $rss_summary .
-        "\n\n----- BEGIN SOURCE MATERIAL -----\n" .
-        mb_substr(
-            $source_text,
-            0,
-            20000,
-            'UTF-8'
-        ) .
-        "\n----- END SOURCE MATERIAL -----";
+        "\n\n----- BEGIN SOURCE EVIDENCE UNITS -----\n" .
+        $formatted_evidence .
+        "\n----- END SOURCE EVIDENCE UNITS -----";
 
     $request_body = array(
         'model' => $model,
@@ -1032,6 +1054,35 @@ function revelations_editorial_generate_draft_with_ai(
         }
     }
 
+    $evidence_resolution =
+        revelations_editorial_ai_resolve_evidence_references(
+            $article,
+            $evidence_units
+        );
+
+    if ( empty( $evidence_resolution['valid'] ) ) {
+        return new WP_Error(
+            sanitize_key(
+                (string) (
+                    $evidence_resolution['code']
+                    ?? 'generation_validation_failed'
+                )
+            ),
+            sanitize_text_field(
+                (string) (
+                    $evidence_resolution['message']
+                    ?? 'Generated evidence references are invalid.'
+                )
+            )
+        );
+    }
+
+    $article = is_array(
+        $evidence_resolution['article'] ?? null
+    )
+        ? $evidence_resolution['article']
+        : array();
+
     $recommended_title = sanitize_text_field(
         (string) $article['recommended_title']
     );
@@ -1115,6 +1166,18 @@ function revelations_editorial_generate_draft_with_ai(
                         $flag['source_evidence'] ?? ''
                     ),
 
+                'evidence_ids' =>
+                    is_array(
+                        $flag['evidence_ids'] ?? null
+                    )
+                        ? array_values(
+                            array_map(
+                                'strval',
+                                $flag['evidence_ids']
+                            )
+                        )
+                        : array(),
+
                 'verification_required' =>
                     true === (
                         $flag['verification_required']
@@ -1152,6 +1215,15 @@ function revelations_editorial_generate_draft_with_ai(
                         $direct_quote[
                             'source_fragment'
                         ] ?? ''
+                    ),
+
+                'evidence_id' =>
+                    sanitize_key(
+                        (string) (
+                            $direct_quote[
+                                'evidence_id'
+                            ] ?? ''
+                        )
                     ),
             );
         }
@@ -1214,7 +1286,7 @@ function revelations_editorial_generate_draft_with_ai(
                     $blocks,
             ),
             $current_section,
-            $source_text
+            $source_input
         );
 
     if ( empty( $validation['valid'] ) ) {

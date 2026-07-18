@@ -656,8 +656,6 @@ function revelations_integration_article(
 
     $quote =
         'Teams now use the system during routine editorial work.';
-    $quote_fragment =
-        'The source states: ' . $quote;
 
     $suggestions = array(
         'news' => 'tech',
@@ -714,18 +712,17 @@ function revelations_integration_article(
         'fact_check_flags' => array(
             array(
                 'claim' => $quote,
-                'claim_type' => 'quote',
-                'source_evidence' => $quote_fragment,
-                'verification_required' => true,
-                'reason' =>
-                    'The direct quotation requires manual source review.',
+                'requires_manual_verification' => true,
+                'evidence_ids' => array(
+                    'p001',
+                ),
             ),
         ),
 
         'direct_quotes' => array(
             array(
                 'quote_text' => $quote,
-                'source_fragment' => $quote_fragment,
+                'evidence_id' => 'p001',
             ),
         ),
 
@@ -1175,11 +1172,17 @@ foreach ( $supported_sections as $section ) {
             ),
             'Current section: ' . $section
         ) &&
-        ! array_key_exists(
-            'source_section',
+            ! array_key_exists(
+                'source_section',
             $request_body['text']['format']['schema'][
                 'properties'
             ] ?? array()
+        ) &&
+        str_contains(
+            (string) (
+                $request_body['input'] ?? ''
+            ),
+            '[p001] '
         ),
         $section . ' uses its profile and server-only section context in the production prompt and schema'
     );
@@ -1214,9 +1217,17 @@ foreach ( $supported_sections as $section ) {
         array( 10 ) ===
             wp_get_post_categories( 100 ) &&
         ! empty( $flags ) &&
+        array( 'p001' ) === (
+            $flags[0]['evidence_ids']
+            ?? array()
+        ) &&
         true === (
             $quotes[0]['verbatim_match']
             ?? false
+        ) &&
+        'p001' === (
+            $quotes[0]['evidence_id']
+            ?? ''
         ) &&
         str_contains(
             $draft->post_content,
@@ -1263,14 +1274,14 @@ $validation_cases = array(
                 return $article;
             },
     ),
-    'source evidence missing from snapshot' => array(
+    'unknown source evidence reference' => array(
         'section' => 'news',
         'error' => 'invalid_fact_check_evidence',
         'mutate' =>
             static function ( array $article ): array {
                 $article['fact_check_flags'][0][
-                    'source_evidence'
-                ] = 'Evidence absent from source.';
+                    'evidence_ids'
+                ] = array( 'p999' );
                 return $article;
             },
     ),
