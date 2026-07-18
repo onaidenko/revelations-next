@@ -947,3 +947,14 @@ Base44 и DNS/domain cutover.
   request, scanner run, frontend or staging change occurred.
 - Next manual step: the user may open draft 214 and publish it through
   Gutenberg when ready; do not save unrelated changes before that action.
+
+## SEO Stage 1B-3: News sitemap declaration
+
+- Live audit of the new News article passed: the main sitemap contains all 63
+  URLs and the new article exactly once; the News sitemap contains the same
+  article exactly once. Both dynamic sitemaps updated through Next ISR without
+  a new build.
+- Local frontend source now declares both existing sitemap endpoints in
+  `robots.txt`: `/sitemap.xml` and `/news-sitemap.xml`. This changes only the
+  crawler declaration, not sitemap content, generation or caching.
+- Production deploy and GSC submission have not been performed.
