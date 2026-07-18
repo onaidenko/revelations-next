@@ -922,3 +922,28 @@ Base44 и DNS/domain cutover.
   contract diagnostics: 18/18; PHP lint and full isolated AI regression suite
   passed. No production CMS, DB, OpenAI, scanner, frontend or staging change
   occurred. The hotfix is committed/pushed but requires a separate CMS deploy.
+
+## REST publication hotfix production rollout retry 2026-07-18
+
+- Successfully deployed commit
+  `ccf78f17d8ecc1b648cc6d208565c6c499c02cac` to exactly one file:
+  `revelations-editorial-publish-gate.php` in the production MU-plugin
+  directory. Source and live SHA-256 matched
+  `661187b46d1945f81fd0c853b0ca27fadeeeae5a2f2c1914054ee498ad928960`.
+- New rollback backup:
+  `/root/revelations-rest-publish-gate-retry-before-20260718-233106`.
+  The earlier attempt was safely rolled back because of a shell validation
+  bug; this retry used `cut -d ' ' -f1`, not `awk`, for every SHA read.
+- Live target lint and lint of all production MU-plugin PHP files passed;
+  owner/mode is `root:www-data 0640`. CMS health, articles and sections
+  endpoints returned HTTP 200; PHP-FPM and Nginx remained active with no new
+  fatal or parse errors.
+- Focused diagnostic against the exact deployed file passed 6/6. It confirms
+  REST bypass, unchanged REST acceptance, slashed-text normalization,
+  classic/WP-CLI fallback and real-change blocking.
+- Draft 214 remained `draft`, category `news`, `reviewed/current`, with nine
+  fingerprints, Featured Image 285, matching hashes, and unchanged modified
+  and review timestamps. No WordPress/DB writes, publication attempt, OpenAI
+  request, scanner run, frontend or staging change occurred.
+- Next manual step: the user may open draft 214 and publish it through
+  Gutenberg when ready; do not save unrelated changes before that action.
