@@ -796,3 +796,53 @@ Base44 и DNS/domain cutover.
   restriction и успешно сгенерировал `/news-sitemap.xml`. Deploy,
   SSH/scp, production CMS/frontend changes и external API calls не
   выполнялись.
+
+## SEO Stage 1B-1 production rollout 2026-07-18
+
+- Развёрнут frontend commit `daa026275321e899e4ca105bae80659cd909d907`
+  (`Build SEO foundation and social previews`). Local `npm test`
+  (18 passing), ESLint и production standalone build прошли; build
+  запускался с production public site/API endpoints, без staging URL в
+  runtime output. Production build ID изменился с
+  `hDsyU_OEvSh7Hwb-GM3Xn` на `fbnR1W5HI1kT-fjAKO_d3`.
+- Полный rollback backup создан до переключения:
+  `/root/revelations-seo-stage1a-before-20260718-215101`; он содержит
+  release archive, service unit, active vhost, checksum manifest,
+  прежний build ID и rollback procedure без secrets. Previous release
+  также сохранён в
+  `/var/www/revelations-production.previous-seo-stage1b-20260718-215930`.
+- Атомарно переключён только `/var/www/revelations-production` и
+  перезапущен только `revelations-production.service`. Service active,
+  listener `127.0.0.1:3002`, loopback и public homepage возвращают 200.
+  Nginx, TLS, DNS, staging, WordPress CMS/MU plugins и база не менялись.
+- Live main sitemap: HTTP 200, `application/xml`, XML programmatically
+  parsed; 62 canonical production URLs, 50 article URLs и 50 published
+  CMS articles, duplicates/invalid URLs/5xx — 0. Host crawl 64 routes
+  и 11 Next assets прошёл без 5xx, noindex, staging leakage или
+  unavailable assets. HTTP и HTTPS www сохраняют direct 301 на apex с
+  path/query.
+- News sitemap: HTTP 200, valid Google News namespace, 0 items. Это
+  корректно: на момент audit не было News с publication date за
+  последние 48 часов; empty XML remains valid. Поэтому publication name
+  и language отсутствуют как нет publication nodes.
+- Проверены live samples с cover: News
+  `elys-life-to-host-private-launch-event-in-dubai` и People
+  `daria-barkova-art-profiling-turns-the-inner-world-into-a-visual-map`.
+  Обе страницы 200; canonical, article OG/Twitter metadata,
+  `summary_large_image`, actual CMS cover URLs (200), timestamps,
+  NewsArticle/Article и BreadcrumbList присутствуют; raw HTML entities
+  в title/description не найдены. Среди 50 current published CMS
+  articles sample без Cover Image отсутствует, поэтому branded fallback
+  in live HTML не был exercised in this audit.
+- Homepage/site graph и sampled article JSON-LD render server-side;
+  audit found types `graph`, `NewsArticle`/`Article` and
+  `BreadcrumbList`. Staging remains 200, service active and retains
+  `X-Robots-Tag: noindex, nofollow, noarchive`.
+- Nginx active; no Nginx error-log lines after deploy. The only service
+  journal `Failed` line is the intentional stop of the previous Node
+  process (exit 143) during `systemctl restart`; new process immediately
+  started and remains active, with no restart loop. Disk free: 39G.
+- Не выполнялись CMS/database writes, OpenAI requests, GSC submission,
+  staging changes or functional code changes. No automatic rollback was
+  needed. Remaining SEO limitation: fresh News and no-cover social
+  fallback need a later live recheck when matching published data exists.
