@@ -1063,3 +1063,47 @@ Base44 и DNS/domain cutover.
 - Staging service and release were unchanged, returned HTTP 200 and retained
   `X-Robots-Tag: noindex`. WordPress, database, OpenAI and scanners were not
   changed during this frontend hotfix.
+
+## Editorial UI and YouTube rollout 2026-07-19
+
+- Functional commits `1931123c73c122cf940ff7025251996718994ba1`
+  (`Fix Unspoken scan progress handling`) and
+  `1ae2f243753ffb54fda80417245e538b89924d5d`
+  (`Embed YouTube videos in articles`) are deployed. The Unspoken scan action
+  now uses the existing shared long-action progress handler; the root cause
+  was its omission from that handler's supported action registry.
+- The production MU-plugin deployment changed only
+  `revelations-editorial-scan-ui.php`; backup:
+  `/root/revelations-editorial-ui-ai-before-20260719-142128`.
+  Persistent manual AI generation is enabled in protected WordPress runtime
+  configuration. Readiness is `Ready`, model is `gpt-5.6-luna`, and requests
+  are enabled. Enablement performed zero OpenAI requests, scanner runs,
+  publications and database writes.
+- Articles now support canonical YouTube `watch`, `youtu.be`, `shorts` and
+  `embed` URLs. The initial page renders a thumbnail from `i.ytimg.com` and a
+  retained external `Watch on YouTube` link (`noopener noreferrer`); click
+  replaces the preview with an autoplaying `youtube-nocookie.com` iframe.
+  Invalid URLs render no empty watch block. Local diagnostics passed: action
+  UI 32/32, YouTube parser 3/3, full Node suite 35/35 and ESLint.
+- Frontend source commit `1ae2f243753ffb54fda80417245e538b89924d5d` was
+  rebuilt and atomically deployed. Previous build
+  `3gTn0QmgvZF1xhmocY2w2` is retained at
+  `/var/www/revelations-production.previous-youtube-20260719-144133`; backup:
+  `/root/revelations-production-youtube-before-20260719-144133`. Active build:
+  `eJZmpMkybdDTtgVtfEn7r`. No rollback was required.
+- Candidate and live audits each passed all 64 current sitemap URLs (the
+  count increased from the earlier 63 through published CMS content): HTTP
+  200, zero canonical errors, zero `og:url` errors and zero staging URL
+  leakage. `robots.txt` declares both production sitemaps; the News sitemap
+  has no staging URL; CMS public API returned 200; `GET /api/revalidate`
+  returned 405 and the protected runtime secret was confirmed loaded without
+  reading its value.
+- Published YouTube article
+  `bwiga-will-be-held-in-montenegro-again-in-september` verified the `youtu.be`
+  form with video ID `R7oU8BMeStQ`: preview and `i.ytimg.com` thumbnail are
+  present, initial HTML has no iframe, and the external fallback link remains.
+  The click-to-load and `allowFullScreen` client contract is covered by the
+  local component tests.
+- Staging was unchanged: service active, homepage HTTP 200,
+  `X-Robots-Tag: noindex`, build `bXG0hOp0zPZs7O8HZaerF`. No CMS, database,
+  OpenAI, scanner or staging mutation occurred during this rollout.
