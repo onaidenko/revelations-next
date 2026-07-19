@@ -958,3 +958,35 @@ Base44 и DNS/domain cutover.
   `robots.txt`: `/sitemap.xml` and `/news-sitemap.xml`. This changes only the
   crawler declaration, not sitemap content, generation or caching.
 - Production deploy and GSC submission have not been performed.
+
+## SEO Stage 1B-3 production rollout 2026-07-19
+
+- Deployed frontend source commit
+  `8add3663e0781647bf4ee2a64014b53bdd039b8a`
+  (`Declare both sitemaps in robots`).
+- Next.js frontend was rebuilt and switched atomically. The only functional
+  frontend change was `app/robots.js`.
+- Previous build ID:
+  `fbnR1W5HI1kT-fjAKO_d3`.
+- Active build ID:
+  `Bq7-JrvFPKzqBxWBL-8T8`.
+- Rollback backup:
+  `/root/revelations-robots-stage1b3-retry-before-20260719-002057`.
+- Previous release:
+  `/var/www/revelations-production.previous-robots-retry-20260719-002057`.
+- Production `robots.txt` now declares both:
+  `https://revelations.me/sitemap.xml` and
+  `https://revelations.me/news-sitemap.xml`.
+- Homepage, News section, published Apple Intelligence article, robots,
+  main sitemap and News sitemap returned HTTP 200.
+- Main sitemap contained 63 unique URLs and the target article exactly once.
+  News sitemap contained the target article exactly once with all required
+  Google News fields.
+- Production service remained active on port 3002. There were zero critical
+  Nginx errors after the deployment timestamp; earlier reported matches were
+  historical log entries.
+- Staging retained `noindex, nofollow, noarchive`.
+- CMS, WordPress, database, OpenAI, editorial scanners and Google Search
+  Console were not changed. No rollback was required.
+- Next stage: verify both sitemaps and request indexing of the new article in
+  Google Search Console.
