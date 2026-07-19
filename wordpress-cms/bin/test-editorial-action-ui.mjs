@@ -161,7 +161,29 @@ for (const [name, blocks] of Object.entries(scripts)) {
 const sourceDraftScript = scripts.sourceDraft.join('\n');
 const longActionsScript = scripts.longActions.join('\n');
 const aiReadinessScript = scripts.aiReadiness.join('\n');
+const scanUiScript = scripts.scanUi.join('\n');
 const actionScripts = Object.values(scripts);
+
+[
+    'revelations_preview_news_scan',
+    'revelations_preview_people_scan',
+    'revelations_preview_places_scan',
+    'revelations_preview_tech_scan',
+    'revelations_preview_unspoken_scan',
+].forEach((action) => {
+    check(
+        scanUiScript.includes(`'${action}'`),
+        `${action} belongs to the shared scan progress UI`
+    );
+});
+
+check(
+    1 === occurrences(
+        scanUiScript,
+        "form.addEventListener('submit'"
+    ),
+    'all five scan actions retain one shared submit handler'
+);
 
 check(
     1 === occurrences(
