@@ -1,0 +1,694 @@
+{
+  "assignments": [
+    {
+      "location": "Armenia",
+      "primary_topic": "blockchain-fintech-digital-money",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": "33-questions",
+      "slug": "33-qs-for-andranik-togramadzhian",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "London, UK",
+      "primary_topic": "creative-industries-media",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "health-longevity-medtech",
+        "startups-founders-investment"
+      ],
+      "series": "33-questions",
+      "slug": "33-qs-for-anna-lou",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Armenia",
+      "primary_topic": "blockchain-fintech-digital-money",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "future-work-leadership"
+      ],
+      "series": "33-questions",
+      "slug": "33-qs-for-arman-mamyan",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Yerevan, Armenia",
+      "primary_topic": "blockchain-fintech-digital-money",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "creative-industries-media",
+        "events-innovation-ecosystems"
+      ],
+      "series": "33-questions",
+      "slug": "33-qs-for-metakse-ghambaryan",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "ai-data",
+      "public_topic_eligible": false,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": "33-questions",
+      "slug": "33-qs-for-sergei-medvedev",
+      "taxonomy_status": "needs-editorial-review"
+    },
+    {
+      "location": "New York, USA",
+      "primary_topic": "startups-founders-investment",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "blockchain-fintech-digital-money"
+      ],
+      "series": "33-questions",
+      "slug": "33-qs-for-sergey-khusnetdinov",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "startups-founders-investment",
+      "public_topic_eligible": false,
+      "secondary_topics": [
+        "future-work-leadership"
+      ],
+      "series": "33-questions",
+      "slug": "33-qs-for-timur-makhmudi",
+      "taxonomy_status": "needs-editorial-review"
+    },
+    {
+      "location": null,
+      "primary_topic": "ai-data",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "robotics-automation"
+      ],
+      "series": null,
+      "slug": "ai-is-coming-for-the-tomato",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "ai-data",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "future-work-leadership",
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "ai-is-done-being-a-toy-now-it-wants-a-desk-in-your-office",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "England, UK",
+      "primary_topic": "health-longevity-medtech",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data",
+        "robotics-automation"
+      ],
+      "series": null,
+      "slug": "ai-is-now-looking-inside-the-lungs",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "New York, USA",
+      "primary_topic": "creative-industries-media",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "future-work-leadership",
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "anastasia-drinevskaya-the-future-belongs-to-people",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "blockchain-fintech-digital-money",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "andreii-bruiaka-everyone-owns-an-app-almost-nobody-owns-the-engine",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "China",
+      "primary_topic": "ai-data",
+      "public_topic_eligible": true,
+      "secondary_topics": [],
+      "series": null,
+      "slug": "apple-intelligence-cleared-for-china-with-alibaba-and-baidu",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "blockchain-fintech-digital-money",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "future-work-leadership",
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "arman-mamyan-in-a-world-built-for-distraction-discipline-becomes-power",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "future-work-leadership",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "health-longevity-medtech"
+      ],
+      "series": null,
+      "slug": "burnout-doesnt-look-like-burnout",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Budva, Montenegro",
+      "primary_topic": "events-innovation-ecosystems",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "blockchain-fintech-digital-money",
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "bwiga-will-be-held-in-montenegro-again-in-september",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "creative-industries-media",
+      "public_topic_eligible": true,
+      "secondary_topics": [],
+      "series": null,
+      "slug": "canons-eos-r6-v-video-first",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "creative-industries-media",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data",
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "daria-barkova-art-profiling-turns-the-inner-world-into-a-visual-map",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "startups-founders-investment",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "future-work-leadership"
+      ],
+      "series": null,
+      "slug": "dariush-soudi-whats-really-behind-this-success",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "startups-founders-investment",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data",
+        "future-work-leadership"
+      ],
+      "series": null,
+      "slug": "david-lolaev-if-the-future-is-a-track-i-want-to-drive-first",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Saudi Arabia",
+      "primary_topic": "future-places-architecture-hospitality",
+      "public_topic_eligible": true,
+      "secondary_topics": [],
+      "series": null,
+      "slug": "desert-rock-the-future-of-hospitality-is-being-carved-into-the-mountain",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Dubai, UAE",
+      "primary_topic": "health-longevity-medtech",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data",
+        "events-innovation-ecosystems"
+      ],
+      "series": null,
+      "slug": "elys-life-to-host-private-launch-event-in-dubai",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Tbilisi, Georgia",
+      "primary_topic": "events-innovation-ecosystems",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "blockchain-fintech-digital-money",
+        "startups-founders-investment"
+      ],
+      "series": "global-tech-weekend-tbilisi",
+      "slug": "global-tech-weekend-tbilisi-2026",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Tbilisi, Georgia",
+      "primary_topic": "events-innovation-ecosystems",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "creative-industries-media",
+        "startups-founders-investment"
+      ],
+      "series": "global-tech-weekend-tbilisi",
+      "slug": "global-tech-weekend-tbilisi-2026-how-a-citywide-festival-united-the-regions-tech-ecosystem",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Tbilisi, Georgia",
+      "primary_topic": "events-innovation-ecosystems",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "blockchain-fintech-digital-money",
+        "startups-founders-investment"
+      ],
+      "series": "global-tech-weekend-tbilisi",
+      "slug": "global-tech-weekend-tbilisi-how-the-city-became-an-interface-for-a-new-tech-region",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Tbilisi, Georgia",
+      "primary_topic": "events-innovation-ecosystems",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": "global-tech-weekend-tbilisi",
+      "slug": "global-tech-weekend-tbilisi-returns-on-june-19-21",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "ai-data",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "how-openxai-will-change-the-worlds-perceptions",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "robotics-automation",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data"
+      ],
+      "series": null,
+      "slug": "humanoid-robots-are-learning-to-use-their-hands-this-is-where-it-gets-personal",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "startups-founders-investment",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "future-work-leadership"
+      ],
+      "series": null,
+      "slug": "i-raised-8m-and-still-failed",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Dubai, UAE",
+      "primary_topic": "blockchain-fintech-digital-money",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "events-innovation-ecosystems"
+      ],
+      "series": "mena-blockchain-week",
+      "slug": "mena-blockchain-week",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Dubai, UAE",
+      "primary_topic": "blockchain-fintech-digital-money",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "events-innovation-ecosystems"
+      ],
+      "series": "mena-blockchain-week",
+      "slug": "mena-blockchain-week-2026-concludes-how-dubais-first-city-wide-blockchain-initiative-drew-5000-attendees-across-40-events",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "ai-data",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "robotics-automation",
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "misumi-ai-driven-manufacturing-revolution",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Morocco",
+      "primary_topic": "future-places-architecture-hospitality",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "creative-industries-media"
+      ],
+      "series": null,
+      "slug": "moroccos-tower-reaches-for-tomorrow",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "blockchain-fintech-digital-money",
+      "public_topic_eligible": true,
+      "secondary_topics": [],
+      "series": null,
+      "slug": "new-era-of-digital-money-and-happiness",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Europe",
+      "primary_topic": "ai-data",
+      "public_topic_eligible": true,
+      "secondary_topics": [],
+      "series": null,
+      "slug": "openai-offers-europe-cybersecurity-tools-ai-diplomacy-has-entered-the-chat",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "health-longevity-medtech",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data"
+      ],
+      "series": null,
+      "slug": "quantum-computing-is-finally-trying-to-be-useful-starting-with-medicine",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "blockchain-fintech-digital-money",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data",
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "sam-kaploushenko-the-future-of-money-is-invisible",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "robotics-automation",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data",
+        "future-work-leadership"
+      ],
+      "series": null,
+      "slug": "saps-warehouse-robots-are-not-a-demo",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Red Sea, Saudi Arabia",
+      "primary_topic": "future-places-architecture-hospitality",
+      "public_topic_eligible": true,
+      "secondary_topics": [],
+      "series": null,
+      "slug": "shebara-the-future-of-luxury-has-landed-on-the-red-sea",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "France",
+      "primary_topic": "ai-data",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "softbank-wants-to-build-the-future-in-france-and-it-looks-like-a-data-center",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "future-work-leadership",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "the-board-that-betrayed-its-founder",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Tbilisi, Georgia",
+      "primary_topic": "events-innovation-ecosystems",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "creative-industries-media",
+        "startups-founders-investment"
+      ],
+      "series": "global-tech-weekend-tbilisi",
+      "slug": "the-brands-and-speakers-you-dont-want-to-miss-at-global-tech-weekend-tbilisi-2026",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "future-work-leadership",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "the-co-founder-divorce-nobody-talks-about",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Maldives",
+      "primary_topic": "future-places-architecture-hospitality",
+      "public_topic_eligible": true,
+      "secondary_topics": [],
+      "series": null,
+      "slug": "the-muraka-sleeping-underwater-is-no-longer-a-fantasy-it-is-a-status-symbol",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "health-longevity-medtech",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data",
+        "robotics-automation"
+      ],
+      "series": null,
+      "slug": "the-robot-dentist-has-entered-the-room",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "London, UK / Gibraltar",
+      "primary_topic": "health-longevity-medtech",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data",
+        "robotics-automation"
+      ],
+      "series": null,
+      "slug": "the-surgeon-was-in-london-the-patient-was-in-gibraltar",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "future-work-leadership",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "the-toxic-culture-we-accidentally-built",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Harads, Sweden",
+      "primary_topic": "future-places-architecture-hospitality",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "creative-industries-media"
+      ],
+      "series": null,
+      "slug": "treehotel-the-future-can-be-a-mirror-cube-in-a-swedish-forest",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "startups-founders-investment",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "future-work-leadership"
+      ],
+      "series": null,
+      "slug": "what-investors-dont-tell-you-after-they-pass",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "Antarctica",
+      "primary_topic": "future-places-architecture-hospitality",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "creative-industries-media"
+      ],
+      "series": null,
+      "slug": "white-desert-echo-base-antarctica-gets-a-space-age-hotel-because-apparently-earth-was-not-remote-enough",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": "United States",
+      "primary_topic": "startups-founders-investment",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "ai-data"
+      ],
+      "series": null,
+      "slug": "why-sheryl-sandberg-is-betting-on-smartphone-vehicle-inspections",
+      "taxonomy_status": "proposed"
+    },
+    {
+      "location": null,
+      "primary_topic": "future-work-leadership",
+      "public_topic_eligible": true,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": null,
+      "slug": "why-we-killed-our-best-product",
+      "taxonomy_status": "proposed"
+    }
+  ],
+  "manual_related": [
+    {
+      "source_slug": "ai-is-done-being-a-toy-now-it-wants-a-desk-in-your-office",
+      "target_slugs": [
+        "softbank-wants-to-build-the-future-in-france-and-it-looks-like-a-data-center",
+        "apple-intelligence-cleared-for-china-with-alibaba-and-baidu",
+        "misumi-ai-driven-manufacturing-revolution"
+      ]
+    },
+    {
+      "source_slug": "david-lolaev-if-the-future-is-a-track-i-want-to-drive-first",
+      "target_slugs": [
+        "why-sheryl-sandberg-is-betting-on-smartphone-vehicle-inspections",
+        "dariush-soudi-whats-really-behind-this-success",
+        "i-raised-8m-and-still-failed"
+      ]
+    },
+    {
+      "source_slug": "mena-blockchain-week",
+      "target_slugs": [
+        "mena-blockchain-week-2026-concludes-how-dubais-first-city-wide-blockchain-initiative-drew-5000-attendees-across-40-events",
+        "bwiga-will-be-held-in-montenegro-again-in-september",
+        "33-qs-for-metakse-ghambaryan"
+      ]
+    },
+    {
+      "source_slug": "openai-offers-europe-cybersecurity-tools-ai-diplomacy-has-entered-the-chat",
+      "target_slugs": [
+        "ai-is-done-being-a-toy-now-it-wants-a-desk-in-your-office",
+        "how-openxai-will-change-the-worlds-perceptions",
+        "softbank-wants-to-build-the-future-in-france-and-it-looks-like-a-data-center"
+      ]
+    },
+    {
+      "source_slug": "sam-kaploushenko-the-future-of-money-is-invisible",
+      "target_slugs": [
+        "arman-mamyan-in-a-world-built-for-distraction-discipline-becomes-power",
+        "andreii-bruiaka-everyone-owns-an-app-almost-nobody-owns-the-engine",
+        "new-era-of-digital-money-and-happiness"
+      ]
+    },
+    {
+      "source_slug": "the-toxic-culture-we-accidentally-built",
+      "target_slugs": [
+        "why-we-killed-our-best-product",
+        "the-board-that-betrayed-its-founder",
+        "burnout-doesnt-look-like-burnout"
+      ]
+    }
+  ],
+  "schema_version": 2,
+  "series": [
+    {
+      "name": "33 Questions",
+      "slug": "33-questions"
+    },
+    {
+      "name": "Global Tech Weekend Tbilisi",
+      "slug": "global-tech-weekend-tbilisi"
+    },
+    {
+      "name": "MENA Blockchain Week",
+      "slug": "mena-blockchain-week"
+    }
+  ],
+  "status": "approved_for_implementation",
+  "topics": [
+    {
+      "description": "Artificial intelligence, machine learning, data infrastructure, advanced computing and practical AI systems.",
+      "name": "AI & Data",
+      "slug": "ai-data"
+    },
+    {
+      "description": "Blockchain, Web3, payments, financial infrastructure, digital assets and the future of money.",
+      "name": "Blockchain, Fintech & Digital Money",
+      "slug": "blockchain-fintech-digital-money"
+    },
+    {
+      "description": "Art, design, film, photography, production, media, creator businesses and cultural projects.",
+      "name": "Creative Industries & Media",
+      "slug": "creative-industries-media"
+    },
+    {
+      "description": "Technology events, conferences, regional ecosystems, cross-sector communities and innovation hubs.",
+      "name": "Events & Innovation Ecosystems",
+      "slug": "events-innovation-ecosystems"
+    },
+    {
+      "description": "Architecture, hotels, destinations and physical spaces that express new ideas about design and experience.",
+      "name": "Future Places, Architecture & Hospitality",
+      "slug": "future-places-architecture-hospitality"
+    },
+    {
+      "description": "Workplace transformation, leadership, company culture, teams, discipline and difficult management decisions.",
+      "name": "Future of Work & Leadership",
+      "slug": "future-work-leadership"
+    },
+    {
+      "description": "Medicine, diagnostics, longevity, wellness, healthcare systems and technology-assisted treatment.",
+      "name": "Health, Longevity & MedTech",
+      "slug": "health-longevity-medtech"
+    },
+    {
+      "description": "Robots, autonomous machines, industrial automation and human-machine collaboration.",
+      "name": "Robotics & Automation",
+      "slug": "robotics-automation"
+    },
+    {
+      "description": "Entrepreneurship, venture capital, fundraising, business building and founder journeys.",
+      "name": "Startups, Founders & Investment",
+      "slug": "startups-founders-investment"
+    }
+  ]
+}

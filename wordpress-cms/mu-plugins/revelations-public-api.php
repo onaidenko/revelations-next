@@ -97,6 +97,18 @@ function revelations_api_prepare_article( WP_Post $post ): array {
         'raw'
     );
 
+    $editorial_taxonomy = function_exists( 'revelations_editorial_taxonomy_public_data' )
+        ? revelations_editorial_taxonomy_public_data( $post_id )
+        : array(
+            'primary_topic'         => null,
+            'topics'                => array(),
+            'series'                => null,
+            'locations'             => array(),
+            'public_topic_eligible' => true,
+            'taxonomy_status'       => 'proposed',
+            'manual_related'        => array(),
+        );
+
     return array(
         'id' => $post_id,
 
@@ -135,6 +147,14 @@ function revelations_api_prepare_article( WP_Post $post ): array {
 
         'categories' => $category_data,
         'tags'       => $tag_data,
+
+        'primary_topic'         => $editorial_taxonomy['primary_topic'],
+        'topics'                => $editorial_taxonomy['topics'],
+        'series'                => $editorial_taxonomy['series'],
+        'locations'             => $editorial_taxonomy['locations'],
+        'public_topic_eligible' => $editorial_taxonomy['public_topic_eligible'],
+        'taxonomy_status'       => $editorial_taxonomy['taxonomy_status'],
+        'manual_related'        => $editorial_taxonomy['manual_related'],
 
         'cover_image' => $image,
 
