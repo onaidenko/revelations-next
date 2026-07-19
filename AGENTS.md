@@ -39,3 +39,34 @@
   WordPress, платным OpenAI API request, destructive Git operation,
   изменением продуктового контракта, а также при неожиданной ошибке
   или несвязанном изменении.
+
+## Production и remote safety
+
+- Перед любой production-операцией явно разделять read-only аудит,
+  deploy и изменение runtime-конфигурации; для каждой mutation нужно
+  отдельное разрешение с точным target и scope.
+- Перед CMS или frontend deploy подтвердить текущий release, создать
+  timestamped backup и сохранить понятный rollback path. Не удалять
+  previous release или backup без отдельного явного разрешения.
+- Frontend deploy выполнять только из проверенного production build.
+  Проверять, что artifact использует `https://revelations.me`, не
+  содержит `https://staging.revelations.me`, и не брать production
+  secrets из repository `.env`-файлов.
+- Перед atomic frontend switch запускать candidate только в новой
+  изолированной `/tmp`-директории и на свободном loopback port. Candidate
+  не получает runtime secret; его отсутствие не считать ошибкой.
+- После switch выполнять health-check service и loopback port, `nginx -t`,
+  public HTTPS audit, CMS API check и безопасную функциональную проверку.
+  Sitemap URLs проверять по фактическому текущему sitemap, а не по
+  заранее зафиксированному количеству.
+- При сбое соединения, approval-сервиса или command pipeline сначала
+  read-only установить, что реально успело выполниться. Не повторять
+  deploy/switch вслепую.
+- Runtime secrets допустимо проверять только по факту наличия/загрузки.
+  Никогда не читать, не выводить, не передавать в Git и не записывать в
+  context их значения.
+- Не выполнять OpenAI generation/test connection, scanner runs, публикацию
+  или WordPress/DB writes во время технического deploy/audit, если это не
+  разрешено отдельно.
+- Staging — самостоятельный контур: не менять его build, service, Nginx,
+  TLS или `noindex` при production deploy без отдельного разрешения.
