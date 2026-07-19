@@ -1210,3 +1210,12 @@ Base44 и DNS/domain cutover.
 - Primary-topic storage audit: 52/52 valid WordPress term IDs; taxonomy totals are 9 topics, 3 series and 19 locations.
 - CMS health is OK; homepage and audited article return HTTP 200; canonical matches; robots contains both production sitemaps.
 - No frontend or staging deploy and no paid AI requests were performed.
+
+## Legacy WordPress tag cleanup
+
+- Read-only audit found 6 legacy `post_tag` terms with one assignment each.
+- Kept product-specific tags `Canon` and `EOS R6 V` on article 83.
+- Removed redundant tags `architecture`, `futurism`, `Morocco`, and `video technology`.
+- Article 84 now has no legacy WordPress tags; its classification remains covered by Topics and Locations.
+- Backup: `/root/revelations-post-tags-before-20260719-184356/post-tags-before.json`.
+- Final verification: 2 remaining tags, CMS HTTP 200, public site HTTP 200.
