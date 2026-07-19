@@ -1247,3 +1247,16 @@ Base44 и DNS/domain cutover.
 - Production build temporarily rewrites only the two public production URL variables in `.env.production`, restores the developer file after the build, and verifies that the standalone artifact contains production rather than staging URLs.
 - Validation: full Node test suite passed, ESLint passed, production build passed, all four taxonomy route families were present, and remote isolated PHP lint/diagnostics passed.
 - No frontend, staging, CMS, or production deploy was performed. No production database writes, OpenAI requests, scanners, or publication actions were performed.
+
+## SEO Stage 2B-4 production rollout (20260719-215226)
+
+- Production frontend commit `9ae0f86bd2de6ba57ca02687f42b07c1f08fe58b` was rebuilt from the live CMS without local fallback and deployed through an isolated loopback candidate followed by a directory switch.
+- Previous frontend build: `eJZmpMkybdDTtgVtfEn7r`. Active frontend build: `lrWLL98gDeeCnPiNg7HuL`.
+- Frontend rollback release: `/var/www/revelations-production.previous-seo2b4-20260719-215226`.
+- Production backup directory: `/root/revelations-seo2b4-before-20260719-215226`.
+- The production MU plugin `revelations-frontend-revalidation.php` was updated to SHA-256 `09f9387f43e7b774ecfb3106276ca1cc07c957e09d57bd93834615280f46f745`; all production MU-plugin PHP files passed lint.
+- Candidate and public checks passed for the homepage, both sitemaps, representative Topic, Series, Location and Tag hubs, a published article, canonical metadata, JSON-LD, article taxonomy, Related Articles and unknown-hub 404 behavior.
+- The public sitemap contains representative taxonomy hubs and the Google News sitemap contains no taxonomy routes. Public responses contain no staging-domain leakage.
+- The frontend service and loopback port are healthy, Nginx syntax passed, CMS health returned HTTP 200, and GET on the signed revalidation endpoint remained HTTP 405.
+- Staging remained HTTP 200 with `X-Robots-Tag: noindex`.
+- No WordPress post, metadata, taxonomy or database writes were performed. No OpenAI request, scanner run or publication action occurred.
