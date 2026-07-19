@@ -1049,6 +1049,17 @@ Base44 и DNS/domain cutover.
   and CMS API URL without changing `.env.production`, then rejects an artifact
   containing the staging domain. Local production build
   `3gTn0QmgvZF1xhmocY2w2` passed the guard; tests 32/32 and ESLint passed.
-- Production deployment, its resulting build ID and rollback locations will
-  be recorded only after the separately verified candidate switch. Staging,
-  WordPress, database, OpenAI and scanners are unchanged by the local work.
+- Production frontend deployment succeeded from commit
+  `8f4c4693a2abc78bb441d04230d68e08cb94a930`. The old build
+  `EE-Mukl8iXKcvOLhMQUxo` was atomically replaced by
+  `3gTn0QmgvZF1xhmocY2w2`; candidate and live sitemap audits each passed
+  63/63 URLs, with zero wrong canonical, `og:url` or staging-domain findings.
+- Rollback release:
+  `/var/www/revelations-production.previous-2a4-20260719-141000`.
+  Backup: `/root/revelations-production-2a4-before-20260719-141000`.
+  Rollback was not required. Production service, port 3002, Nginx syntax,
+  CMS public API and `GET /api/revalidate` (405) passed; the runtime secret
+  file was present but never read or recorded.
+- Staging service and release were unchanged, returned HTTP 200 and retained
+  `X-Robots-Tag: noindex`. WordPress, database, OpenAI and scanners were not
+  changed during this frontend hotfix.
