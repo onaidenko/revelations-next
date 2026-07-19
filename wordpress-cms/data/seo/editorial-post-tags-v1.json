@@ -1,0 +1,891 @@
+{
+  "version": "editorial-post-tags-v1",
+  "taxonomy": "post_tag",
+  "strategy": "entity-only",
+  "replace_exact": true,
+  "policy": {
+    "purpose": "People, organizations, brands, products, named initiatives and named venues only.",
+    "do_not_duplicate": [
+      "revelations_topic",
+      "revelations_series",
+      "revelations_location"
+    ],
+    "generic_articles_may_have_no_tags": true,
+    "abort_on_current_tag_drift": true
+  },
+  "summary": {
+    "articles": 52,
+    "articles_with_tags": 43,
+    "articles_without_entity_tags": 9,
+    "tag_assignments": 98,
+    "unique_tags": 88,
+    "existing_tags_preserved": [
+      "Canon",
+      "EOS R6 V"
+    ]
+  },
+  "tag_catalog": [
+    {
+      "name": "Ahmed Saleem",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Alibaba",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Anastasia Drinevskaya",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Andranik Togramadzhian",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Andreii Bruiaka",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Anna Lou",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Anthropic",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Apple",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Apple Intelligence",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Arman Mamyan",
+      "planned_article_count": 2
+    },
+    {
+      "name": "Art Profiling",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Aster DM Healthcare",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Baidu",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Bertil Harström",
+      "planned_article_count": 1
+    },
+    {
+      "name": "BWiGA",
+      "planned_article_count": 1
+    },
+    {
+      "name": "BWiGA Accelerator",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Canon",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Choose France Summit",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Cleveland Clinic",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Conrad Maldives Rangali Island",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Cyberwave",
+      "planned_article_count": 1
+    },
+    {
+      "name": "D33 Agenda",
+      "planned_article_count": 2
+    },
+    {
+      "name": "Daria Barkova",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Dariush Soudi",
+      "planned_article_count": 1
+    },
+    {
+      "name": "David Lolaev",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Desert Rock",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Dolce & Gabbana",
+      "planned_article_count": 2
+    },
+    {
+      "name": "Dubai Business Events",
+      "planned_article_count": 2
+    },
+    {
+      "name": "Echo Base",
+      "planned_article_count": 1
+    },
+    {
+      "name": "ELYS Life",
+      "planned_article_count": 1
+    },
+    {
+      "name": "EOS R6 V",
+      "planned_article_count": 1
+    },
+    {
+      "name": "eternal.ag",
+      "planned_article_count": 1
+    },
+    {
+      "name": "European Commission",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Factory Tbilisi",
+      "planned_article_count": 3
+    },
+    {
+      "name": "Fictiv",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Formula 1",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Fuckup Nights",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Genesis",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Google",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Hakim Benjelloun",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Harvester",
+      "planned_article_count": 1
+    },
+    {
+      "name": "IBM",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Infofest",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Infrastructure Transparency Framework",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Killa Design",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Masayoshi Son",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Meta",
+      "planned_article_count": 2
+    },
+    {
+      "name": "Metakse Ghambaryan",
+      "planned_article_count": 1
+    },
+    {
+      "name": "MicroPort MedBot",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Mirrorcube",
+      "planned_article_count": 1
+    },
+    {
+      "name": "MISUMI",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Mohammed VI Tower",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Monday.com",
+      "planned_article_count": 2
+    },
+    {
+      "name": "NHS England",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Nike",
+      "planned_article_count": 1
+    },
+    {
+      "name": "OpenAI",
+      "planned_article_count": 2
+    },
+    {
+      "name": "OpenAI Deployment Company",
+      "planned_article_count": 1
+    },
+    {
+      "name": "OpenAI EU Cyber Action Plan",
+      "planned_article_count": 1
+    },
+    {
+      "name": "OpenxAI",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Oppenheim Architecture",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Perceptive",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Prokar Dasgupta",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Proud of UAE",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Qwen",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Rafael de La-Hoz",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Red Sea Global",
+      "planned_article_count": 2
+    },
+    {
+      "name": "Renat Mansurov",
+      "planned_article_count": 1
+    },
+    {
+      "name": "RIKEN",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Sam Kaploushenko",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Sandberg Bernthal Venture Partners",
+      "planned_article_count": 1
+    },
+    {
+      "name": "SAP",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Self Inspection",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Sergei Medvedev",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Sergey Khusnetdinov",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Shebara",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Sheryl Sandberg",
+      "planned_article_count": 1
+    },
+    {
+      "name": "SkyNet X Solutions",
+      "planned_article_count": 1
+    },
+    {
+      "name": "SoftBank",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Stellantis",
+      "planned_article_count": 1
+    },
+    {
+      "name": "The London Clinic",
+      "planned_article_count": 1
+    },
+    {
+      "name": "The Muraka",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Timur Makhmudi",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Tomoro",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Toumai Surgical Robot",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Treehotel",
+      "planned_article_count": 1
+    },
+    {
+      "name": "UFO Room",
+      "planned_article_count": 1
+    },
+    {
+      "name": "Wellth by Medcare",
+      "planned_article_count": 1
+    },
+    {
+      "name": "White Desert",
+      "planned_article_count": 1
+    }
+  ],
+  "assignments": [
+    {
+      "id": 99,
+      "slug": "33-qs-for-andranik-togramadzhian",
+      "title": "33 Q’s for Andranik Togramadzhian",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Andranik Togramadzhian"
+      ]
+    },
+    {
+      "id": 96,
+      "slug": "33-qs-for-anna-lou",
+      "title": "33 Q’s for Anna Lou",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Anna Lou"
+      ]
+    },
+    {
+      "id": 98,
+      "slug": "33-qs-for-arman-mamyan",
+      "title": "33 Q’s for Arman Mamyan",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Arman Mamyan"
+      ]
+    },
+    {
+      "id": 97,
+      "slug": "33-qs-for-metakse-ghambaryan",
+      "title": "33 Q’s for Metakse Ghambaryan",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Metakse Ghambaryan"
+      ]
+    },
+    {
+      "id": 93,
+      "slug": "33-qs-for-sergei-medvedev",
+      "title": "33 Q’s for Sergei Medvedev",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Sergei Medvedev"
+      ]
+    },
+    {
+      "id": 94,
+      "slug": "33-qs-for-sergey-khusnetdinov",
+      "title": "33 Q’s for Sergey Khusnetdinov",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Sergey Khusnetdinov"
+      ]
+    },
+    {
+      "id": 91,
+      "slug": "33-qs-for-timur-makhmudi",
+      "title": "33 Q’s for Timur Makhmudi",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Timur Makhmudi"
+      ]
+    },
+    {
+      "id": 109,
+      "slug": "ai-is-coming-for-the-tomato",
+      "title": "AI Is Coming for the Tomato",
+      "expected_current_tags": [],
+      "target_tags": [
+        "eternal.ag",
+        "Harvester"
+      ]
+    },
+    {
+      "id": 89,
+      "slug": "ai-is-done-being-a-toy-now-it-wants-a-desk-in-your-office",
+      "title": "AI Is Done Being a Toy. Now It Wants a Desk in Your Office",
+      "expected_current_tags": [],
+      "target_tags": [
+        "OpenAI",
+        "OpenAI Deployment Company",
+        "Tomoro"
+      ]
+    },
+    {
+      "id": 102,
+      "slug": "ai-is-now-looking-inside-the-lungs",
+      "title": "AI Is Now Looking Inside the Lungs — and the Robot Knows Where to Go",
+      "expected_current_tags": [],
+      "target_tags": [
+        "NHS England"
+      ]
+    },
+    {
+      "id": 81,
+      "slug": "anastasia-drinevskaya-the-future-belongs-to-people",
+      "title": "Anastasia Drinevskaya: The future belongs to people",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Anastasia Drinevskaya"
+      ]
+    },
+    {
+      "id": 80,
+      "slug": "andreii-bruiaka-everyone-owns-an-app-almost-nobody-owns-the-engine",
+      "title": "Andreii Bruiaka: Everyone Owns an App. Almost Nobody Owns the Engine",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Andreii Bruiaka",
+        "Infrastructure Transparency Framework"
+      ]
+    },
+    {
+      "id": 214,
+      "slug": "apple-intelligence-cleared-for-china-with-alibaba-and-baidu",
+      "title": "Apple Intelligence Cleared for China With Alibaba and Baidu",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Apple",
+        "Apple Intelligence",
+        "Alibaba",
+        "Baidu",
+        "Qwen"
+      ]
+    },
+    {
+      "id": 78,
+      "slug": "arman-mamyan-in-a-world-built-for-distraction-discipline-becomes-power",
+      "title": "Arman Mamyan: In a World Built for Distraction, Discipline Becomes Power",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Arman Mamyan"
+      ]
+    },
+    {
+      "id": 103,
+      "slug": "burnout-doesnt-look-like-burnout",
+      "title": "Burnout Doesn’t Look Like Burnout",
+      "expected_current_tags": [],
+      "target_tags": []
+    },
+    {
+      "id": 75,
+      "slug": "bwiga-will-be-held-in-montenegro-again-in-september",
+      "title": "BWiGA will be held in Montenegro again in September",
+      "expected_current_tags": [],
+      "target_tags": [
+        "BWiGA",
+        "Infofest",
+        "BWiGA Accelerator"
+      ]
+    },
+    {
+      "id": 83,
+      "slug": "canons-eos-r6-v-video-first",
+      "title": "Canon’s EOS R6 V: When Cameras Start Talking Video First",
+      "expected_current_tags": [
+        "Canon",
+        "EOS R6 V"
+      ],
+      "target_tags": [
+        "Canon",
+        "EOS R6 V"
+      ]
+    },
+    {
+      "id": 70,
+      "slug": "daria-barkova-art-profiling-turns-the-inner-world-into-a-visual-map",
+      "title": "Daria Barkova: Art Profiling Turns the Inner World Into a Visual Map",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Daria Barkova",
+        "Art Profiling"
+      ]
+    },
+    {
+      "id": 95,
+      "slug": "dariush-soudi-whats-really-behind-this-success",
+      "title": "Dariush Soudi | What’s Really Behind This Success?",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Dariush Soudi"
+      ]
+    },
+    {
+      "id": 76,
+      "slug": "david-lolaev-if-the-future-is-a-track-i-want-to-drive-first",
+      "title": "David Lolaev: If the Future Is a Track, I Want to Drive First",
+      "expected_current_tags": [],
+      "target_tags": [
+        "David Lolaev",
+        "Formula 1"
+      ]
+    },
+    {
+      "id": 114,
+      "slug": "desert-rock-the-future-of-hospitality-is-being-carved-into-the-mountain",
+      "title": "Desert Rock: The Future of Hospitality Is Being Carved Into the Mountain",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Desert Rock",
+        "Red Sea Global",
+        "Oppenheim Architecture"
+      ]
+    },
+    {
+      "id": 67,
+      "slug": "elys-life-to-host-private-launch-event-in-dubai",
+      "title": "ELYS Life to Host Private Launch Event in Dubai",
+      "expected_current_tags": [],
+      "target_tags": [
+        "ELYS Life",
+        "Renat Mansurov",
+        "Wellth by Medcare",
+        "Aster DM Healthcare"
+      ]
+    },
+    {
+      "id": 79,
+      "slug": "global-tech-weekend-tbilisi-2026",
+      "title": "Global Tech Weekend Tbilisi 2026 – The Region’s Largest Decentralized Tech Movement Returns to Tbilisi",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Factory Tbilisi"
+      ]
+    },
+    {
+      "id": 69,
+      "slug": "global-tech-weekend-tbilisi-2026-how-a-citywide-festival-united-the-regions-tech-ecosystem",
+      "title": "Global Tech Weekend Tbilisi 2026: How a Citywide Festival United the Region’s Tech Ecosystem",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Factory Tbilisi",
+        "Meta",
+        "Fuckup Nights",
+        "Monday.com",
+        "Dolce & Gabbana"
+      ]
+    },
+    {
+      "id": 71,
+      "slug": "global-tech-weekend-tbilisi-how-the-city-became-an-interface-for-a-new-tech-region",
+      "title": "Global Tech Weekend Tbilisi: How the City Became an Interface for a New Tech Region",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Factory Tbilisi"
+      ]
+    },
+    {
+      "id": 74,
+      "slug": "global-tech-weekend-tbilisi-returns-on-june-19-21",
+      "title": "Global Tech Weekend Tbilisi Returns on June 19-21",
+      "expected_current_tags": [],
+      "target_tags": []
+    },
+    {
+      "id": 92,
+      "slug": "how-openxai-will-change-the-worlds-perceptions",
+      "title": "How OpenxAI Will Change the World’s Perceptions?",
+      "expected_current_tags": [],
+      "target_tags": [
+        "OpenxAI"
+      ]
+    },
+    {
+      "id": 86,
+      "slug": "humanoid-robots-are-learning-to-use-their-hands-this-is-where-it-gets-personal",
+      "title": "Humanoid Robots Are Learning to Use Their Hands. This Is Where It Gets Personal",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Genesis"
+      ]
+    },
+    {
+      "id": 113,
+      "slug": "i-raised-8m-and-still-failed",
+      "title": "I Raised $8M and Still Failed",
+      "expected_current_tags": [],
+      "target_tags": []
+    },
+    {
+      "id": 82,
+      "slug": "mena-blockchain-week",
+      "title": "MENA Blockchain Week Transforms Dubai Into a City-Wide Blockchain Venue",
+      "expected_current_tags": [],
+      "target_tags": [
+        "SkyNet X Solutions",
+        "Dubai Business Events",
+        "Proud of UAE",
+        "D33 Agenda"
+      ]
+    },
+    {
+      "id": 68,
+      "slug": "mena-blockchain-week-2026-concludes-how-dubais-first-city-wide-blockchain-initiative-drew-5000-attendees-across-40-events",
+      "title": "MENA Blockchain Week 2026 Concludes: How Dubai’s First City-Wide Blockchain Initiative Drew 5,000+ Attendees Across 40+ Events",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Dubai Business Events",
+        "D33 Agenda"
+      ]
+    },
+    {
+      "id": 77,
+      "slug": "misumi-ai-driven-manufacturing-revolution",
+      "title": "MISUMI’s Billion-Dollar Leap: Redefining Manufacturing with AI",
+      "expected_current_tags": [],
+      "target_tags": [
+        "MISUMI",
+        "Fictiv"
+      ]
+    },
+    {
+      "id": 84,
+      "slug": "moroccos-tower-reaches-for-tomorrow",
+      "title": "Morocco’s Tower Reaches for Tomorrow",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Mohammed VI Tower",
+        "Rafael de La-Hoz",
+        "Hakim Benjelloun"
+      ]
+    },
+    {
+      "id": 90,
+      "slug": "new-era-of-digital-money-and-happiness",
+      "title": "New era of digital money and happiness",
+      "expected_current_tags": [],
+      "target_tags": []
+    },
+    {
+      "id": 87,
+      "slug": "openai-offers-europe-cybersecurity-tools-ai-diplomacy-has-entered-the-chat",
+      "title": "OpenAI Offers Europe Cybersecurity Tools. AI Diplomacy Has Entered the Chat",
+      "expected_current_tags": [],
+      "target_tags": [
+        "OpenAI",
+        "OpenAI EU Cyber Action Plan",
+        "European Commission",
+        "Anthropic"
+      ]
+    },
+    {
+      "id": 85,
+      "slug": "quantum-computing-is-finally-trying-to-be-useful-starting-with-medicine",
+      "title": "Quantum Computing Is Finally Trying to Be Useful — Starting With Medicine",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Cleveland Clinic",
+        "RIKEN",
+        "IBM"
+      ]
+    },
+    {
+      "id": 72,
+      "slug": "sam-kaploushenko-the-future-of-money-is-invisible",
+      "title": "Sam Kaploushenko: The Future of Money Is Invisible",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Sam Kaploushenko"
+      ]
+    },
+    {
+      "id": 108,
+      "slug": "saps-warehouse-robots-are-not-a-demo",
+      "title": "SAP’s Warehouse Robots Are Not a Demo. They Are Folding Boxes",
+      "expected_current_tags": [],
+      "target_tags": [
+        "SAP",
+        "Cyberwave"
+      ]
+    },
+    {
+      "id": 101,
+      "slug": "shebara-the-future-of-luxury-has-landed-on-the-red-sea",
+      "title": "Shebara: The Future of Luxury Has Landed on the Red Sea",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Shebara",
+        "Killa Design",
+        "Red Sea Global"
+      ]
+    },
+    {
+      "id": 88,
+      "slug": "softbank-wants-to-build-the-future-in-france-and-it-looks-like-a-data-center",
+      "title": "SoftBank Wants to Build the Future in France — and It Looks Like a Data Center",
+      "expected_current_tags": [],
+      "target_tags": [
+        "SoftBank",
+        "Masayoshi Son",
+        "Choose France Summit"
+      ]
+    },
+    {
+      "id": 111,
+      "slug": "the-board-that-betrayed-its-founder",
+      "title": "The Board That Betrayed Its Founder",
+      "expected_current_tags": [],
+      "target_tags": []
+    },
+    {
+      "id": 73,
+      "slug": "the-brands-and-speakers-you-dont-want-to-miss-at-global-tech-weekend-tbilisi-2026",
+      "title": "Google, Nike, Meta, Monday.com, Dolce & Gabbana: The Brands and Speakers You Don’t Want to Miss at Global Tech Weekend Tbilisi 2026",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Google",
+        "Nike",
+        "Meta",
+        "Monday.com",
+        "Dolce & Gabbana"
+      ]
+    },
+    {
+      "id": 104,
+      "slug": "the-co-founder-divorce-nobody-talks-about",
+      "title": "The Co-Founder Divorce Nobody Talks About",
+      "expected_current_tags": [],
+      "target_tags": []
+    },
+    {
+      "id": 115,
+      "slug": "the-muraka-sleeping-underwater-is-no-longer-a-fantasy-it-is-a-status-symbol",
+      "title": "The Muraka: Sleeping Underwater Is No Longer a Fantasy. It Is a Status Symbol",
+      "expected_current_tags": [],
+      "target_tags": [
+        "The Muraka",
+        "Conrad Maldives Rangali Island",
+        "Ahmed Saleem"
+      ]
+    },
+    {
+      "id": 100,
+      "slug": "the-robot-dentist-has-entered-the-room",
+      "title": "The Robot Dentist Has Entered the Room. Please Try to Stay Calm",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Perceptive"
+      ]
+    },
+    {
+      "id": 112,
+      "slug": "the-surgeon-was-in-london-the-patient-was-in-gibraltar",
+      "title": "The Surgeon Was in London. The Patient Was in Gibraltar. The Operation Still Happened",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Prokar Dasgupta",
+        "The London Clinic",
+        "Toumai Surgical Robot",
+        "MicroPort MedBot"
+      ]
+    },
+    {
+      "id": 116,
+      "slug": "the-toxic-culture-we-accidentally-built",
+      "title": "The Toxic Culture We Accidentally Built",
+      "expected_current_tags": [],
+      "target_tags": []
+    },
+    {
+      "id": 110,
+      "slug": "treehotel-the-future-can-be-a-mirror-cube-in-a-swedish-forest",
+      "title": "Treehotel: The Future Can Be a Mirror Cube in a Swedish Forest",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Treehotel",
+        "Mirrorcube",
+        "UFO Room",
+        "Bertil Harström"
+      ]
+    },
+    {
+      "id": 107,
+      "slug": "what-investors-dont-tell-you-after-they-pass",
+      "title": "What Investors Don’t Tell You After They Pass",
+      "expected_current_tags": [],
+      "target_tags": []
+    },
+    {
+      "id": 106,
+      "slug": "white-desert-echo-base-antarctica-gets-a-space-age-hotel-because-apparently-earth-was-not-remote-enough",
+      "title": "White Desert Echo Base: Antarctica Gets a Space-Age Hotel, Because Apparently Earth Was Not Remote Enough",
+      "expected_current_tags": [],
+      "target_tags": [
+        "White Desert",
+        "Echo Base"
+      ]
+    },
+    {
+      "id": 222,
+      "slug": "why-sheryl-sandberg-is-betting-on-smartphone-vehicle-inspections",
+      "title": "Why Sheryl Sandberg Is Betting on Smartphone Vehicle Inspections",
+      "expected_current_tags": [],
+      "target_tags": [
+        "Sheryl Sandberg",
+        "Sandberg Bernthal Venture Partners",
+        "Self Inspection",
+        "Stellantis"
+      ]
+    },
+    {
+      "id": 105,
+      "slug": "why-we-killed-our-best-product",
+      "title": "Why We Killed Our Best Product",
+      "expected_current_tags": [],
+      "target_tags": []
+    }
+  ]
+}

@@ -1219,3 +1219,17 @@ Base44 и DNS/domain cutover.
 - Article 84 now has no legacy WordPress tags; its classification remains covered by Topics and Locations.
 - Backup: `/root/revelations-post-tags-before-20260719-184356/post-tags-before.json`.
 - Final verification: 2 remaining tags, CMS HTTP 200, public site HTTP 200.
+
+## Entity-only WordPress tag assignment
+
+- Approved map: `wordpress-cms/data/seo/editorial-post-tags-v1.json` (SHA-256 `9ac7784a156353c4d0187cf8bca4c7577622c3731c7303e2dad0f1acdcd23ca8`).
+- Policy: `post_tag` is reserved for named people, organizations, brands, products, initiatives and venues; Topics, Series and Locations are not duplicated.
+- Production preflight: 52/52 articles resolved, 0 errors, 0 drift, 182 planned changes and 0 pre-apply writes.
+- The first transactional attempt detected an HTML-entity comparison mismatch on `Dolce & Gabbana` and rolled back.
+- Recovery verified the exact pre-apply state before retrying.
+- The corrected production apply created 86 terms and updated 42 posts, adding 96 relationships and removing none.
+- Final state: 88 unique tags, 98 assignments, 43 tagged articles and 9 generic articles without entity tags.
+- Existing `Canon` and `EOS R6 V` tags were preserved.
+- Post-apply audit: 0 remaining changes and 0 protected-field differences.
+- Backup and audit directory: `/root/revelations-post-tags-v1-20260719-190829`.
+- CMS and public site returned HTTP 200. No frontend/staging deploy and no paid AI request were performed.
