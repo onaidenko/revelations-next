@@ -1130,3 +1130,16 @@ Base44 и DNS/domain cutover.
   ESLint passed; isolated remote PHP lint 4/4 and taxonomy diagnostics 8/8.
   CMS DB, production, staging, importer apply, OpenAI, scanners and
   publications remain unchanged (all zero).
+
+## SEO Stage 2B-3A0: production-aware importer hardening
+
+- The prior CMS deploy was stopped before mutation because the first importer
+  could validate JSON but could not resolve production WordPress slugs.
+- The importer is now prepared, **not deployed**, for an explicit
+  `--wordpress-root=/path` read-only dry-run. It resolves exact `post_name`
+  records across statuses, validates manual target IDs/order, reports term and
+  assignment plans, and compares deterministic before/after state fingerprints.
+- Static validation without a bootstrap remains available; production-aware
+  mode requires a valid bootstrap. Both modes report `db_writes=0`; apply was
+  not run. Isolated PHP diagnostics 8/8, full Node suite and ESLint passed.
+  Production, CMS DB, frontend and staging remain unchanged.
