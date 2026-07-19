@@ -143,8 +143,9 @@
 ## CMS cache revalidation
 
 - The frontend shares cache tag `revelations:cms:articles`; its 60-second TTL
-  remains a fallback. The isolated WordPress sender posts signed public-state
-  events to the frontend only when both HTTPS URL and secret constants exist.
+  remains a fallback. The deployed WordPress sender posts signed public-state
+  events to the deployed frontend endpoint when protected URL/secret runtime
+  configuration is present.
 - Sender snapshots old status/slug/section request-locally before post update,
   then uses take-and-clear after terms are saved. It has no database queue or
   persistent deduplication.

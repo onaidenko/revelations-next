@@ -121,9 +121,10 @@
 
 ## Cache revalidation
 
-- **Решение:** CMS sender подписывает минимальный public-state payload HMAC-SHA256
-  по `timestamp.raw_body`; publication остаётся fail-open, а frontend TTL
-  остаётся fallback. Secrets provision и deploy требуют отдельного решения.
+- **Решение:** production использует единый shared HMAC secret для WordPress
+  sender и Next endpoint. Secret хранится только в закрытых runtime-
+  конфигурациях; synthetic signed smoke без публикации допустим как end-to-end
+  проверка. Sender остаётся fail-open, а frontend TTL остаётся fallback.
 
 - **Решение:** HTML entities из WordPress декодируются общей функцией
   ровно один раз только для plain-text полей. HTML article content

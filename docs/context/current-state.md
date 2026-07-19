@@ -998,8 +998,8 @@ Base44 и DNS/domain cutover.
   contract accepts only bounded v1 editorial events, HMAC-SHA256 over exact
   `timestamp.raw-body`, and timestamps within 300 seconds.
 - Valid events invalidate the tag with `{ expire: 0 }` and only canonical
-  shared, article-slug and editorial-section paths. WordPress sender and
-  production secret provisioning are pending; no deploy occurred. Built
+  shared, article-slug and editorial-section paths. The Stage 2A-3 rollout
+  completed the earlier pending sender, secret, deploy and smoke scope. Built
   runtime checks passed without a secret (503) and with a temporary
   process-only secret (401 invalid, 200 valid and repeated valid request).
 
@@ -1014,6 +1014,21 @@ Base44 и DNS/domain cutover.
   after save. Public transitions emit publish, update or unpublish; direct
   published deletion emits delete, while trash deletion emits no second event.
   Duplicate state events are suppressed only in the current request.
-- Isolated PHP lint passed and sender diagnostic passed 60/60. No production
-  secret, frontend/CMS deploy or real webhook smoke has occurred; frontend TTL
-  60 seconds remains the fallback.
+- Isolated PHP lint passed and sender diagnostic passed 60/60.
+
+## SEO Stage 2A-3 cache revalidation production rollout
+
+- Production commit `aff28ffdb7ff1e5f67c71b447fffefa41272bfb2` is deployed;
+  active frontend build is `EE-Mukl8iXKcvOLhMQUxo`. The frontend endpoint and
+  WordPress MU sender `revelations-frontend-revalidation.php` are live.
+- One shared HMAC secret is provisioned only in protected runtime
+  configuration: `/etc/revelations-production-revalidation.env`, the systemd
+  drop-in `/etc/systemd/system/revelations-production.service.d/10-revalidation.conf`,
+  and WordPress `wp-config.php`. Its value is not recorded here.
+- GET `/api/revalidate` returned 405. A real signed webhook smoke succeeded
+  with `path_count=4`, revalidating `/`, `/archive`, `/sitemap.xml` and
+  `/news-sitemap.xml`; no publication or database write occurred.
+- Frontend TTL remains 60 seconds as fail-open fallback. Staging retains
+  `noindex`; rollback was unnecessary. Backups:
+  `/root/revelations-stage2a3-before-20260719-111439` and
+  `/var/www/revelations-production.previous-stage2a3-20260719-111439`.
