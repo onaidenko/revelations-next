@@ -1169,3 +1169,22 @@ Base44 и DNS/domain cutover.
   Isolated planner diagnostics cover empty and partial state, zero post-apply
   plan, manual order and dry-run zero writes. This hardening is not deployed;
   no production apply or database write was performed.
+
+## SEO Stage 2B-3B0: final diff-plan integration
+
+- The production-aware importer now builds canonical expected state from the
+  approved map and resolved WordPress IDs, reads only its owned taxonomy/meta
+  state, and returns the real `terms_create`, relationship add/remove and
+  meta add/update plan. `planned_changes` is computed from that plan rather
+  than assigned a constant.
+- Apply accepts the already-built plan, mutates only its listed operations,
+  counts successful writes, then rebuilds the plan and fails if any operation
+  remains. Its contract is dry-run `db_writes=0`, first apply nonzero planned
+  and actual writes, and an idempotent second apply with zero plan/writes.
+  Content, status, categories, ordinary tags, modified timestamps and manual
+  Related metadata on articles without an override remain outside the plan.
+- Isolated remote PHP lint passed for importer and diagnostic; stubbed
+  diff-plan diagnostics passed 8/8. Full Node suite (39 tests), ESLint and
+  `git diff --check` passed. This hardening remains local and not deployed:
+  production CMS, database, frontend and staging are unchanged; no importer
+  apply was run.
