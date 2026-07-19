@@ -1,14 +1,15 @@
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
+import { buildPageMetadata } from '@/lib/seo';
+import { SITE_URL } from '@/lib/site';
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: 'Contact — REVELATIONS',
   description:
     'Contact REVELATIONS for editorial requests, partnerships, advertising, interviews, collaborations, and media inquiries.',
-  alternates: {
-    canonical: '/contact',
-  },
-};
+  pathname: '/contact',
+  siteUrl: SITE_URL,
+});
 
 export default function ContactPage() {
   return (

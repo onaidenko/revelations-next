@@ -1,18 +1,19 @@
 import SectionPage from '@/components/section-page';
 import { SECTIONS } from '@/lib/sections';
+import { buildPageMetadata } from '@/lib/seo';
+import { SITE_URL } from '@/lib/site';
 
 const SECTION = 'podcast';
 
 export function generateMetadata() {
   const section = SECTIONS[SECTION];
 
-  return {
+  return buildPageMetadata({
     title: section.title,
     description: section.description,
-    alternates: {
-      canonical: `/${SECTION}`,
-    },
-  };
+    pathname: `/${SECTION}`,
+    siteUrl: SITE_URL,
+  });
 }
 
 export default function Page() {

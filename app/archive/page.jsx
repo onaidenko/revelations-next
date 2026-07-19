@@ -2,6 +2,8 @@ import Link from 'next/link';
 
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
+import { buildPageMetadata } from '@/lib/seo';
+import { SITE_URL } from '@/lib/site';
 
 import {
   formatDate,
@@ -26,14 +28,13 @@ const SECTION_LABELS = {
   podcast: 'Podcast',
 };
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: 'Archive',
   description:
     'Every published REVELATIONS story across people, technology, culture, places and conversations.',
-  alternates: {
-    canonical: '/archive',
-  },
-};
+  pathname: '/archive',
+  siteUrl: SITE_URL,
+});
 
 export default async function ArchivePage() {
   const articles = await getPublishedArticles();

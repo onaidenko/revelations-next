@@ -1,15 +1,16 @@
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import AccessRequestForm from '@/components/access-request-form';
+import { buildPageMetadata } from '@/lib/seo';
+import { SITE_URL } from '@/lib/site';
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: 'Access — REVELATIONS',
   description:
     'Request selective access to the REVELATIONS Inner Circle.',
-  alternates: {
-    canonical: '/access',
-  },
-};
+  pathname: '/access',
+  siteUrl: SITE_URL,
+});
 
 export default function AccessPage() {
   return (

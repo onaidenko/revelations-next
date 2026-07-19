@@ -21,13 +21,13 @@ export const metadata = {
     template: '%s — REVELATIONS',
   },
   description: DEFAULT_DESCRIPTION,
-  alternates: { canonical: '/' },
+  alternates: { canonical: SITE_URL },
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,
     title: 'REVELATIONS — People, Technology, Places & Culture',
     description: DEFAULT_DESCRIPTION,
-    url: '/',
+    url: SITE_URL,
     images: [DEFAULT_IMAGE],
   },
   twitter: {

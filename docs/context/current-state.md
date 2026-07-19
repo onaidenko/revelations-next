@@ -1032,3 +1032,23 @@ Base44 и DNS/domain cutover.
   `noindex`; rollback was unnecessary. Backups:
   `/root/revelations-stage2a3-before-20260719-111439` and
   `/var/www/revelations-production.previous-stage2a3-20260719-111439`.
+
+## SEO Hotfix 2A-4: production URL and sharing metadata
+
+- Root cause of the production-domain regression: the active production
+  artifact `EE-Mukl8iXKcvOLhMQUxo` was built with
+  `NEXT_PUBLIC_SITE_URL=https://staging.revelations.me`. This propagated to
+  sitemap, canonical URLs, JSON-LD and the server-provided ShareButton URL.
+- `ShareButton` now uses the browser's `origin + pathname` as its primary
+  value, omitting query strings and fragments. A validated server URL is only
+  a browser-unavailable fallback; clipboard denial leaves the control usable.
+- Static sitemap routes now use one metadata helper so canonical and
+  route-specific `og:url` remain identical. Article metadata already used
+  its route-specific canonical and retains that contract.
+- `npm run build:production` explicitly sets the production public site URL
+  and CMS API URL without changing `.env.production`, then rejects an artifact
+  containing the staging domain. Local production build
+  `3gTn0QmgvZF1xhmocY2w2` passed the guard; tests 32/32 and ESLint passed.
+- Production deployment, its resulting build ID and rollback locations will
+  be recorded only after the separately verified candidate switch. Staging,
+  WordPress, database, OpenAI and scanners are unchanged by the local work.

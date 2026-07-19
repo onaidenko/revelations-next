@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   articleCanonicalUrl,
+  buildPageMetadata,
   buildArticleBreadcrumbJsonLd,
   buildArticleJsonLd,
   buildArticleMetadata,
@@ -97,6 +98,24 @@ test('social metadata uses the cover image, then only a branded fallback', () =>
     'https://revelations.me/media/brand/revelations-logo.png'
   );
   assert.match(metadata.alternates.canonical, /^https:\/\//);
+});
+
+test('article metadata keeps Open Graph URL equal to its canonical URL', () => {
+  const metadata = buildArticleMetadata(article, {
+    siteUrl,
+    fallbackImage: '/media/brand/revelations-logo.png',
+  });
+
+  assert.equal(metadata.openGraph.url, metadata.alternates.canonical);
+  assert.equal(
+    buildPageMetadata({
+      title: 'Home',
+      description: 'Description',
+      pathname: '/',
+      siteUrl,
+    }).openGraph.url,
+    'https://revelations.me/'
+  );
 });
 
 test('article, site graph and breadcrumbs keep images and authors truthful', () => {

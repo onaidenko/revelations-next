@@ -1,14 +1,15 @@
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
+import { buildPageMetadata } from '@/lib/seo';
+import { SITE_URL } from '@/lib/site';
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: 'About Revelations — Future-Facing Lifestyle Media',
   description:
     'Revelations is a future-facing lifestyle media platform covering people, technology, culture, places and the unspoken forces shaping tomorrow.',
-  alternates: {
-    canonical: '/about',
-  },
-};
+  pathname: '/about',
+  siteUrl: SITE_URL,
+});
 
 export default function AboutPage() {
   return (

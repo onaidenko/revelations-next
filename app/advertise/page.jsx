@@ -1,5 +1,7 @@
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
+import { buildPageMetadata } from '@/lib/seo';
+import { SITE_URL } from '@/lib/site';
 
 const FORMATS = [
   {
@@ -31,14 +33,13 @@ const AUDIENCE = [
   { label: 'Creative Directors', value: '15%' },
 ];
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: 'Advertise — REVELATIONS',
   description:
     'Partner with REVELATIONS through editorial placements, podcast features, artifact spotlights and selected collaborations.',
-  alternates: {
-    canonical: '/advertise',
-  },
-};
+  pathname: '/advertise',
+  siteUrl: SITE_URL,
+});
 
 export default function AdvertisePage() {
   return (
