@@ -5,6 +5,7 @@ $terms = array(); $relationships = array(); $meta = array(); $fail = false;
 function is_wp_error( $value ) { return $value instanceof WP_Error; }
 function wp_insert_term( $name, $taxonomy, $args ) { global $terms, $fail; if ( $fail ) { return new WP_Error(); } $key = $taxonomy . ':' . $args['slug']; $terms[ $key ] = (object) array( 'term_id' => count( $terms ) + 1, 'slug' => $args['slug'] ); return array( 'term_id' => $terms[ $key ]->term_id ); }
 function get_term_by( $field, $slug, $taxonomy ) { global $terms; return $terms[ $taxonomy . ':' . $slug ] ?? false; }
+function get_term( $term_id, $taxonomy ) { global $terms; foreach ( $terms as $key => $term ) { if ( str_starts_with( $key, $taxonomy . ':' ) && (int) $term->term_id === (int) $term_id ) { return $term; } } return false; }
 function wp_set_object_terms( $post_id, $ids, $taxonomy ) { global $relationships, $fail; if ( $fail ) { return new WP_Error(); } $relationships[ $post_id ][ $taxonomy ] = $ids; return $ids; }
 function update_post_meta( $post_id, $key, $value ) { global $meta, $fail; if ( $fail ) { return false; } $meta[ $post_id ][ $key ] = $value; return 1; }
 require_once __DIR__ . '/import-editorial-taxonomy.php';
@@ -23,7 +24,8 @@ $partial_plan = revelations_taxonomy_import_diff( $expected, $partial );
 check( 1 === count( $partial_plan['relationships_add'] ) && 1 === count( $partial_plan['relationships_remove'] ) && 1 === count( $partial_plan['meta_add'] ) && 1 === count( $partial_plan['meta_update'] ), 'partial-state add remove and meta diff');
 check( $plan['planned_changes'] > 0 && 0 === ( $plan['db_writes'] ?? 0 ), 'dry-run planned changes with zero writes');
 $writes = revelations_taxonomy_import_apply_plan( $plan );
-check( 4 === $writes && isset( $terms['revelations_topic:topic-a'] ) && array( 1 ) === $relationships[7]['revelations_topic'] && array( 9, 8 ) === $meta[7]['_revelations_manual_related'], 'apply executes only planned term relationship and ordered meta operations');
+check( 4 === $writes && isset( $terms['revelations_topic:topic-a'] ) && array( 1 ) === $relationships[7]['revelations_topic'] && 1 === $meta[7]['_revelations_primary_topic'] && array( 9, 8 ) === $meta[7]['_revelations_manual_related'], 'apply stores primary topic ID and preserves ordered meta operations');
+check( 'topic-a' === revelations_taxonomy_import_primary_topic_slug( 1 ) && 1 === revelations_taxonomy_import_primary_topic_id( 'topic-a' ), 'primary topic ID and canonical slug round trip');
 $current_after = array( 'terms' => $expected['terms'], 'posts' => array( 7 => array( 'relationships' => array( 'revelations_topic' => array( 'topic-a' ) ), 'meta' => $expected['posts'][7]['meta'] ) ) );
 $zero = revelations_taxonomy_import_diff( $expected, $current_after );
 check( 0 === $zero['planned_changes'] && 0 === revelations_taxonomy_import_apply_plan( $zero ), 'second apply idempotent and post-apply plan zero');

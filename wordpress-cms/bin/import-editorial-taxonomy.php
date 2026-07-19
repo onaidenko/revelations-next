@@ -45,6 +45,19 @@ function revelations_taxonomy_import_plan( array $map ): array {
 
 function revelations_taxonomy_import_term_key( string $taxonomy, string $slug ): string { return $taxonomy . ':' . $slug; }
 
+function revelations_taxonomy_import_primary_topic_slug( $stored_value ): string {
+    $term = get_term( (int) $stored_value, 'revelations_topic' );
+    return $term && ! is_wp_error( $term ) ? (string) $term->slug : '';
+}
+
+function revelations_taxonomy_import_primary_topic_id( string $slug ): int {
+    $term = get_term_by( 'slug', $slug, 'revelations_topic' );
+    if ( ! $term || is_wp_error( $term ) ) {
+        throw new RuntimeException( 'planned_primary_topic_missing' );
+    }
+    return (int) $term->term_id;
+}
+
 /** Canonical desired state uses term slugs, never runtime term IDs. */
 function revelations_taxonomy_import_expected_state( array $map, array $resolved ): array {
     $terms = array();
@@ -97,7 +110,14 @@ function revelations_taxonomy_import_current_state( array $resolved ): array {
         }
         $meta = array();
         foreach ( array( '_revelations_primary_topic', '_revelations_manual_related', '_revelations_public_topic_eligible', '_revelations_taxonomy_status' ) as $key ) {
-            if ( metadata_exists( 'post', $id, $key ) ) { $meta[ $key ] = get_post_meta( $id, $key, true ); }
+            if ( ! metadata_exists( 'post', $id, $key ) ) {
+                continue;
+            }
+            $value = get_post_meta( $id, $key, true );
+            if ( '_revelations_primary_topic' === $key ) {
+                $value = revelations_taxonomy_import_primary_topic_slug( $value );
+            }
+            $meta[ $key ] = $value;
         }
         $posts[ $id ] = array( 'relationships' => $relationships, 'meta' => $meta );
     }
@@ -163,7 +183,11 @@ function revelations_taxonomy_import_apply_plan( array $plan ): int {
         $writes++;
     }
     foreach ( array_merge( $plan['meta_add'], $plan['meta_update'] ) as $operation ) {
-        $result = update_post_meta( $operation['post_id'], $operation['key'], $operation['value'] );
+        $value = $operation['value'];
+        if ( '_revelations_primary_topic' === $operation['key'] ) {
+            $value = revelations_taxonomy_import_primary_topic_id( (string) $value );
+        }
+        $result = update_post_meta( $operation['post_id'], $operation['key'], $value );
         if ( false === $result ) { throw new RuntimeException( 'meta_write_failed' ); }
         $writes++;
     }
