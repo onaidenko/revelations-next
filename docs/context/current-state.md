@@ -990,3 +990,15 @@ Base44 и DNS/domain cutover.
   Console were not changed. No rollback was required.
 - Next stage: verify both sitemaps and request indexing of the new article in
   Google Search Console.
+
+## SEO Stage 2A-1 frontend cache revalidation
+
+- Frontend CMS fetches share cache tag `revelations:cms:articles` while
+  retaining the 60-second TTL fallback. The signed POST `/api/revalidate`
+  contract accepts only bounded v1 editorial events, HMAC-SHA256 over exact
+  `timestamp.raw-body`, and timestamps within 300 seconds.
+- Valid events invalidate the tag with `{ expire: 0 }` and only canonical
+  shared, article-slug and editorial-section paths. WordPress sender and
+  production secret provisioning are pending; no deploy occurred. Built
+  runtime checks passed without a secret (503) and with a temporary
+  process-only secret (401 invalid, 200 valid and repeated valid request).
