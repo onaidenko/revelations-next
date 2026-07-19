@@ -119,6 +119,12 @@
 
 ## Public frontend
 
+## Cache revalidation
+
+- **Решение:** CMS sender подписывает минимальный public-state payload HMAC-SHA256
+  по `timestamp.raw_body`; publication остаётся fail-open, а frontend TTL
+  остаётся fallback. Secrets provision и deploy требуют отдельного решения.
+
 - **Решение:** HTML entities из WordPress декодируются общей функцией
   ровно один раз только для plain-text полей. HTML article content
   этим decoder не обрабатывается.

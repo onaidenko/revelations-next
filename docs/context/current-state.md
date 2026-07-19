@@ -1002,3 +1002,18 @@ Base44 и DNS/domain cutover.
   production secret provisioning are pending; no deploy occurred. Built
   runtime checks passed without a secret (503) and with a temporary
   process-only secret (401 invalid, 200 valid and repeated valid request).
+
+## SEO Stage 2A-2 WordPress revalidation sender
+
+- Added isolated sender source for signed frontend invalidation. It reads only
+  `REVELATIONS_REVALIDATION_URL` and `REVELATIONS_REVALIDATION_SECRET`, sends
+  HMAC-SHA256 over exact `timestamp.raw_body`, and is fail-open for config,
+  JSON and HTTP errors. Payload contains public state only, never article text
+  or personal data.
+- Request-local pre-update snapshots preserve old section, then take-and-clear
+  after save. Public transitions emit publish, update or unpublish; direct
+  published deletion emits delete, while trash deletion emits no second event.
+  Duplicate state events are suppressed only in the current request.
+- Isolated PHP lint passed and sender diagnostic passed 60/60. No production
+  secret, frontend/CMS deploy or real webhook smoke has occurred; frontend TTL
+  60 seconds remains the fallback.

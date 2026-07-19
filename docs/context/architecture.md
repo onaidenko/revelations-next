@@ -140,6 +140,15 @@
 
 ## Public frontend content mapping
 
+## CMS cache revalidation
+
+- The frontend shares cache tag `revelations:cms:articles`; its 60-second TTL
+  remains a fallback. The isolated WordPress sender posts signed public-state
+  events to the frontend only when both HTTPS URL and secret constants exist.
+- Sender snapshots old status/slug/section request-locally before post update,
+  then uses take-and-clear after terms are saved. It has no database queue or
+  persistent deduplication.
+
 - `lib/cms-articles.js` преобразует WordPress REST payload в единый
   article model для страниц, cards, metadata и JSON-LD.
 - Общий `lib/decode-wordpress-text.js` декодирует HTML entities ровно
