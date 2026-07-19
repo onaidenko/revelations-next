@@ -47,13 +47,34 @@ function revelations_taxonomy_import_plan( array $map, array $posts_by_slug = ar
     return array( 'valid' => ! $errors && ! $missing, 'errors' => $errors, 'missing_slugs' => $missing, 'topics' => count( $map['topics'] ), 'series' => count( $map['series'] ), 'assignments' => count( $map['assignments'] ), 'manual_sources' => count( $map['manual_related'] ) );
 }
 
+function revelations_taxonomy_import_runtime_plan( array $map ): array {
+    $resolved = array(); $missing = array(); $duplicates = array(); $conflicts = array();
+    foreach ( $map['assignments'] as $assignment ) {
+        $posts = get_posts( array( 'post_type' => 'post', 'post_status' => 'any', 'name' => $assignment['slug'], 'posts_per_page' => 2, 'fields' => 'all', 'suppress_filters' => true ) );
+        if ( 0 === count( $posts ) ) { $missing[] = $assignment['slug']; continue; }
+        if ( 1 !== count( $posts ) ) { $duplicates[] = $assignment['slug']; continue; }
+        $post = $posts[0];
+        if ( 'publish' !== $post->post_status ) { $conflicts[] = $assignment['slug'] . ':status:' . $post->post_status; }
+        $resolved[ $assignment['slug'] ] = array( 'id' => (int) $post->ID, 'slug' => $post->post_name, 'status' => $post->post_status, 'modified' => $post->post_modified_gmt );
+    }
+    $manual_targets = 0;
+    foreach ( $map['manual_related'] as $override ) {
+        if ( ! isset( $resolved[ $override['source_slug'] ] ) ) { $conflicts[] = 'manual_source_missing:' . $override['source_slug']; continue; }
+        $seen = array(); foreach ( $override['target_slugs'] as $target ) { if ( ! isset( $resolved[ $target ] ) || $target === $override['source_slug'] || isset( $seen[ $target ] ) ) { $conflicts[] = 'manual_target_invalid:' . $target; } $seen[ $target ] = true; $manual_targets++; }
+    }
+    $state = array(); foreach ( $resolved as $slug => $post ) { $id = $post['id']; $state[ $slug ] = array( 'post' => $post, 'terms' => wp_get_object_terms( $id, array( 'revelations_topic', 'revelations_series', 'revelations_location' ), array( 'fields' => 'ids' ) ), 'meta' => array_map( static function ( $key ) use ( $id ) { return hash( 'sha256', wp_json_encode( get_post_meta( $id, $key, true ) ) ); }, array( '_revelations_primary_topic', '_revelations_manual_related', '_revelations_public_topic_eligible', '_revelations_taxonomy_status' ) ) ); }
+    ksort( $state ); $fingerprint = hash( 'sha256', wp_json_encode( $state ) );
+    return array( 'wordpress_loaded' => true, 'assignments_expected' => count( $map['assignments'] ), 'assignments_resolved' => count( $resolved ), 'missing' => $missing, 'duplicates' => $duplicates, 'conflicts' => $conflicts, 'topics_plan' => count( $map['topics'] ), 'series_plan' => count( $map['series'] ), 'locations_plan' => count( array_unique( array_filter( array_column( $map['assignments'], 'location' ) ) ) ), 'manual_sources' => count( $map['manual_related'] ), 'manual_targets_resolved' => $manual_targets, 'public_topic_exclusions' => count( array_filter( $map['assignments'], static function ( $a ) { return false === $a['public_topic_eligible']; } ) ), 'fingerprint' => $fingerprint, 'db_writes' => 0 );
+}
+
 function revelations_taxonomy_import_main( array $argv ): int {
     $apply = in_array( '--apply', $argv, true );
     $confirmed = in_array( '--confirm=editorial-taxonomy-v2', $argv, true );
-    $path = dirname( __DIR__, 2 ) . '/data/seo/editorial-taxonomy-v2.json';
-    foreach ( $argv as $argument ) { if ( 0 === strpos( $argument, '--map=' ) ) { $path = substr( $argument, 6 ); } }
+    $path = dirname( __DIR__, 2 ) . '/data/seo/editorial-taxonomy-v2.json'; $wordpress = '';
+    foreach ( $argv as $argument ) { if ( 0 === strpos( $argument, '--map=' ) ) { $path = substr( $argument, 6 ); } if ( 0 === strpos( $argument, '--wordpress-root=' ) ) { $wordpress = rtrim( substr( $argument, 17 ), '/' ); } }
     try { $map = revelations_taxonomy_import_load( $path ); $plan = revelations_taxonomy_import_plan( $map ); } catch ( Throwable $error ) { fwrite( STDERR, $error->getMessage() . PHP_EOL ); return 1; }
-    echo json_encode( array_merge( array( 'mode' => $apply ? 'apply' : 'dry-run' ), $plan ) ) . PHP_EOL;
+    if ( $wordpress ) { if ( ! is_file( $wordpress . '/wp-load.php' ) ) { fwrite( STDERR, 'wordpress_bootstrap_missing' . PHP_EOL ); return 1; } require_once $wordpress . '/wp-load.php'; $before = revelations_taxonomy_import_runtime_plan( $map ); $after = revelations_taxonomy_import_runtime_plan( $map ); $plan = array_merge( $plan, $before, array( 'before_fingerprint' => $before['fingerprint'], 'after_fingerprint' => $after['fingerprint'], 'fingerprint_unchanged' => $before['fingerprint'] === $after['fingerprint'], 'ready_for_apply' => ! $before['missing'] && ! $before['duplicates'] && ! $before['conflicts'] && $before['fingerprint'] === $after['fingerprint'] ) ); }
+    echo json_encode( array_merge( array( 'mode' => $apply ? 'apply' : 'dry-run', 'wordpress_loaded' => false, 'db_writes' => 0 ), $plan ) ) . PHP_EOL;
     if ( ! $plan['valid'] || ! $apply ) { return $plan['valid'] ? 0 : 1; }
     if ( ! $confirmed ) { fwrite( STDERR, 'apply_confirmation_required' . PHP_EOL ); return 1; }
     fwrite( STDERR, 'apply_requires_explicit_wordpress_bootstrap_and_is_not_available_in_this_isolated_runner' . PHP_EOL );
