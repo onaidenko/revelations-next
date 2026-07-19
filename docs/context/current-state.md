@@ -1161,3 +1161,11 @@ Base44 и DNS/domain cutover.
   remained canonical, AI readiness stayed `ready` without requests, and
   staging retained `noindex`. No frontend deploy, DB write, scanner,
   publication, OpenAI request or staging change occurred.
+
+## SEO Stage 2B-3B0: importer apply hardening
+
+- A pure taxonomy diff planner now reports term creation, relationship add/remove
+  and meta add/update operations with a computed `planned_changes` total.
+  Isolated planner diagnostics cover empty and partial state, zero post-apply
+  plan, manual order and dry-run zero writes. This hardening is not deployed;
+  no production apply or database write was performed.
