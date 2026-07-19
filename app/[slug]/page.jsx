@@ -6,6 +6,7 @@ import SiteFooter from '@/components/site-footer';
 import ArticleCard from '@/components/article-card';
 import ArticleBody from '@/components/article-body';
 import ShareButton from '@/components/share-button';
+import YouTubeEmbed from '@/components/youtube-embed';
 
 import {
   getArticleBySlug,
@@ -150,27 +151,7 @@ export default async function ArticlePage({ params }) {
         <div className="mx-auto max-w-3xl px-6 py-12">
           <ArticleBody content={article.content} format={article.content_format} />
 
-          {article.youtube_url && (
-            <div className="mt-12">
-              <span className="mb-4 block font-mono text-[10px] uppercase tracking-[0.2em] text-rose">
-                Watch
-              </span>
-
-              <a
-                href={article.youtube_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center font-mono text-xs uppercase tracking-[0.15em] text-foreground"
-              >
-                <span className="relative">
-                  Watch on YouTube
-                  <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-rose transition-transform duration-700 group-hover:scale-x-100" />
-                </span>
-
-                <span className="ml-3 text-rose">→</span>
-              </a>
-            </div>
-          )}
+          {article.youtube_url && <YouTubeEmbed url={article.youtube_url} />}
 
           {Array.isArray(article.tags) &&
             article.tags.length > 0 && (
