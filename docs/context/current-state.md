@@ -1107,3 +1107,26 @@ Base44 и DNS/domain cutover.
 - Staging was unchanged: service active, homepage HTTP 200,
   `X-Robots-Tag: noindex`, build `bXG0hOp0zPZs7O8HZaerF`. No CMS, database,
   OpenAI, scanner or staging mutation occurred during this rollout.
+
+## SEO Stage 2B-3: editorial taxonomy and Related scoring
+
+- Approved taxonomy v2 was materialized as the normalized, deterministic
+  `data/seo/editorial-taxonomy-v2.json`: 52 assignments, 9 topics, 3 series,
+  6 manual Related override sources, no target-graph orphans and two
+  review-required/public-topic exclusions. Automatic Related suggestions were
+  not stored as manual CMS configuration.
+- Prepared, **not deployed**: separate WordPress topic, series and location
+  taxonomies; primary-topic, ordered manual Related, public-topic-eligibility
+  and taxonomy-status metadata; safe editor meta box and additive public API
+  fields. Existing category, tags, content, publication and API pagination
+  contracts remain unchanged.
+- The importer is dry-run by default and validates schema, all 52 slugs,
+  definitions, manual target references and review exclusions before any
+  possible write path. Apply needs explicit flags and was not run.
+- Frontend normalization has safe legacy defaults. Related selection is
+  deterministic: ordered manual overrides, same series, primary/secondary
+  topic intersections, same section, date proximity and slug tie-break.
+- Tests: taxonomy map/Related Node diagnostics 4/4; full Node suite 39/39;
+  ESLint passed; isolated remote PHP lint 4/4 and taxonomy diagnostics 8/8.
+  CMS DB, production, staging, importer apply, OpenAI, scanners and
+  publications remain unchanged (all zero).

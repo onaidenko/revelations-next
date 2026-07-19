@@ -119,6 +119,17 @@
 
 ## Public frontend
 
+## Editorial taxonomy and Related content
+
+- **Решение:** topics, series и locations являются разными editorial
+  dimensions; обычные WordPress tags не переиспользуются.
+- **Решение:** primary topic хранится отдельно от множества assigned topics,
+  чтобы модель могла выразить один главный topic без потери secondary topics.
+- **Решение:** manual Related overrides имеют приоритет над automatic scoring,
+  но применяются только для явно заданных source articles и сохраняют порядок.
+- **Решение:** importer по умолчанию выполняет только validate/plan dry-run;
+  apply требует отдельного явного разрешения и confirmation token.
+
 ## Cache revalidation
 
 - **Решение:** production использует единый shared HMAC secret для WordPress

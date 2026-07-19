@@ -140,6 +140,26 @@
 
 ## Public frontend content mapping
 
+## Editorial taxonomy and related content
+
+- `revelations-editorial-taxonomy.php` defines separate non-hierarchical
+  `revelations_topic`, `revelations_series` and `revelations_location`
+  taxonomies for editorial posts. Ordinary WordPress tags remain unchanged.
+- Multiple topics are allowed; `_revelations_primary_topic` must refer to an
+  assigned topic. Series is limited by its taxonomy contract to one term in
+  the importer/admin workflow; locations are independent from topics.
+- The model stores ordered manual related post IDs (maximum three), public
+  topic eligibility and a validated taxonomy status. The public API returns
+  only published, unique, non-self manual targets and exposes safe defaults
+  for legacy posts without taxonomy data.
+- The frontend normalizes the additive API fields and selects Related content
+  deterministically: manual order, series, primary/secondary topic overlap,
+  section, date proximity and slug tie-break. Topic eligibility affects future
+  topic hubs, not Related selection.
+- `data/seo/editorial-taxonomy-v2.json` is the normalized approved proposal.
+  `import-editorial-taxonomy.php` validates and plans it in dry-run by default;
+  apply requires explicit flags and is not run against production in this stage.
+
 ## CMS cache revalidation
 
 - The frontend shares cache tag `revelations:cms:articles`; its 60-second TTL
