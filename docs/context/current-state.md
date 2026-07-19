@@ -1198,3 +1198,15 @@ Base44 и DNS/domain cutover.
 - Focused diagnostics: 9 passed, 0 failed.
 - Full Node suite: 39 passed, 0 failed; ESLint и `git diff --check` прошли.
 - Production deploy, WordPress bootstrap, importer apply и DB writes не выполнялись.
+
+## SEO 2B-3B production taxonomy import
+
+- Production backup: `/root/revelations-taxonomy-before-20260719-180823` (DB export 4.4 MB plus importer and audit snapshots).
+- Production importer SHA-256: `ec6d0286328e0ba33062f1ce82c600c9ef272c06c6b8add51649a67bf1fba34a`; matches local importer.
+- Pre-apply dry-run: 52/52 resolved, 0 missing, 0 duplicates, 0 conflicts, 350 planned changes, 0 writes.
+- One confirmed production apply completed successfully: exit 0, 286 actual mutation calls.
+- Post-apply dry-run is idempotent: 0 planned changes, 0 writes.
+- Protected-state audit: 52 articles checked, 0 differences in content, status, modified date, categories, tags and non-overridden manual Related metadata.
+- Primary-topic storage audit: 52/52 valid WordPress term IDs; taxonomy totals are 9 topics, 3 series and 19 locations.
+- CMS health is OK; homepage and audited article return HTTP 200; canonical matches; robots contains both production sitemaps.
+- No frontend or staging deploy and no paid AI requests were performed.
