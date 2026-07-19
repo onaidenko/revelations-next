@@ -1233,3 +1233,17 @@ Base44 и DNS/domain cutover.
 - Post-apply audit: 0 remaining changes and 0 protected-field differences.
 - Backup and audit directory: `/root/revelations-post-tags-v1-20260719-190829`.
 - CMS and public site returned HTTP 200. No frontend/staging deploy and no paid AI request were performed.
+
+## SEO Stage 2B-4: public taxonomy and Related (2026-07-20)
+
+- Added canonical public routes for `/topics/[slug]`, `/series/[slug]`, `/locations/[slug]`, and `/tags/[slug]`.
+- Topic hubs exclude articles marked non-public or `needs-editorial-review`; Series hubs require one published article; Location and entity-tag hubs require at least two published articles.
+- Current production-CMS dataset prerenders 9 Topic, 3 Series, 4 Location, and 9 Tag hubs.
+- Hub pages include route-specific metadata, canonical and Open Graph URLs, `BreadcrumbList`, `CollectionPage`, stable article ordering, and 404 handling for unknown or ineligible terms.
+- Article pages show primary Topic, secondary Topics, Series, Locations, and entity tags. Terms without an eligible public hub remain plain text rather than thin internal links.
+- Related Articles use ordered manual overrides, then Series, primary Topic, secondary Topic intersections, section, publication-date proximity, and slug tie-breaking. Results are published-only, unique, exclude the current article, and are capped at three.
+- The main sitemap includes eligible taxonomy hubs; the Google News sitemap remains article-only.
+- Signed revalidation v1 remains backward-compatible and now accepts bounded canonical old/new taxonomy paths. HMAC, timestamp, payload-size, fail-open sender, and private-payload safeguards remain in place.
+- Production build temporarily rewrites only the two public production URL variables in `.env.production`, restores the developer file after the build, and verifies that the standalone artifact contains production rather than staging URLs.
+- Validation: full Node test suite passed, ESLint passed, production build passed, all four taxonomy route families were present, and remote isolated PHP lint/diagnostics passed.
+- No frontend, staging, CMS, or production deploy was performed. No production database writes, OpenAI requests, scanners, or publication actions were performed.

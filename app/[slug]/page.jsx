@@ -5,11 +5,13 @@ import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import ArticleCard from '@/components/article-card';
 import ArticleBody from '@/components/article-body';
+import ArticleTaxonomy from '@/components/article-taxonomy';
 import ShareButton from '@/components/share-button';
 import YouTubeEmbed from '@/components/youtube-embed';
 
 import {
   getArticleBySlug,
+  getArticleTaxonomyPresentation,
   getPublishedArticles,
   getRelatedArticles,
   formatDate,
@@ -31,7 +33,9 @@ import {
 } from '@/lib/seo';
 
 export async function generateStaticParams() {
-  return (await getPublishedArticles()).map(({ slug }) => ({ slug }));
+  return (await getPublishedArticles()).map(
+    ({ slug }) => ({ slug })
+  );
 }
 
 export async function generateMetadata({ params }) {
@@ -55,7 +59,9 @@ export async function generateMetadata({ params }) {
   });
 }
 
-export default async function ArticlePage({ params }) {
+export default async function ArticlePage({
+  params,
+}) {
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
 
@@ -64,17 +70,26 @@ export default async function ArticlePage({ params }) {
   }
 
   const section = SECTIONS[article.section];
-  const related = await getRelatedArticles(article);
+  const [related, taxonomy] = await Promise.all([
+    getRelatedArticles(article),
+    getArticleTaxonomyPresentation(article),
+  ]);
   const canonical = `${SITE_URL}/${article.slug}`;
 
-  const publicationDate = article.publication_date || article.created_date;
+  const publicationDate =
+    article.publication_date ||
+    article.created_date;
   const jsonLd = buildArticleJsonLd(article, {
     siteUrl: SITE_URL,
     siteName: SITE_NAME,
     logoUrl: BRAND_LOGO_URL,
     organizationId: ORGANIZATION_ID,
   });
-  const breadcrumbs = buildArticleBreadcrumbJsonLd(article, SITE_URL);
+  const breadcrumbs =
+    buildArticleBreadcrumbJsonLd(
+      article,
+      SITE_URL
+    );
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,7 +130,9 @@ export default async function ArticlePage({ params }) {
               href={`/${article.section}`}
               className="font-mono text-[10px] uppercase tracking-[0.2em] text-rose transition-colors hover:text-foreground"
             >
-              {article.section_name || section?.title || article.section}
+              {article.section_name ||
+                section?.title ||
+                article.section}
             </Link>
 
             <span className="h-3 w-px bg-border" />
@@ -149,25 +166,18 @@ export default async function ArticlePage({ params }) {
         </header>
 
         <div className="mx-auto max-w-3xl px-6 py-12">
-          <ArticleBody content={article.content} format={article.content_format} />
+          <ArticleBody
+            content={article.content}
+            format={article.content_format}
+          />
 
-          {article.youtube_url && <YouTubeEmbed url={article.youtube_url} />}
+          {article.youtube_url && (
+            <YouTubeEmbed
+              url={article.youtube_url}
+            />
+          )}
 
-          {Array.isArray(article.tags) &&
-            article.tags.length > 0 && (
-              <div className="mt-12 border-t border-border/30 pt-8">
-                <div className="flex flex-wrap gap-3">
-                  {article.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="border border-border/40 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+          <ArticleTaxonomy value={taxonomy} />
         </div>
       </article>
 

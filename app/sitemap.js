@@ -1,4 +1,7 @@
-import { getPublishedArticles } from '@/lib/cms-articles';
+import {
+  getAllTaxonomyHubs,
+  getPublishedArticles,
+} from '@/lib/cms-articles';
 import { SITE_URL } from '@/lib/site';
 import { buildMainSitemapEntries } from '@/lib/seo';
 
@@ -21,12 +24,21 @@ const STATIC_PATHS = [
 ];
 
 export default async function sitemap() {
-  const articles = await getPublishedArticles();
+  const [articles, hubsByType] =
+    await Promise.all([
+      getPublishedArticles(),
+      getAllTaxonomyHubs(),
+    ]);
+
+  const taxonomyHubs = Object.values(
+    hubsByType
+  ).flat();
 
   return buildMainSitemapEntries({
     articles,
     siteUrl: SITE_URL,
     staticPaths: STATIC_PATHS,
     sectionPaths: SECTION_PATHS,
+    taxonomyHubs,
   });
 }
