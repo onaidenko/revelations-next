@@ -1143,3 +1143,21 @@ Base44 и DNS/domain cutover.
   mode requires a valid bootstrap. Both modes report `db_writes=0`; apply was
   not run. Isolated PHP diagnostics 8/8, full Node suite and ESLint passed.
   Production, CMS DB, frontend and staging remain unchanged.
+
+## SEO Stage 2B-3A: taxonomy CMS dry-run
+
+- Deployed only `revelations-editorial-taxonomy.php`,
+  `revelations-public-api.php`, `import-editorial-taxonomy.php` and the
+  approved map at `public/data/seo/editorial-taxonomy-v2.json`. Backup:
+  `/root/revelations-taxonomy-before-20260719-164950`; rollback was not
+  required.
+- Production-aware importer dry-run resolved 52/52 assignments with no
+  missing, duplicate or conflicting slugs; planned 9 topics, 3 series and 19
+  locations, resolved 6 manual sources/18 targets and 2 public-topic
+  exclusions. Before/after fingerprint matched; `db_writes=0` and apply was
+  not run.
+- All production MU plugins passed lint. CMS health/API and frontend returned
+  HTTP 200; additive API taxonomy fields return safe legacy defaults. Robots
+  remained canonical, AI readiness stayed `ready` without requests, and
+  staging retained `noindex`. No frontend deploy, DB write, scanner,
+  publication, OpenAI request or staging change occurred.
