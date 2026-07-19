@@ -1188,3 +1188,13 @@ Base44 и DNS/domain cutover.
   `git diff --check` passed. This hardening remains local and not deployed:
   production CMS, database, frontend and staging are unchanged; no importer
   apply was run.
+
+## SEO 2B-3B primary topic storage hardening
+
+- Importer canonical diff продолжает использовать topic slug.
+- Текущее WordPress meta `_revelations_primary_topic` преобразуется из term ID в slug перед сравнением.
+- Apply преобразует запланированный primary-topic slug обратно в реальный term ID перед `update_post_meta`.
+- Isolated PHP lint прошёл для importer и focused diagnostic.
+- Focused diagnostics: 9 passed, 0 failed.
+- Full Node suite: 39 passed, 0 failed; ESLint и `git diff --check` прошли.
+- Production deploy, WordPress bootstrap, importer apply и DB writes не выполнялись.
