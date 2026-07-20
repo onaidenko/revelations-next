@@ -214,3 +214,16 @@
   чтобы entity tags оставались контекстной навигацией, а не tag cloud.
 - **Причина:** SEO 3B audit подтвердил, что `/topics` возвращал 404, а все
   девять public Topic hubs не имели стабильного non-article entry point.
+
+## Production service socket detection
+
+- **Решение:** post-switch loopback port определяется по PID-ам активного
+  systemd cgroup (`ControlGroup` + recursive `cgroup.procs`), а не по `cwd`
+  или наличию release path в process command line.
+- **Решение:** все listening sockets, принадлежащие процессам unit cgroup,
+  рассматриваются как кандидаты; deploy выбирает первый порт, который
+  действительно отвечает по `127.0.0.1`.
+- **Причина:** standalone Next.js может создавать дочерний процесс, чей `cwd`
+  и command line не содержат live release path. Старый эвристический поиск
+  поэтому не находил рабочий порт 3002 и запускал rollback после успешного
+  service start.

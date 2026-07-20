@@ -530,55 +530,91 @@ fi
 MAIN_PID="$(
   systemctl show -p MainPID --value "$SERVICE"
 )"
+CONTROL_GROUP="$(
+  systemctl show -p ControlGroup --value "$SERVICE"
+)"
 
-LOOPBACK_PORT="$(
-  python3 - "$LIVE_ROOT" <<'PY'
-import os
+SERVICE_PORTS="$(
+  python3 - "$MAIN_PID" "$CONTROL_GROUP" <<'PY'
+from __future__ import annotations
+
 import re
 import subprocess
 import sys
+from pathlib import Path
 
-root = os.path.realpath(sys.argv[1])
+main_pid = sys.argv[1].strip()
+control_group = sys.argv[2].strip()
+service_pids: set[int] = set()
+
+if main_pid.isdigit() and int(main_pid) > 0:
+    service_pids.add(int(main_pid))
+
+if control_group.startswith("/"):
+    cgroup_root = Path("/sys/fs/cgroup") / control_group.lstrip("/")
+    if cgroup_root.is_dir():
+        for process_file in cgroup_root.rglob("cgroup.procs"):
+            try:
+                for value in process_file.read_text(
+                    encoding="utf-8"
+                ).splitlines():
+                    if value.isdigit():
+                        service_pids.add(int(value))
+            except OSError:
+                continue
+
+if not service_pids:
+    raise SystemExit(1)
+
 output = subprocess.check_output(
     ["ss", "-ltnpH"],
     text=True,
     stderr=subprocess.DEVNULL,
 )
 
+ports: set[int] = set()
 for line in output.splitlines():
-    pids = [
+    socket_pids = {
         int(value)
         for value in re.findall(r"pid=(\d+)", line)
-    ]
-    for pid in pids:
-        try:
-            cwd = os.path.realpath(f"/proc/{pid}/cwd")
-            cmdline = open(
-                f"/proc/{pid}/cmdline",
-                "rb",
-            ).read().replace(b"\0", b" ").decode(
-                "utf-8",
-                errors="replace",
-            )
-        except OSError:
-            continue
+    }
+    if service_pids.isdisjoint(socket_pids):
+        continue
 
-        if cwd == root or root in cmdline:
-            local_address = line.split()[3]
-            print(local_address.rsplit(":", 1)[-1])
-            raise SystemExit(0)
+    fields = line.split()
+    if len(fields) < 4:
+        continue
 
-raise SystemExit(1)
+    local_address = fields[3]
+    port_text = local_address.rsplit(":", 1)[-1]
+    if port_text.isdigit():
+        ports.add(int(port_text))
+
+if not ports:
+    raise SystemExit(1)
+
+for port in sorted(ports):
+    print(port)
 PY
-)" || fail "loopback_port_not_found"
+)" || fail "service_ports_not_found"
 
-if ! curl -fsS \
-  --connect-timeout 3 \
-  --max-time 15 \
-  "http://127.0.0.1:$LOOPBACK_PORT/" \
-  >/dev/null
-then
-  fail "loopback_health_failed"
+LOOPBACK_PORT=""
+while IFS= read -r candidate_port; do
+  [[ "$candidate_port" =~ ^[0-9]+$ ]] || continue
+
+  if curl -fsS \
+    --connect-timeout 3 \
+    --max-time 15 \
+    "http://127.0.0.1:$candidate_port/" \
+    >/dev/null
+  then
+    LOOPBACK_PORT="$candidate_port"
+    break
+  fi
+done <<< "$SERVICE_PORTS"
+
+if [[ -z "$LOOPBACK_PORT" ]]; then
+  fail "service_loopback_health_failed"
 fi
 
 nginx -t >/dev/null 2>&1 \

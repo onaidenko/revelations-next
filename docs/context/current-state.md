@@ -1377,3 +1377,28 @@ Base44 и DNS/domain cutover.
 - This implementation stage performs no frontend deploy, CMS/DB write,
   staging change, signed revalidation POST, OpenAI request, scanner run or
   publication.
+
+## Production deploy loopback detector fix
+
+- The first SEO 3B-1 rollout built and verified the isolated candidate, switched
+  to build `Utda7Lo0wwFV6xG6KD_uc`, then failed at
+  `loopback_port_not_found`.
+- The fail-closed trap restored the previous production release:
+  build `5ICYzasjBNQx3eFA81CzK`, frontend commit
+  `fe25af912c5b7f34ee3a32116e0db282eeabbf20`. Public homepage returned 200,
+  `/topics` returned 404, the old sitemap was restored, and rollback
+  verification passed.
+- Root cause: the permanent deploy script associated sockets with the release
+  through process `cwd` or command-line text. The active Next.js listener
+  belonged to the systemd unit cgroup but did not satisfy that path heuristic.
+- The detector now collects the main PID and every PID in the recursive systemd
+  cgroup, matches those PIDs against `ss -ltnpH`, and probes the resulting
+  ports through loopback. The production state checker proved this method finds
+  port 3002.
+- Regression tests require cgroup-based ownership, reject the removed
+  `cwd`/command-line heuristic, preserve the only allowed raw IP
+  `127.0.0.1`, and verify the detector remains between service readiness and
+  public manifest verification.
+- This fix performs no frontend deploy, CMS/DB write, staging change, signed
+  revalidation POST, OpenAI request, scanner run or publication. A separate
+  retry is required after commit/push.

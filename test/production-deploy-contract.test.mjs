@@ -34,6 +34,11 @@ test('production deploy is fail-closed and transfers runtime environment only af
     'public_candidate_match_failed',
     'RUNTIME_ENV_TRANSFERRED=yes',
     'PUBLIC_MANIFEST_MATCH=yes',
+    'systemctl show -p ControlGroup --value "$SERVICE"',
+    '/sys/fs/cgroup',
+    'cgroup.procs',
+    'service_ports_not_found',
+    'service_loopback_health_failed',
   ]) {
     assert.ok(
       source.includes(required),
@@ -83,6 +88,27 @@ test('production deploy is fail-closed and transfers runtime environment only af
     source,
     /PUBLIC_OK=.*test "\$PUBLIC_OK"/
   );
+  assert.doesNotMatch(
+    source,
+    /\/proc\/\$\{?pid\}?\/cwd/
+  );
+  assert.doesNotMatch(
+    source,
+    /root in cmdline/
+  );
+
+  const serviceReady = source.indexOf(
+    'service_not_ready_after_switch'
+  );
+  const cgroupLookup = source.indexOf(
+    'systemctl show -p ControlGroup --value "$SERVICE"'
+  );
+  const publicManifestFailure = source.indexOf(
+    'fail "public_candidate_match_failed"'
+  );
+
+  assert.ok(cgroupLookup > serviceReady);
+  assert.ok(publicManifestFailure > cgroupLookup);
 });
 
 test('production release verifier is sitemap-driven and passes its self-test', async () => {
