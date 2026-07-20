@@ -197,3 +197,20 @@
 - **Причина:** SEO 3A rollout показал, что static candidate может выглядеть
   исправным без полного runtime environment, а неявная shell-обработка ошибки
   может ошибочно зафиксировать неуспешный rollout как успешный.
+
+## Taxonomy discovery indexes
+
+- **Решение:** `/topics` является индексируемой public collection page и
+  получает список только из существующего eligible Topics builder. Ручной
+  список topic slugs и отдельная CMS-конфигурация не создаются.
+- **Решение:** стабильные входы в Topics размещаются в `Footer → Explore` и
+  в компактном блоке `Explore by topic` на `/archive`. Primary desktop/mobile
+  header остаётся сфокусированным на редакционных разделах.
+- **Решение:** `/topics` входит в основной sitemap и signed frontend
+  revalidation. Individual Topic URLs, eligibility thresholds, article
+  membership, News sitemap и taxonomy storage не меняются.
+- **Решение:** отдельные `/series` и `/locations` могут быть рассмотрены
+  позднее. `/tags` не создаётся как общий публичный каталог на этом этапе,
+  чтобы entity tags оставались контекстной навигацией, а не tag cloud.
+- **Причина:** SEO 3B audit подтвердил, что `/topics` возвращал 404, а все
+  девять public Topic hubs не имели стабильного non-article entry point.

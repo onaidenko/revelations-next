@@ -21,6 +21,7 @@ const STATIC_PATHS = [
   'access',
   'contact',
   'archive',
+  'topics',
 ];
 
 export default async function sitemap() {

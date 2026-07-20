@@ -9,6 +9,9 @@ import {
   formatDate,
   getPublishedArticles,
 } from '@/lib/cms-articles';
+import {
+  buildTaxonomyHubs,
+} from '@/lib/taxonomy-hubs';
 
 const SECTION_ORDER = [
   'news',
@@ -38,6 +41,10 @@ export const metadata = buildPageMetadata({
 
 export default async function ArchivePage() {
   const articles = await getPublishedArticles();
+  const topics = buildTaxonomyHubs(
+    articles,
+    'topics'
+  );
 
   const grouped = articles.reduce((result, article) => {
     const section = article.section || 'news';
@@ -76,6 +83,53 @@ export default async function ArchivePage() {
 
           <div className="mt-8 h-px bg-gradient-to-r from-rose/40 via-border/30 to-transparent" />
         </header>
+
+        {topics.length > 0 && (
+          <section
+            aria-labelledby="archive-topics-title"
+            className="mb-16 border-y border-border/20 py-8"
+          >
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <span className="mb-2 block font-mono text-[9px] uppercase tracking-[0.2em] text-rose">
+                  Explore
+                </span>
+
+                <h2
+                  id="archive-topics-title"
+                  className="font-display text-2xl tracking-tight text-foreground"
+                >
+                  Explore by topic
+                </h2>
+              </div>
+
+              <Link
+                href="/topics"
+                className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground transition-colors duration-300 hover:text-foreground"
+              >
+                All topics →
+              </Link>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {topics.map((topic) => (
+                <Link
+                  key={topic.slug}
+                  href={topic.pathname}
+                  className="group flex items-center justify-between gap-4 border border-border/25 px-4 py-3 transition-colors duration-300 hover:border-rose/40"
+                >
+                  <span className="font-body text-sm text-foreground transition-colors duration-300 group-hover:text-rose">
+                    {topic.name}
+                  </span>
+
+                  <span className="shrink-0 font-mono text-[9px] tracking-[0.1em] text-muted-foreground/60">
+                    {topic.articles.length}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {populatedSections.length === 0 ? (
           <div className="py-20 text-center">

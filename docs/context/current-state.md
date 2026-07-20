@@ -1354,3 +1354,26 @@ Base44 и DNS/domain cutover.
 - This hardening stage changes repository tooling and documentation only. No
   frontend deploy, production runtime mutation, CMS/DB write, signed
   revalidation POST, OpenAI request, scanner run or publication occurred.
+
+## SEO 3B-1 topic discovery implementation
+
+- Added an indexable `/topics` route driven exclusively by
+  `getTaxonomyHubs('topics')`; no manual hub inventory or CMS setting was
+  introduced.
+- The page exposes all currently eligible Topic hubs with their curated
+  descriptions and live article counts, canonical metadata, Open Graph,
+  Twitter metadata, `BreadcrumbList`, `CollectionPage` and `ItemList`.
+- `Topics` was added to `Footer → Explore`. `/archive` now contains a compact
+  `Explore by topic` block generated from the same eligibility builder.
+  Primary desktop/mobile navigation was intentionally unchanged.
+- `/topics` was added to the main sitemap and to the signed revalidation path
+  set so publication and taxonomy changes refresh its live counts and
+  membership. The News sitemap remains article-only.
+- Individual hub URLs, eligibility thresholds, taxonomy assignments, CMS/DB
+  state, article ordering inside hubs and the two SEO 3B taxonomy-link
+  mismatches were not changed.
+- Focused Topics index tests, the full Node suite, ESLint, taxonomy governance,
+  `git diff --check` and a production build must pass before commit/push.
+- This implementation stage performs no frontend deploy, CMS/DB write,
+  staging change, signed revalidation POST, OpenAI request, scanner run or
+  publication.
