@@ -1543,3 +1543,40 @@ Base44 и DNS/domain cutover.
 - This implementation performs no frontend deploy, production mutation,
   CMS/DB write, signed revalidation POST, staging change, OpenAI request,
   scanner run or publication action.
+
+## SEO 3B-2 production rollout and final audit
+
+- Frontend commit `b3d5b289e01c583c80e5e250e928bb6908ea76bd`
+  was deployed atomically to production through
+  `scripts/deploy-production.sh`.
+- Active build: `uIm3yh6oLx8xm2GjHa8xQ`; service:
+  `revelations-production.service`; healthy loopback port: `3002`.
+- Rollback assets:
+  `/root/revelations-production-before-20260720-185005` and
+  `/var/www/revelations-production.previous-20260720-185005`.
+- Runtime environment transfer succeeded. Candidate and public manifests
+  matched. CMS health returned HTTP 200; GET `/api/revalidate` returned 405.
+- The production release exposes four indexable collection roots:
+  `/topics`, `/series`, `/locations` and `/tags` (`Entities`). Their hub
+  inventory remains dynamic and driven by the existing eligibility builders.
+- Footer Explore and Archive collection discovery are live. Primary navigation
+  remains unchanged.
+- Main sitemap contains 93 canonical public URLs: 52 published articles,
+  25 eligible taxonomy hubs and the four collection roots. Hub inventory is
+  9 Topics, 3 Series, 4 Locations and 9 entity Tags.
+- The News sitemap currently contains zero URLs because no published article
+  falls inside its active Google News time window; taxonomy URLs remain
+  excluded from it.
+- Final read-only public graph audit passed:
+  article orphans `0`, zero-inlink hubs `0`, hubs linked only from articles
+  `0`, hubs unreachable from home `0`, hubs deeper than two clicks `0`,
+  taxonomy link/membership mismatches `0`, and broken internal links `0`.
+- `/topics`, `/series`, `/locations` and `/tags` each returned HTTP 200 and
+  passed metadata, canonical, Open Graph, Twitter and structured-data checks.
+- Audit severity: high `0`, medium `0`, low `1`. The remaining low finding is
+  a non-blocking slow-page observation recorded in the audit report.
+- Audit report:
+  `/Users/admin/Downloads/revelations-seo-3b2-postdeploy-20260720-190500/seo-3b2-postdeploy-audit.md`.
+- Deployment and audit performed zero CMS writes, zero database writes, zero
+  OpenAI requests and no staging change. No signed revalidation POST was
+  performed during the deployment or final audit.
