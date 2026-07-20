@@ -1483,3 +1483,28 @@ Base44 и DNS/domain cutover.
 - Read-only audit report: `/Users/admin/Downloads/revelations-seo-3b1-postdeploy-20260720-171812/seo-3b1-postdeploy-audit.md`.
 - No CMS, WordPress post, taxonomy or database writes were performed. No signed
   revalidation POST, OpenAI request, scanner run or publication action occurred.
+
+## Signed revalidation production smoke test
+
+- A single controlled production HMAC POST was sent to `/api/revalidate`
+  using the secret already present in the active frontend process environment.
+  The secret and signature were not printed, stored in the repository or
+  transferred to the local machine.
+- Event ID: `seo-3b1-signed-revalidation-smoke-20260720-180106`. Synthetic payload version: `1`; action: `update`;
+  taxonomy target: `/topics/ai-data`. No WordPress post was created or changed.
+- The endpoint returned HTTP 200 with `ok=true`, `revalidated=true` and
+  `path_count=6`. The affected set covered `/`, `/archive`,
+  `/topics`, `/sitemap.xml`, `/news-sitemap.xml` and `/topics/ai-data`.
+- After invalidation, `/topics` and `/topics/ai-data` regenerated
+  successfully with HTTP 200, correct canonical/Open Graph URLs, no `noindex`
+  and their required JSON-LD.
+- Full public production verification passed again for all 25 taxonomy hubs,
+  the main sitemap, the taxonomy-free News sitemap, unknown-hub 404 behavior,
+  the homepage and a representative article.
+- Active frontend remained commit `a94acab1a2a651a9701c9d784d93dfe517ede083`, build
+  `Jz3vzoa0fWE0pkxTSsYSh`, service `revelations-production.service`. CMS health returned HTTP 200.
+- Report: `/Users/admin/Downloads/revelations-signed-revalidation-smoke-20260720-180202/signed-revalidation-smoke.md`.
+- Production mutation was limited to frontend cache/tag/path invalidation.
+  CMS writes, WordPress post/taxonomy changes and database writes were `0`.
+  Staging was unchanged. OpenAI requests, scanners and publication actions
+  were not performed.
