@@ -5,11 +5,6 @@ export default function robots() {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: [
-        '/admin/',
-        '/editorial-desk/',
-        '/private/',
-      ],
     },
     sitemap: [
       `${SITE_URL}/sitemap.xml`,

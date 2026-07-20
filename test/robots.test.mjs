@@ -31,14 +31,18 @@ test('robots declares both canonical production sitemaps exactly once', () => {
   assert.equal(result.sitemap.filter((url) => url.includes('cms.')).length, 0);
 });
 
-test('robots preserves the existing crawler rules', () => {
-  assert.deepEqual(robots().rules, {
-    userAgent: '*',
-    allow: '/',
-    disallow: [
-      '/admin/',
-      '/editorial-desk/',
-      '/private/',
-    ],
-  });
+test('robots allows all public frontend routes', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const source = await readFile(
+    new URL('../app/robots.js', import.meta.url),
+    'utf8'
+  );
+
+  assert.ok(source.includes("userAgent: '*'"));
+  assert.ok(source.includes("allow: '/'"));
+  assert.doesNotMatch(source, /disallow\s*:/i);
+  assert.doesNotMatch(
+    source,
+    /admin|editorial-desk|private/i
+  );
 });

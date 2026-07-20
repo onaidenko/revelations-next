@@ -1580,3 +1580,24 @@ Base44 и DNS/domain cutover.
 - Deployment and audit performed zero CMS writes, zero database writes, zero
   OpenAI requests and no staging change. No signed revalidation POST was
   performed during the deployment or final audit.
+
+## SEO 4A: GSC legacy URL audit and robots cleanup
+
+- Google Search Console drilldown exports contained 36 historical examples:
+  9 crawled-not-indexed, 13 Google/user canonical mismatches, 2 former 5xx,
+  1 former 404 and 11 former noindex URLs.
+- Corrected live redirect walking found no current indexability defect in
+  35 examples: 17 are resolved by permanent redirects, 15 obsolete URLs now
+  return 404, and 3 current pages are live and indexable.
+- The remaining `http://revelations.me/quisp` example now resolves through
+  HTTPS to a clean 404 and is absent from the sitemap; no replacement or
+  redirect is justified without a known equivalent page.
+- `/admin/`, `/editorial-desk/` and `/private/` all resolve to current 404
+  responses. They are not public frontend routes and are not protected
+  resources; their robots exclusions are obsolete.
+- Frontend source removes those three `Disallow` entries. The resulting
+  robots policy allows crawling of the public frontend and continues to
+  declare both production sitemaps.
+- This source change is committed and pushed but not deployed in this step.
+  Production, CMS, database, staging, signed revalidation and OpenAI remain
+  unchanged.
