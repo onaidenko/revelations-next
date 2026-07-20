@@ -227,3 +227,16 @@
   и command line не содержат live release path. Старый эвристический поиск
   поэтому не находил рабочий порт 3002 и запускал rollback после успешного
   service start.
+
+## Production service readiness retry
+
+- **Решение:** после atomic switch готовность production service означает не
+  только `systemctl is-active`, но одновременно наличие listening socket,
+  принадлежащего PID-ам systemd cgroup, и успешный HTTP-ответ по loopback.
+- **Решение:** service state, cgroup membership, sockets и loopback HTTP
+  проверяются повторно до 40 раз с паузой в одну секунду. Пустой список
+  sockets во время запуска считается промежуточным состоянием, а не
+  немедленной ошибкой.
+- **Причина:** systemd может отметить unit активным раньше, чем дочерний
+  standalone Next.js process войдёт в cgroup и откроет порт. Одноразовый
+  socket lookup дважды вызывал безопасный rollback исправного candidate.

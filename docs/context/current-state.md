@@ -1402,3 +1402,29 @@ Base44 и DNS/domain cutover.
 - This fix performs no frontend deploy, CMS/DB write, staging change, signed
   revalidation POST, OpenAI request, scanner run or publication. A separate
   retry is required after commit/push.
+
+## Production deploy service-readiness retry fix
+
+- The second SEO 3B-1 rollout again passed isolated candidate verification,
+  switched to frontend commit
+  `89a505b7c65994a243af3d4a5c700aad5b59dd7f`, and then failed at
+  `service_ports_not_found`.
+- Fail-closed rollback restored build `5ICYzasjBNQx3eFA81CzK` and commit
+  `fe25af912c5b7f34ee3a32116e0db282eeabbf20`. Production homepage returned
+  200, `/topics` returned 404, the old sitemap was restored, port 3002 was
+  healthy, and rollback verification passed.
+- Root cause: the post-switch code retried only `systemctl is-active`; after
+  the first active result it performed one cgroup/socket lookup. The unit can
+  be active before the Next.js child has joined the cgroup and opened its
+  listening socket.
+- The readiness gate now retries the complete sequence for up to 40 seconds:
+  active unit → current MainPID and ControlGroup → recursive cgroup PIDs →
+  matching `ss` listeners → successful loopback HTTP response.
+- Empty socket results during startup are retryable. The deployment fails
+  closed only when no healthy service-owned loopback listener appears before
+  the deadline.
+- Tests require the integrated retry gate and reject the former immediate
+  `service_ports_not_found` and `service_loopback_health_failed` exits.
+- This fix performs no frontend deploy, CMS/DB write, staging change, signed
+  revalidation POST, OpenAI request, scanner run or publication. A separate
+  production retry is required after commit/push.

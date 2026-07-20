@@ -37,8 +37,8 @@ test('production deploy is fail-closed and transfers runtime environment only af
     'systemctl show -p ControlGroup --value "$SERVICE"',
     '/sys/fs/cgroup',
     'cgroup.procs',
-    'service_ports_not_found',
-    'service_loopback_health_failed',
+    'find_service_ports()',
+    'service_loopback_not_ready_after_switch',
   ]) {
     assert.ok(
       source.includes(required),
@@ -97,18 +97,31 @@ test('production deploy is fail-closed and transfers runtime environment only af
     /root in cmdline/
   );
 
-  const serviceReady = source.indexOf(
-    'service_not_ready_after_switch'
+  const serviceStart = source.indexOf(
+    'systemctl start "$SERVICE"'
+  );
+  const readinessLoop = source.indexOf(
+    'for _ in $(seq 1 40); do',
+    serviceStart
   );
   const cgroupLookup = source.indexOf(
-    'systemctl show -p ControlGroup --value "$SERVICE"'
+    'systemctl show -p ControlGroup --value "$SERVICE"',
+    serviceStart
+  );
+  const loopbackFailure = source.indexOf(
+    'fail "service_loopback_not_ready_after_switch"'
   );
   const publicManifestFailure = source.indexOf(
     'fail "public_candidate_match_failed"'
   );
 
-  assert.ok(cgroupLookup > serviceReady);
-  assert.ok(publicManifestFailure > cgroupLookup);
+  assert.ok(serviceStart >= 0);
+  assert.ok(readinessLoop > serviceStart);
+  assert.ok(cgroupLookup > readinessLoop);
+  assert.ok(loopbackFailure > cgroupLookup);
+  assert.ok(publicManifestFailure > loopbackFailure);
+  assert.doesNotMatch(source, /service_ports_not_found/);
+  assert.doesNotMatch(source, /service_loopback_health_failed/);
 });
 
 test('production release verifier is sitemap-driven and passes its self-test', async () => {

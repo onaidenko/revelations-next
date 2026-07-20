@@ -511,31 +511,11 @@ mv "$CANDIDATE" "$LIVE_ROOT" \
   || fail "candidate_activation_failed"
 SWITCHED=1
 
-systemctl start "$SERVICE" \
-  || fail "service_start_failed"
+find_service_ports() {
+  local main_pid="$1"
+  local control_group="$2"
 
-SERVICE_READY=0
-for _ in $(seq 1 40); do
-  if systemctl is-active --quiet "$SERVICE"; then
-    SERVICE_READY=1
-    break
-  fi
-  sleep 1
-done
-
-if [[ "$SERVICE_READY" -ne 1 ]]; then
-  fail "service_not_ready_after_switch"
-fi
-
-MAIN_PID="$(
-  systemctl show -p MainPID --value "$SERVICE"
-)"
-CONTROL_GROUP="$(
-  systemctl show -p ControlGroup --value "$SERVICE"
-)"
-
-SERVICE_PORTS="$(
-  python3 - "$MAIN_PID" "$CONTROL_GROUP" <<'PY'
+  python3 - "$main_pid" "$control_group" <<'PY'
 from __future__ import annotations
 
 import re
@@ -566,11 +546,14 @@ if control_group.startswith("/"):
 if not service_pids:
     raise SystemExit(1)
 
-output = subprocess.check_output(
-    ["ss", "-ltnpH"],
-    text=True,
-    stderr=subprocess.DEVNULL,
-)
+try:
+    output = subprocess.check_output(
+        ["ss", "-ltnpH"],
+        text=True,
+        stderr=subprocess.DEVNULL,
+    )
+except (OSError, subprocess.CalledProcessError):
+    raise SystemExit(1)
 
 ports: set[int] = set()
 for line in output.splitlines():
@@ -596,25 +579,57 @@ if not ports:
 for port in sorted(ports):
     print(port)
 PY
-)" || fail "service_ports_not_found"
+}
 
+systemctl start "$SERVICE" \
+  || fail "service_start_failed"
+
+SERVICE_READY=0
 LOOPBACK_PORT=""
-while IFS= read -r candidate_port; do
-  [[ "$candidate_port" =~ ^[0-9]+$ ]] || continue
 
-  if curl -fsS \
-    --connect-timeout 3 \
-    --max-time 15 \
-    "http://127.0.0.1:$candidate_port/" \
-    >/dev/null
-  then
-    LOOPBACK_PORT="$candidate_port"
+for _ in $(seq 1 40); do
+  if ! systemctl is-active --quiet "$SERVICE"; then
+    sleep 1
+    continue
+  fi
+
+  MAIN_PID="$(
+    systemctl show -p MainPID --value "$SERVICE"
+  )"
+  CONTROL_GROUP="$(
+    systemctl show -p ControlGroup --value "$SERVICE"
+  )"
+  SERVICE_PORTS="$(
+    find_service_ports \
+      "$MAIN_PID" \
+      "$CONTROL_GROUP" \
+      || true
+  )"
+
+  while IFS= read -r candidate_port; do
+    [[ "$candidate_port" =~ ^[0-9]+$ ]] || continue
+
+    if curl -fsS \
+      --connect-timeout 3 \
+      --max-time 15 \
+      "http://127.0.0.1:$candidate_port/" \
+      >/dev/null
+    then
+      LOOPBACK_PORT="$candidate_port"
+      SERVICE_READY=1
+      break
+    fi
+  done <<< "$SERVICE_PORTS"
+
+  if [[ "$SERVICE_READY" -eq 1 ]]; then
     break
   fi
-done <<< "$SERVICE_PORTS"
 
-if [[ -z "$LOOPBACK_PORT" ]]; then
-  fail "service_loopback_health_failed"
+  sleep 1
+done
+
+if [[ "$SERVICE_READY" -ne 1 || -z "$LOOPBACK_PORT" ]]; then
+  fail "service_loopback_not_ready_after_switch"
 fi
 
 nginx -t >/dev/null 2>&1 \
