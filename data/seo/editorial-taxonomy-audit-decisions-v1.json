@@ -1,0 +1,20 @@
+{
+  "version": "editorial-taxonomy-audit-decisions-v1",
+  "reviewed_semantic_assignments": [
+    {
+      "slug": "burnout-doesnt-look-like-burnout",
+      "primary_topic": "future-work-leadership",
+      "secondary_topics": [
+        "health-longevity-medtech"
+      ],
+      "rationale": "The editorial angle is workplace burnout and leadership; health remains a valid secondary Topic."
+    }
+  ],
+  "manual_review": [
+    {
+      "slug": "33-qs-for-sergei-medvedev",
+      "finding": "ai_topic_without_text_evidence",
+      "rationale": "The current public record does not contain enough text for deterministic validation. Keep in the human review queue."
+    }
+  ]
+}

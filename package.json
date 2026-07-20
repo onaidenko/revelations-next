@@ -9,7 +9,8 @@
     "build:production": "bash scripts/build-production.sh",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --test"
+    "test": "node --test",
+    "audit:taxonomy": "python3 scripts/audit-editorial-taxonomy.py"
   },
   "dependencies": {
     "he": "^1.2.0",

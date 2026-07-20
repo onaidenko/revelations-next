@@ -35,17 +35,14 @@ test('related fallback is unique, bounded and does not privilege newest section 
   assert.deepEqual(result, ['close', 'other', 'newest']); assert.equal(new Set(result).size, result.length);
 });
 
-test('all approved fixtures select three unique related articles without inbound orphans', () => {
+test('all approved fixtures select three unique related articles', () => {
   const manual = new Map(map.manual_related.map((item) => [item.source_slug, item.target_slugs]));
   const corpus = map.assignments.map((item, index) => article(item.slug, {
     section: index % 2 ? 'news' : 'people', publication_date: `2026-01-${String((index % 28) + 1).padStart(2, '0')}`,
     primary_topic: item.primary_topic, topics: [item.primary_topic, ...item.secondary_topics], series: item.series || '', manual_related: manual.get(item.slug) || [],
   }));
-  const inbound = new Map(corpus.map((item) => [item.slug, 0]));
   for (const source of corpus) {
     const related = selectRelatedArticles(source, corpus);
     assert.equal(related.length, 3); assert.equal(new Set(related.map((item) => item.slug)).size, 3);
-    for (const target of related) inbound.set(target.slug, inbound.get(target.slug) + 1);
   }
-  assert.ok([...inbound.values()].every((count) => count > 0));
 });

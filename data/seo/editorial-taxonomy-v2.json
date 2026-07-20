@@ -392,9 +392,7 @@
       "location": null,
       "primary_topic": "health-longevity-medtech",
       "public_topic_eligible": true,
-      "secondary_topics": [
-        "ai-data"
-      ],
+      "secondary_topics": [],
       "series": null,
       "slug": "quantum-computing-is-finally-trying-to-be-useful-starting-with-medicine",
       "taxonomy_status": "proposed"
@@ -468,10 +466,10 @@
     },
     {
       "location": null,
-      "primary_topic": "future-work-leadership",
+      "primary_topic": "startups-founders-investment",
       "public_topic_eligible": true,
       "secondary_topics": [
-        "startups-founders-investment"
+        "future-work-leadership"
       ],
       "series": null,
       "slug": "the-co-founder-divorce-nobody-talks-about",

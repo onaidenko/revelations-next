@@ -1270,3 +1270,16 @@ Base44 и DNS/domain cutover.
 - Production map backup: `/root/revelations-taxonomy-map-before-20260720-090807`.
 - The public AI & Data hub no longer contains the Daria article, and the article page links to Creative Industries & Media without linking to AI & Data.
 - CMS health and the public AI topic page returned HTTP 200. No importer apply, database write, frontend deploy, OpenAI request, scanner run or publication action occurred.
+
+## SEO 2C taxonomy governance and editorial corrections (20260720-103727)
+
+- Added the permanent read-only command `npm run audit:taxonomy`, backed by `scripts/audit-editorial-taxonomy.py`.
+- The audit canonicalizes HTML entities before entity-tag comparison, recognizes `OpenxAI` as an AI signal, and records narrow human-reviewed semantic decisions in `data/seo/editorial-taxonomy-audit-decisions-v1.json`.
+- Corrected the Related fixture test to enforce the actual per-source contract (three unique bounded results) without imposing synthetic global inbound coverage, which is not guaranteed by the ranking algorithm.
+- Corrected `the-co-founder-divorce-nobody-talks-about`: primary Topic is now `startups-founders-investment`; `future-work-leadership` remains secondary.
+- Corrected `quantum-computing-is-finally-trying-to-be-useful-starting-with-medicine`: removed the unsupported secondary Topic `ai-data`; primary remains `health-longevity-medtech`.
+- Production importer dry-run planned exactly two changes: one Topic relationship removal and one primary-Topic metadata update. Apply completed with two mutation calls, then the production map was updated.
+- Production backup and rollback: `/root/revelations-seo2c-governance-before-20260720-103744`.
+- Production map SHA-256 changed from `55e116e8442acece86be5cb1df6af8987328225e72ec2d6758e9d84c55cf7c3e` to `03485e7877f80fe31d939486dada83d5d99388f3d4ee8042f0a3dcec41f5bd40`.
+- Post-change governance result: 52 articles, critical=0, high=1, drift=0. The only remaining review candidate is `33-qs-for-sergei-medvedev`, whose current public text is insufficient for deterministic validation.
+- Public Topic hubs and both affected article pages converged to the approved state. No frontend deploy, staging change, OpenAI request, scanner run or publication action occurred.
