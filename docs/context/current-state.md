@@ -1330,3 +1330,27 @@ Base44 и DNS/domain cutover.
 - Public verification after recovery covered all 25 eligible hubs, the main sitemap, Google News sitemap, unknown-hub 404 behavior, homepage and a representative article.
 - CMS health returned HTTP 200, GET on the signed revalidation endpoint remained HTTP 405, and staging remained HTTP 200 with `X-Robots-Tag: noindex`.
 - No CMS, taxonomy, WordPress post or database writes were performed. No signed revalidation POST, OpenAI request, scanner run or publication action occurred.
+
+## Permanent production deploy hardening
+
+- Added permanent `scripts/deploy-production.sh` and
+  `scripts/verify-production-release.py`.
+- Production artifacts are now explicitly secret-free. Candidate verification
+  uses only generated safe production URL variables; the active release
+  `.env.production` is transferred server-side only after the candidate stops
+  and is verified byte-for-byte before the switch.
+- Candidate taxonomy inventory and metadata/schema signatures are captured from
+  its actual sitemap. Public HTTPS must match the candidate manifest after the
+  switch; there is no fixed 25-hub assumption.
+- Public verification, CMS health, service, loopback, Nginx, revalidation GET
+  and staging `noindex` failures now call an explicit fail path and trigger the
+  timestamped rollback trap.
+- Regression tests cover operation ordering, runtime-environment transfer,
+  explicit fail-closed behavior, absence of non-loopback raw IPs and pipelines, sitemap-
+  driven verification, Python verifier self-tests and Bash syntax.
+- The pre-existing revalidation timestamp test now passes an explicit fixed
+  `now` value to `validTimestamp`, eliminating a one-second boundary race
+  without changing the 300-second production contract.
+- This hardening stage changes repository tooling and documentation only. No
+  frontend deploy, production runtime mutation, CMS/DB write, signed
+  revalidation POST, OpenAI request, scanner run or publication occurred.

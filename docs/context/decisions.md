@@ -179,3 +179,21 @@
   `rest_pre_insert_post`. Его internal save не проходит повторно classic
   fallback; non-REST classic/WP-CLI path сохраняет guard и нормализует
   slashed request text через `wp_unslash`.
+
+## Production deploy safety
+
+- **Решение:** production artifact не содержит runtime `.env` или секреты.
+  Изолированный candidate запускается только с генерируемыми безопасными
+  значениями production site URL и CMS API URL.
+- **Решение:** полный runtime `.env.production` переносится только на сервере
+  из текущего active release после остановки candidate и до atomic switch.
+  Перенос подтверждается `cmp`, а значение secret не читается и не выводится.
+- **Решение:** public verification является fail-closed. Любое несовпадение с
+  candidate manifest, ошибка service/loopback/Nginx/CMS или потеря staging
+  `noindex` вызывает явный failure и rollback; одного `set -e` недостаточно.
+- **Решение:** список проверяемых taxonomy hubs берётся из фактического sitemap
+  candidate, а не из зафиксированного количества. После switch публичный
+  sitemap и ключевые metadata/schema должны совпасть с candidate manifest.
+- **Причина:** SEO 3A rollout показал, что static candidate может выглядеть
+  исправным без полного runtime environment, а неявная shell-обработка ошибки
+  может ошибочно зафиксировать неуспешный rollout как успешный.

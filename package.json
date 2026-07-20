@@ -10,7 +10,9 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "node --test",
-    "audit:taxonomy": "python3 scripts/audit-editorial-taxonomy.py"
+    "audit:taxonomy": "python3 scripts/audit-editorial-taxonomy.py",
+    "deploy:production": "bash scripts/deploy-production.sh",
+    "verify:production-release": "python3 scripts/verify-production-release.py"
   },
   "dependencies": {
     "he": "^1.2.0",

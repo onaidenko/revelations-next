@@ -240,3 +240,29 @@
   Articles and provides one Gutenberg select backed by the editor data API.
 
 Глобальный AI gate расположен в общем engine непосредственно перед `call_user_func($score_story, $story)`, поэтому он предшествует section-specific scoring для News, People, Tech, Places и Unspoken.
+
+## Production frontend deployment
+
+- `scripts/deploy-production.sh` is the permanent production frontend
+  orchestrator. It requires an exact full commit SHA, a matching confirmation
+  token, a clean synchronized `admin-editorial` branch, full tests, lint,
+  taxonomy governance, a production build and a secret-free artifact.
+- The uploaded artifact never contains `.env`, `.env.*`, private keys or the
+  staging domain. The isolated candidate receives only a generated non-secret
+  environment containing the canonical production site URL and CMS API URL.
+- After candidate verification and process shutdown, the complete
+  `.env.production` runtime file is copied server-side from the active release
+  into the candidate and compared byte-for-byte. The production secret is
+  never sent to the local machine, printed, hashed into logs or exposed to the
+  running candidate.
+- `scripts/verify-production-release.py` derives the taxonomy hub inventory from
+  the candidate sitemap, validates all four hub families and captures a
+  metadata/schema manifest. After the atomic switch, public HTTPS must match
+  that manifest exactly. Fixed hub counts are not part of the deploy contract.
+- Any failed candidate, service, loopback, Nginx, public-manifest, CMS,
+  revalidation-GET or staging-noindex check exits explicitly through `fail`.
+  The EXIT trap restores the timestamped previous release and checks it against
+  a pre-deploy public manifest.
+- Remote deploy output is captured without an SSH-to-`tee` pipeline. Success is
+  emitted only after runtime transfer, public verification and all surrounding
+  checks have passed.
