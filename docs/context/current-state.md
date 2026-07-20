@@ -1428,3 +1428,30 @@ Base44 и DNS/domain cutover.
 - This fix performs no frontend deploy, CMS/DB write, staging change, signed
   revalidation POST, OpenAI request, scanner run or publication. A separate
   production retry is required after commit/push.
+
+## SEO 3B-1 taxonomy soft-404 root cause and fix
+
+- The third SEO 3B-1 rollout passed candidate verification and service
+  readiness, but public verification found four false missing hubs:
+  `/series/mena-blockchain-week`, `/tags/arman-mamyan`,
+  `/tags/d33-agenda`, and `/tags/dolce-gabbana`.
+- The deploy failed closed and restored build `5ICYzasjBNQx3eFA81CzK` /
+  commit `fe25af912c5b7f34ee3a32116e0db282eeabbf20`. Runtime environments
+  matched and rollback verification passed.
+- Read-only relocation diagnostics proved the failed release contained all
+  expected prerender routes. The affected hubs initially rendered the
+  application Not Found page, then recovered after repeated requests and a
+  fresh runtime location. `/topics` remained healthy throughout.
+- Root cause: `fetchCmsArticles()` caught any CMS request failure and returned
+  an empty CMS collection. The taxonomy builder then used legacy-only data;
+  threshold hubs absent from that fallback were treated as genuinely missing,
+  producing cacheable `notFound()` renders.
+- The CMS fetch policy now retries each request three times, uses a 15-second
+  timeout, and rethrows the final error. It no longer turns transport failures
+  into empty valid data. This lets Next.js retain the last successfully
+  generated ISR output when regeneration fails and retry later.
+- The implementation adds functional retry tests plus a source contract that
+  forbids the former local-fallback-on-error behavior.
+- No frontend deploy, CMS/DB write, staging change, signed revalidation POST,
+  OpenAI request, scanner run or publication is performed by this repository
+  fix. A separate production deploy is required after commit/push.

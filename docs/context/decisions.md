@@ -240,3 +240,17 @@
 - **Причина:** systemd может отметить unit активным раньше, чем дочерний
   standalone Next.js process войдёт в cgroup и откроет порт. Одноразовый
   socket lookup дважды вызывал безопасный rollback исправного candidate.
+
+## CMS failure semantics for ISR
+
+- **Решение:** transient CMS failures must throw after bounded retries; they
+  must never be converted into a successful empty CMS collection.
+- **Решение:** each CMS page request receives three attempts with incremental
+  delays and a 15-second timeout per attempt.
+- **Причина:** returning `[]` on a temporary CMS failure caused taxonomy
+  regeneration to build a valid-looking `notFound()` result from legacy-only
+  data. Next.js then cached that false result and public hubs became soft-404.
+- **Поведение:** when CMS configuration is intentionally absent, local legacy
+  data remains available. When a configured CMS becomes unavailable, build or
+  regeneration fails explicitly so Next.js can keep the last successful
+  cached output and retry later.
