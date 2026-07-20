@@ -20,11 +20,20 @@ export default function TaxonomyHubPage({ hub }) {
             {hub.name}
           </h1>
 
-          <p className="font-body text-sm leading-relaxed text-muted-foreground">
-            {hub.articles.length}{' '}
-            {hub.articles.length === 1 ? 'story' : 'stories'}{' '}
-            from REVELATIONS.
+          <p className="font-body text-base leading-relaxed text-muted-foreground">
+            {hub.introduction ||
+              `${hub.articles.length} ${
+                hub.articles.length === 1 ? 'story' : 'stories'
+              } from REVELATIONS.`}
           </p>
+
+          {hub.introduction && (
+            <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground/60">
+              {hub.articles.length}{' '}
+              {hub.articles.length === 1 ? 'story' : 'stories'}{' '}
+              in this collection
+            </p>
+          )}
 
           <div className="mt-8 h-px bg-gradient-to-r from-rose/40 via-border/30 to-transparent" />
         </header>

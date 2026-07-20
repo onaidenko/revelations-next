@@ -1294,3 +1294,14 @@ Base44 и DNS/domain cutover.
 - Public Topic hubs and both affected article pages match the approved taxonomy state.
 - Python cache artifacts are now ignored through `__pycache__/` and `*.py[cod]`.
 - No frontend deploy, staging change, OpenAI request, scanner run or publication action occurred.
+
+## SEO 3A hub content and metadata implementation
+
+- Added curated English-language editorial content for all 25 currently eligible public taxonomy hubs: 9 Topics, 3 Series, 4 Locations and 9 entity Tags.
+- Each approved hub now has a unique page-title input, a unique 90–180 character meta description and a visible 45–90 word editorial introduction.
+- Hub eligibility, URL paths, article membership, ordering, sitemap behavior, canonical URLs and 404 rules were not changed.
+- Hub metadata uses curated copy when available and retains the existing count-based fallback for future eligible terms without an editorial entry.
+- Open Graph, Twitter metadata and CollectionPage JSON-LD use the same curated description.
+- The visible page keeps the article count as a secondary collection label below the editorial introduction.
+- Validation: full Node test suite passed, ESLint passed, git diff check passed and a production build completed with curated copy present and no staging-domain leakage.
+- Commit and push are part of the approved local stage. Frontend deploy was intentionally not performed. CMS, database, staging, OpenAI, scanners and publication workflows were not changed.
