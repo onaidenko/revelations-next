@@ -1260,3 +1260,13 @@ Base44 и DNS/domain cutover.
 - The frontend service and loopback port are healthy, Nginx syntax passed, CMS health returned HTTP 200, and GET on the signed revalidation endpoint remained HTTP 405.
 - Staging remained HTTP 200 with `X-Robots-Tag: noindex`.
 - No WordPress post, metadata, taxonomy or database writes were performed. No OpenAI request, scanner run or publication action occurred.
+
+## Daria Barkova taxonomy correction (20260720-090807)
+
+- Removed the erroneous secondary Topic `ai-data` from `daria-barkova-art-profiling-turns-the-inner-world-into-a-visual-map`; its primary Topic remains `creative-industries-media` and its only secondary Topic is `startups-founders-investment`.
+- The user had already removed the relationship manually in production CMS. A production-aware importer dry-run against the corrected map resolved 52/52 articles and reported zero planned changes and zero writes.
+- Corrected approved map commit: `3ec721118ad5d8b1857615e418719defa21d5439`.
+- Production map SHA-256 changed from `ad142158eb3640dddcbfcb0e17181bef0b35846175b9d4c42efa02de889aa5d2` to `55e116e8442acece86be5cb1df6af8987328225e72ec2d6758e9d84c55cf7c3e`.
+- Production map backup: `/root/revelations-taxonomy-map-before-20260720-090807`.
+- The public AI & Data hub no longer contains the Daria article, and the article page links to Creative Industries & Media without linking to AI & Data.
+- CMS health and the public AI topic page returned HTTP 200. No importer apply, database write, frontend deploy, OpenAI request, scanner run or publication action occurred.
