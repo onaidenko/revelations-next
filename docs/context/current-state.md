@@ -1305,3 +1305,16 @@ Base44 и DNS/domain cutover.
 - The visible page keeps the article count as a secondary collection label below the editorial introduction.
 - Validation: full Node test suite passed, ESLint passed, git diff check passed and a production build completed with curated copy present and no staging-domain leakage.
 - Commit and push are part of the approved local stage. Frontend deploy was intentionally not performed. CMS, database, staging, OpenAI, scanners and publication workflows were not changed.
+
+## SEO 3A production rollout (20260720-125424)
+
+- Frontend commit `fe25af912c5b7f34ee3a32116e0db282eeabbf20` was rebuilt from the live CMS and deployed through an isolated loopback candidate followed by an atomic same-filesystem directory switch.
+- Previous build: `lrWLL98gDeeCnPiNg7HuL`. Active build: `5ICYzasjBNQx3eFA81CzK`.
+- Frontend service: `revelations-production.service`; verified loopback port: ``.
+- Production backup and rollback: `/root/revelations-seo3a-before-20260720-125822`.
+- Previous release retained at `/var/www/revelations-production.previous-seo3a-20260720-125822`.
+- Candidate and public verification passed for all 25 eligible taxonomy hubs, including curated introductions, titles, meta descriptions, canonical URLs, Open Graph, Twitter metadata, BreadcrumbList, CollectionPage, sitemap membership and unknown-hub 404 behavior.
+- Homepage, a representative article, CMS health, Nginx syntax and the frontend service passed. GET on the signed revalidation endpoint remained HTTP 405.
+- Runtime revalidation secret presence after restart matched the pre-deploy service state: `yes`; no secret value was read or recorded.
+- Staging remained HTTP 200 with `X-Robots-Tag: noindex`.
+- No CMS, taxonomy, WordPress post or database writes were performed. No signed revalidation POST, OpenAI request, scanner run or publication action occurred.
