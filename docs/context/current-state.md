@@ -1318,3 +1318,15 @@ Base44 и DNS/domain cutover.
 - Runtime revalidation secret presence after restart matched the pre-deploy service state: `yes`; no secret value was read or recorded.
 - Staging remained HTTP 200 with `X-Robots-Tag: noindex`.
 - No CMS, taxonomy, WordPress post or database writes were performed. No signed revalidation POST, OpenAI request, scanner run or publication action occurred.
+
+## SEO 3A production recovery (20260720-130910)
+
+- The initial SEO 3A rollout switched production to build `5ICYzasjBNQx3eFA81CzK`, but its public verifier then reported persistent HTTP 404 responses for all 25 taxonomy hubs and a sitemap without taxonomy URLs.
+- The rollout script incorrectly continued after those failed public checks and recorded documentation commit `6c384562352e0bfde20f83ccdaa9911d7c3839cd` as successful; that record is superseded by this recovery entry.
+- Recovery mode: `runtime_env_restored`.
+- Active build after recovery: `5ICYzasjBNQx3eFA81CzK`.
+- Recovery backup: `/root/revelations-seo3a-recovery-before-20260720-130919`.
+- Failed SEO 3A release location, when rollback was required: `/var/www/revelations-production.failed-seo3a-20260720-130919`.
+- Public verification after recovery covered all 25 eligible hubs, the main sitemap, Google News sitemap, unknown-hub 404 behavior, homepage and a representative article.
+- CMS health returned HTTP 200, GET on the signed revalidation endpoint remained HTTP 405, and staging remained HTTP 200 with `X-Robots-Tag: noindex`.
+- No CMS, taxonomy, WordPress post or database writes were performed. No signed revalidation POST, OpenAI request, scanner run or publication action occurred.
