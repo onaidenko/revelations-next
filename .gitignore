@@ -10,3 +10,5 @@ data/staging-seo-audit.json
 data/seo-metadata-plan.json
 deploy-production/
 revelations-production.tar.gz
+__pycache__/
+*.py[cod]

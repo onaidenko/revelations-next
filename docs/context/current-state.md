@@ -1283,3 +1283,14 @@ Base44 и DNS/domain cutover.
 - Production map SHA-256 changed from `55e116e8442acece86be5cb1df6af8987328225e72ec2d6758e9d84c55cf7c3e` to `03485e7877f80fe31d939486dada83d5d99388f3d4ee8042f0a3dcec41f5bd40`.
 - Post-change governance result: 52 articles, critical=0, high=1, drift=0. The only remaining review candidate is `33-qs-for-sergei-medvedev`, whose current public text is insufficient for deterministic validation.
 - Public Topic hubs and both affected article pages converged to the approved state. No frontend deploy, staging change, OpenAI request, scanner run or publication action occurred.
+
+## SEO 2C recovery completion (20260720-110313)
+
+- The first SEO 2C governance run reached a valid production state and pushed commit `8570aed`, but its final cleanliness check detected generated Python bytecode after the push. The run's safety trap therefore restored the two affected production articles and the previous production taxonomy map.
+- Recovery restored the local working tree exactly from pushed commit `8570aed`, then reapplied or verified the same approved two-change production plan.
+- Recovery backup and rollback: `/root/revelations-seo2c-recovery-before-20260720-110336`.
+- Production taxonomy map SHA-256 is `03485e7877f80fe31d939486dada83d5d99388f3d4ee8042f0a3dcec41f5bd40` (previous recovery-time SHA: `55e116e8442acece86be5cb1df6af8987328225e72ec2d6758e9d84c55cf7c3e`).
+- Final live governance audit: 52 articles, critical=0, high=1, drift=0; the only manual review candidate remains `33-qs-for-sergei-medvedev`.
+- Public Topic hubs and both affected article pages match the approved taxonomy state.
+- Python cache artifacts are now ignored through `__pycache__/` and `*.py[cod]`.
+- No frontend deploy, staging change, OpenAI request, scanner run or publication action occurred.
