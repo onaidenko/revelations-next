@@ -1508,3 +1508,38 @@ Base44 и DNS/domain cutover.
   CMS writes, WordPress post/taxonomy changes and database writes were `0`.
   Staging was unchanged. OpenAI requests, scanners and publication actions
   were not performed.
+
+## SEO 3B-2 collection discovery implementation
+
+- The post-SEO-3B-1 read-only audit found 90 sitemap URLs, 52 published
+  articles and 25 eligible taxonomy hubs: 9 Topics, 3 Series, 4 Locations
+  and 9 entity Tags.
+- `/topics` reduced hubs discoverable only through articles from 25 to 16
+  and hubs deeper than two clicks from 8 to 6. Article orphans, zero-inlink
+  hubs, unreachable hubs, taxonomy mismatches and broken internal links were
+  all zero. The remaining structural gap was that `/series`, `/locations`
+  and `/tags` returned 404.
+- SEO 3B-2 adds indexable collection roots for `/series`, `/locations` and
+  `/tags`, while retaining `/topics`. All four routes use one shared server
+  component and the existing `getTaxonomyHubs(type)` eligibility builder;
+  no hub slug inventory or CMS setting is duplicated.
+- `/tags` is presented publicly as `Entities` and exposes only currently
+  eligible entity-tag hubs. It does not expose every WordPress tag.
+- Each collection root has unique title/description metadata, canonical,
+  Open Graph and Twitter data, plus `BreadcrumbList`, `CollectionPage` and
+  nested `ItemList` JSON-LD. Cards show curated hub descriptions and live
+  article counts with the existing safe fallback for future eligible hubs.
+- Footer Explore links now include Topics, Series, Locations and Entities.
+  Archive uses one compact four-collection discovery block derived from
+  `buildAllTaxonomyHubs(articles)`.
+- `/series`, `/locations` and `/tags` are added to the main sitemap and all
+  four collection roots are included in signed revalidation. Primary desktop
+  and mobile navigation remain unchanged.
+- Individual hub URLs, eligibility thresholds, taxonomy assignments, article
+  membership/order and the Google News sitemap contract are unchanged.
+- Validation requires the full Node suite, ESLint, taxonomy governance,
+  `git diff --check` and a production build with all four collection roots
+  in the prerender manifest.
+- This implementation performs no frontend deploy, production mutation,
+  CMS/DB write, signed revalidation POST, staging change, OpenAI request,
+  scanner run or publication action.

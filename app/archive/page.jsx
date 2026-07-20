@@ -10,8 +10,12 @@ import {
   getPublishedArticles,
 } from '@/lib/cms-articles';
 import {
-  buildTaxonomyHubs,
+  buildAllTaxonomyHubs,
 } from '@/lib/taxonomy-hubs';
+import {
+  getTaxonomyIndexConfig,
+  TAXONOMY_INDEX_ORDER,
+} from '@/lib/taxonomy-indexes';
 
 const SECTION_ORDER = [
   'news',
@@ -41,9 +45,12 @@ export const metadata = buildPageMetadata({
 
 export default async function ArchivePage() {
   const articles = await getPublishedArticles();
-  const topics = buildTaxonomyHubs(
-    articles,
-    'topics'
+  const hubsByType = buildAllTaxonomyHubs(articles);
+  const collections = TAXONOMY_INDEX_ORDER.map(
+    (type) => ({
+      ...getTaxonomyIndexConfig(type),
+      hubs: hubsByType[type] || [],
+    })
   );
 
   const grouped = articles.reduce((result, article) => {
@@ -84,52 +91,53 @@ export default async function ArchivePage() {
           <div className="mt-8 h-px bg-gradient-to-r from-rose/40 via-border/30 to-transparent" />
         </header>
 
-        {topics.length > 0 && (
-          <section
-            aria-labelledby="archive-topics-title"
-            className="mb-16 border-y border-border/20 py-8"
-          >
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <span className="mb-2 block font-mono text-[9px] uppercase tracking-[0.2em] text-rose">
-                  Explore
-                </span>
+        <section
+          aria-labelledby="archive-collections-title"
+          className="mb-16 border-y border-border/20 py-8"
+        >
+          <div className="mb-6">
+            <span className="mb-2 block font-mono text-[9px] uppercase tracking-[0.2em] text-rose">
+              Explore
+            </span>
 
-                <h2
-                  id="archive-topics-title"
-                  className="font-display text-2xl tracking-tight text-foreground"
-                >
-                  Explore by topic
-                </h2>
-              </div>
+            <h2
+              id="archive-collections-title"
+              className="font-display text-2xl tracking-tight text-foreground"
+            >
+              Explore collections
+            </h2>
+          </div>
 
+          <div className="grid gap-3 sm:grid-cols-2">
+            {collections.map((collection) => (
               <Link
-                href="/topics"
-                className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                key={collection.type}
+                href={collection.pathname}
+                className="group flex min-h-36 flex-col justify-between border border-border/25 p-5 transition-colors duration-300 hover:border-rose/40"
               >
-                All topics →
+                <div>
+                  <div className="mb-3 flex items-center justify-between gap-4">
+                    <h3 className="font-display text-xl text-foreground transition-colors duration-300 group-hover:text-rose">
+                      {collection.name}
+                    </h3>
+
+                    <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/60">
+                      {collection.hubs.length}
+                    </span>
+                  </div>
+
+                  <p className="font-body text-sm leading-relaxed text-muted-foreground">
+                    {collection.archiveDescription}
+                  </p>
+                </div>
+
+                <span className="mt-5 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground transition-colors duration-300 group-hover:text-foreground">
+                  Explore {collection.name.toLowerCase()} →
+                </span>
               </Link>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {topics.map((topic) => (
-                <Link
-                  key={topic.slug}
-                  href={topic.pathname}
-                  className="group flex items-center justify-between gap-4 border border-border/25 px-4 py-3 transition-colors duration-300 hover:border-rose/40"
-                >
-                  <span className="font-body text-sm text-foreground transition-colors duration-300 group-hover:text-rose">
-                    {topic.name}
-                  </span>
-
-                  <span className="shrink-0 font-mono text-[9px] tracking-[0.1em] text-muted-foreground/60">
-                    {topic.articles.length}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+            ))}
+          </div>
+        </section>
 
         {populatedSections.length === 0 ? (
           <div className="py-20 text-center">

@@ -5,7 +5,7 @@ import {
 import { buildPageMetadata } from '@/lib/seo';
 import { SITE_URL } from '@/lib/site';
 
-const config = getTaxonomyIndexConfig('topics');
+const config = getTaxonomyIndexConfig('locations');
 
 export const metadata = {
   ...buildPageMetadata({
@@ -21,6 +21,6 @@ export const metadata = {
   },
 };
 
-export default function TopicsPage() {
-  return <TaxonomyIndexPage type="topics" />;
+export default function LocationsPage() {
+  return <TaxonomyIndexPage type="locations" />;
 }

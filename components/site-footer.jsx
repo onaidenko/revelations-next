@@ -9,6 +9,9 @@ const MEDIA_LINKS = [
 
 const EXPLORE_LINKS = [
   ['Topics', '/topics'],
+  ['Series', '/series'],
+  ['Locations', '/locations'],
+  ['Entities', '/tags'],
   ['Unspoken', '/unspoken'],
   ['Podcast', '/podcast'],
 ];
