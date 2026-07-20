@@ -1455,3 +1455,31 @@ Base44 и DNS/domain cutover.
 - No frontend deploy, CMS/DB write, staging change, signed revalidation POST,
   OpenAI request, scanner run or publication is performed by this repository
   fix. A separate production deploy is required after commit/push.
+
+## SEO 3B-1 production rollout (20260720-162459)
+
+- Production frontend commit `a94acab1a2a651a9701c9d784d93dfe517ede083` was deployed through the
+  permanent fail-closed release pipeline. Active build:
+  `Jz3vzoa0fWE0pkxTSsYSh`; service: `revelations-production.service`; verified loopback port:
+  `3002`.
+- Read-only post-deploy verification passed for the indexable `/topics`
+  collection and all 25 eligible taxonomy hubs: 9 Topics,
+  3 Series, 4 Locations and 9 entity Tags.
+- `/topics` returns HTTP 200 with route-specific canonical, Open Graph and
+  Twitter metadata, one H1, no `noindex`, and valid `BreadcrumbList`,
+  `CollectionPage` and nested `ItemList` JSON-LD covering all 9 Topic hubs.
+- The homepage footer exposes `Topics` under Explore. `/archive` exposes
+  `Explore by topic`, links to `/topics`, and links to the same 9 eligible
+  Topic hubs.
+- The main sitemap contains `/topics` and the exact 25-hub taxonomy set. The
+  Google News sitemap remains taxonomy-free, unknown taxonomy URLs return 404,
+  and no staging-domain leakage was detected.
+- CMS health returned HTTP 200. GET on `/api/revalidate` remained HTTP 405.
+  Staging returned HTTP 200 with `X-Robots-Tag: noindex`.
+- Runtime environment transfer was confirmed by deployment and remains present
+  in the active release. Public candidate-manifest matching passed.
+- Production backup: `/root/revelations-production-before-20260720-162459`. Previous release:
+  `/var/www/revelations-production.previous-20260720-162459`.
+- Read-only audit report: `/Users/admin/Downloads/revelations-seo-3b1-postdeploy-20260720-171812/seo-3b1-postdeploy-audit.md`.
+- No CMS, WordPress post, taxonomy or database writes were performed. No signed
+  revalidation POST, OpenAI request, scanner run or publication action occurred.
