@@ -759,12 +759,12 @@ function revelations_editorial_generate_draft_with_ai(
      */
     $preferred_minimum_words = min(
         $maximum_words,
-        $minimum_words + 50
+        $minimum_words + 75
     );
 
     $preferred_maximum_words = max(
         $preferred_minimum_words,
-        $maximum_words - 50
+        $maximum_words - 100
     );
 
     $editorial_policy = trim(
@@ -1402,18 +1402,28 @@ function revelations_editorial_generate_draft_with_ai(
             $blocks
         );
 
-    if (
-        $word_count < $minimum_words ||
-        $word_count > $maximum_words
-    ) {
+    $word_count_status = 'in_range';
+    $word_count_warning = '';
+
+    if ( $word_count < $minimum_words ) {
         return new WP_Error(
             'invalid_word_count',
             sprintf(
-                'Generated article contains %d words; required range is %d–%d.',
+                'Generated article contains %d words; minimum is %d.',
                 $word_count,
-                $minimum_words,
-                $maximum_words
+                $minimum_words
             )
+        );
+    }
+
+    if ( $word_count > $maximum_words ) {
+        $word_count_status = 'over_max';
+
+        $word_count_warning = sprintf(
+            'Generated article contains %d words, which is %d above the configured maximum of %d. The article was saved as a draft for editorial trimming.',
+            $word_count,
+            $word_count - $maximum_words,
+            $maximum_words
         );
     }
 
@@ -1599,6 +1609,12 @@ function revelations_editorial_generate_draft_with_ai(
         '_revelations_ai_word_count' =>
             $word_count,
 
+        '_revelations_ai_word_count_status' =>
+            $word_count_status,
+
+        '_revelations_ai_word_count_warning' =>
+            $word_count_warning,
+
         '_revelations_ai_duration_ms' =>
             $duration_ms,
 
@@ -1692,8 +1708,14 @@ function revelations_editorial_generate_draft_with_ai(
             $section_mismatch,
         'suggested_section' =>
             $suggested_section,
-        'word_count'    => $word_count,
-        'duration_ms'   => $duration_ms,
+        'word_count' =>
+            $word_count,
+        'word_count_status' =>
+            $word_count_status,
+        'word_count_warning' =>
+            $word_count_warning,
+        'duration_ms' =>
+            $duration_ms,
         'input_tokens'  =>
             absint(
                 $usage['input_tokens'] ?? 0
@@ -1969,6 +1991,20 @@ function revelations_editorial_ai_create_version_backup(
         '_rev_ai_word_count' =>
             $current_word_count,
 
+        '_rev_ai_word_count_status' =>
+            get_post_meta(
+                $draft_id,
+                '_revelations_ai_word_count_status',
+                true
+            ),
+
+        '_rev_ai_word_count_warning' =>
+            get_post_meta(
+                $draft_id,
+                '_revelations_ai_word_count_warning',
+                true
+            ),
+
         '_rev_ai_input_tokens' =>
             get_post_meta(
                 $draft_id,
@@ -2138,6 +2174,17 @@ add_action(
             );
         }
 
+        $success_message =
+            ! empty( $result['regenerated'] )
+                ? 'AI article regenerated successfully. The previous version was saved privately. The article remains a WordPress draft.'
+                : 'AI article generated successfully. The article remains a WordPress draft.';
+
+        if ( ! empty( $result['word_count_warning'] ) ) {
+            $success_message =
+                'AI article generated and saved as a WordPress draft. ' .
+                (string) $result['word_count_warning'];
+        }
+
         set_transient(
             revelations_editorial_ai_generation_result_key(),
             array_merge(
@@ -2145,9 +2192,7 @@ add_action(
                     'ok' => true,
 
                     'message' =>
-                        ! empty( $result['regenerated'] )
-                            ? 'AI article regenerated successfully. The previous version was saved privately. The article remains a WordPress draft.'
-                            : 'AI article generated successfully. The article remains a WordPress draft.',
+                        $success_message,
                 ),
                 $result
             ),
@@ -2179,12 +2224,22 @@ function revelations_editorial_render_ai_generation_notices(): void {
     $success = ! empty(
         $result['ok']
     );
+
+    $warning =
+        $success &&
+        ! empty(
+            $result['word_count_warning']
+        );
     ?>
     <div
         class="notice <?php echo esc_attr(
-            $success
-                ? 'notice-success'
-                : 'notice-error'
+            $warning
+                ? 'notice-warning'
+                : (
+                    $success
+                        ? 'notice-success'
+                        : 'notice-error'
+                )
         ); ?> is-dismissible"
     >
         <p>

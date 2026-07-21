@@ -1242,6 +1242,84 @@ foreach ( $supported_sections as $section ) {
 }
 
 /*
+ * Over-maximum output remains a usable unpublished draft.
+ */
+revelations_integration_reset( 'news' );
+
+$overlong_article =
+    revelations_integration_article( 'news' );
+
+$overlong_article['blocks'][] = array(
+    'type' =>
+        'paragraph',
+    'text' =>
+        trim(
+            str_repeat(
+                'context ',
+                850
+            )
+        ),
+    'heading_level' =>
+        0,
+    'items' =>
+        array(),
+);
+
+$revelations_integration_transport_article =
+    $overlong_article;
+
+$overlong_result =
+    revelations_editorial_generate_draft_with_ai(
+        100
+    );
+
+$overlong_draft = get_post( 100 );
+
+revelations_integration_check(
+    is_array( $overlong_result ) &&
+    (
+        $overlong_result['word_count']
+        ?? 0
+    ) > 800 &&
+    'over_max' === (
+        $overlong_result[
+            'word_count_status'
+        ] ?? ''
+    ) &&
+    '' !== (
+        $overlong_result[
+            'word_count_warning'
+        ] ?? ''
+    ),
+    'over-maximum generation completes with a warning'
+);
+
+revelations_integration_check(
+    $overlong_draft instanceof WP_Post &&
+    'draft' ===
+        $overlong_draft->post_status &&
+    'ai_generated' ===
+        get_post_meta(
+            100,
+            '_revelations_draft_kind',
+            true
+        ) &&
+    'over_max' ===
+        get_post_meta(
+            100,
+            '_revelations_ai_word_count_status',
+            true
+        ) &&
+    '' !==
+        get_post_meta(
+            100,
+            '_revelations_ai_word_count_warning',
+            true
+        ),
+    'over-maximum generation is preserved as an unpublished AI draft'
+);
+
+/*
  * Validation failures after transport but before WordPress writes.
  */
 $validation_cases = array(

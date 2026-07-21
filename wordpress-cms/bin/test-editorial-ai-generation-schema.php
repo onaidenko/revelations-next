@@ -523,6 +523,8 @@ $draft_meta_keys = array(
     '_revelations_ai_section_mismatch_reason',
     '_revelations_ai_fact_check_flags',
     '_revelations_ai_direct_quotes',
+    '_revelations_ai_word_count_status',
+    '_revelations_ai_word_count_warning',
 );
 
 foreach ( $draft_meta_keys as $draft_meta_key ) {
@@ -563,6 +565,8 @@ $version_meta_keys = array(
     '_rev_ai_section_mismatch_reason',
     '_rev_ai_fact_check_flags',
     '_rev_ai_direct_quotes',
+    '_rev_ai_word_count_status',
+    '_rev_ai_word_count_warning',
 );
 
 foreach (

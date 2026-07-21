@@ -310,6 +310,12 @@ function revelations_editorial_ai_restore_readiness(
 
         '_rev_ai_direct_quotes' =>
             '_revelations_ai_direct_quotes',
+
+        '_rev_ai_word_count_status' =>
+            '_revelations_ai_word_count_status',
+
+        '_rev_ai_word_count_warning' =>
+            '_revelations_ai_word_count_warning',
     );
 
     $current_generation_meta = array();
@@ -647,6 +653,12 @@ function revelations_editorial_ai_restore_version(
 
         '_rev_ai_direct_quotes' =>
             '_revelations_ai_direct_quotes',
+
+        '_rev_ai_word_count_status' =>
+            '_revelations_ai_word_count_status',
+
+        '_rev_ai_word_count_warning' =>
+            '_revelations_ai_word_count_warning',
     );
 
     foreach (
