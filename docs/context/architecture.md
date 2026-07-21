@@ -140,6 +140,12 @@
 
 ## Public frontend content mapping
 
+- `app/page.jsx` получает десять последних опубликованных материалов через
+  `getPublishedArticles()` без ограничения по editorial section.
+- Hero, secondary cards и общий latest feed показывают фактический раздел
+  каждой статьи. Section pages продолжают использовать собственные фильтры.
+- Общая ссылка homepage feed ведёт в `/archive`, а не в `/news`.
+
 ## Editorial taxonomy and related content
 
 - `revelations-editorial-taxonomy.php` defines separate non-hierarchical

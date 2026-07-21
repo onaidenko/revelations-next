@@ -1,6 +1,6 @@
 # Текущее состояние
 
-Дата фиксации: 2026-07-18.
+Дата фиксации: 2026-07-21.
 
 ## Git и окружение
 
@@ -1601,3 +1601,14 @@ Base44 и DNS/domain cutover.
 - This source change is committed and pushed but not deployed in this step.
   Production, CMS, database, staging, signed revalidation and OpenAI remain
   unchanged.
+
+## Homepage all-section feed
+
+- Обнаружено, что `app/page.jsx` запрашивал только
+  `getArticlesBySection('news')`, поэтому опубликованные материалы других
+  разделов не могли появляться на главной.
+- Homepage переведён на `getPublishedArticles()` и показывает десять
+  последних опубликованных материалов из всех разделов.
+- Hero, secondary cards и latest feed показывают фактический section.
+- Общая ссылка latest feed ведёт в `/archive`.
+- Добавлен автономный Node contract test против возврата News-only фильтра.

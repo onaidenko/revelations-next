@@ -119,6 +119,13 @@
 
 ## Public frontend
 
+- **Решение:** главная страница показывает последние опубликованные статьи
+  из всех editorial sections, а не только News.
+- **Решение:** фактический раздел отображается на каждой mixed-feed карточке;
+  общий переход ведёт в Archive. Section pages остаются отфильтрованными.
+- **Причина:** homepage является общим входом в REVELATIONS и не должна
+  скрывать новые публикации Tech, People, Places или Unspoken.
+
 ## Editorial taxonomy and Related content
 
 - **Решение:** topics, series и locations являются разными editorial

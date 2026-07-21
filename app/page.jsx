@@ -2,7 +2,7 @@ import Link from 'next/link';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import DropsMarquee from '@/components/drops-marquee';
-import { getArticlesBySection } from '@/lib/cms-articles';
+import { getPublishedArticles } from '@/lib/cms-articles';
 
 function formatDate(value, variant = 'full') {
   if (!value) return '';
@@ -21,8 +21,22 @@ function formatDate(value, variant = 'full') {
   return new Intl.DateTimeFormat('en-US', options).format(date);
 }
 
+function formatSectionLabel(article) {
+  const value =
+    article?.section_name ||
+    article?.section ||
+    'News';
+
+  return String(value)
+    .replace(/[-_]+/g, ' ')
+    .replace(
+      /\b\w/g,
+      (character) => character.toUpperCase()
+    );
+}
+
 export default async function HomePage() {
-  const articles = (await getArticlesBySection('news')).slice(0, 10);
+  const articles = (await getPublishedArticles()).slice(0, 10);
 
   const hero = articles[0] || null;
   const secondary = articles.slice(1, 3);
@@ -38,7 +52,7 @@ export default async function HomePage() {
             <div className="mb-5 flex items-center justify-between gap-6">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-rose">
-                  News
+                  {formatSectionLabel(hero)}
                 </span>
 
                 {hero.author && (
@@ -122,7 +136,7 @@ export default async function HomePage() {
 
                   <div className="mb-2 flex items-center gap-3">
                     <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-rose">
-                      News
+                      {formatSectionLabel(article)}
                     </span>
 
                     <span className="font-mono text-[9px] tracking-[0.1em] text-muted-foreground">
@@ -152,13 +166,13 @@ export default async function HomePage() {
           <section className="mx-auto max-w-7xl px-6 py-14 md:px-12">
             <div className="mb-10 flex items-center gap-6">
               <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-rose">
-                Latest from News
+                Latest Stories
               </span>
 
               <div className="h-px flex-1 bg-border/20" />
 
               <Link
-                href="/news"
+                href="/archive"
                 className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground transition-colors duration-300 hover:text-foreground"
               >
                 View all
@@ -178,6 +192,12 @@ export default async function HomePage() {
 
                   <div className="min-w-0 flex-1">
                     <div className="mb-2 flex flex-wrap items-center gap-3">
+                      <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-rose">
+                        {formatSectionLabel(article)}
+                      </span>
+
+                      <span className="h-3 w-px bg-border/40" />
+
                       <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
                         {formatDate(
                           article.publication_date || article.created_date
