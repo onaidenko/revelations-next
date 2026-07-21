@@ -119,12 +119,15 @@
 
 ## Public frontend
 
-- **Решение:** главная страница показывает последние опубликованные статьи
-  из всех editorial sections, а не только News.
+- **Решение:** главная страница показывает в общей хронологии последние
+  опубликованные материалы разделов News, People, Tech, Places, Unspoken и
+  Podcast.
+- **Решение:** Access является отдельной страницей, а не editorial section,
+  и не участвует в homepage article feed.
 - **Решение:** фактический раздел отображается на каждой mixed-feed карточке;
   общий переход ведёт в Archive. Section pages остаются отфильтрованными.
 - **Причина:** homepage является общим входом в REVELATIONS и не должна
-  скрывать новые публикации Tech, People, Places или Unspoken.
+  скрывать публикации ни одного раздела главного меню.
 
 ## Editorial taxonomy and Related content
 
@@ -161,7 +164,10 @@
   routes не получают искусственную текущую дату; section/article dates
   происходят только из реальных article timestamps.
 - **Решение:** News sitemap ограничен 48 часами от publication date;
-  modified date не может вернуть старую новость в Google News sitemap.
+  modified date не может вернуть старую публикацию в Google News sitemap.
+- **Решение:** News Sitemap использует тот же editorial section registry,
+  что и homepage: News, People, Tech, Places, Unspoken и Podcast.
+  Access и неизвестные sections исключаются.
 - **Решение:** Cover Image — единственный article-specific social
   image. Branded logo допустим только как Open Graph/Twitter fallback,
   но не как `Article.image`.

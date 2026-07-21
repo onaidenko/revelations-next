@@ -20,6 +20,16 @@ test(
       /await getPublishedArticles\(\)/
     );
 
+    assert.match(
+      source,
+      /import \{ isEditorialSection \} from '@\/lib\/sections'/
+    );
+
+    assert.match(
+      source,
+      /isEditorialSection\(article\.section\)/
+    );
+
     assert.doesNotMatch(
       source,
       /getArticlesBySection\(['"]news['"]\)/

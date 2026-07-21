@@ -1612,3 +1612,15 @@ Base44 и DNS/domain cutover.
 - Hero, secondary cards и latest feed показывают фактический section.
 - Общая ссылка latest feed ведёт в `/archive`.
 - Добавлен автономный Node contract test против возврата News-only фильтра.
+
+## Unified homepage and News Sitemap sections
+
+- Подтверждён единый public editorial registry: News, People, Tech, Places,
+  Unspoken и Podcast.
+- Access остаётся отдельной страницей и не участвует в article feeds.
+- Homepage показывает десять самых новых материалов шести разделов в общей
+  хронологии без section priority.
+- News Sitemap использует тот же registry и 48-часовое ограничение по
+  publication date.
+- Добавлены regression checks для всех шести разделов, Access, неизвестного
+  section, старой и будущей публикации.

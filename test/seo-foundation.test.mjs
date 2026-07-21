@@ -66,20 +66,121 @@ test('main sitemap has only canonical public URLs and honest dates', () => {
   assert.equal('lastModified' in entries.find(({ url }) => url === 'https://revelations.me/tech'), false);
 });
 
-test('news sitemap is recent-publication-only and escapes XML', () => {
-  const now = new Date('2026-07-19T12:00:00+00:00');
-  const xml = buildNewsSitemapXml([
-    article,
-    { ...article, slug: 'old-news', publication_date: '2026-07-10T10:00:00+00:00', modified_date: now.toISOString() },
-    { ...article, slug: 'not-news', section: 'tech' },
-  ], { siteUrl, now });
+test(
+  'news sitemap includes recent stories from every editorial section and escapes XML',
+  () => {
+    const now = new Date(
+      '2026-07-19T12:00:00+00:00'
+    );
 
-  assert.match(xml, /xmlns:news=/);
-  assert.match(xml, /<news:publication_date>2026-07-18T10:00:00\+00:00<\/news:publication_date>/);
-  assert.match(xml, /AI &amp; Research &lt;Today&gt;/);
-  assert.doesNotMatch(xml, /old-news|not-news/);
-  assert.match(buildNewsSitemapXml([], { siteUrl }), /<urlset[\s\S]*<\/urlset>/);
-});
+    const xml = buildNewsSitemapXml(
+      [
+        article,
+        {
+          ...article,
+          slug: 'recent-tech',
+          section: 'tech',
+          title: 'Recent Tech Story',
+        },
+        {
+          ...article,
+          slug: 'recent-people',
+          section: 'people',
+          title: 'Recent People Story',
+        },
+        {
+          ...article,
+          slug: 'recent-places',
+          section: 'places',
+          title: 'Recent Places Story',
+        },
+        {
+          ...article,
+          slug: 'recent-unspoken',
+          section: 'unspoken',
+          title: 'Recent Unspoken Story',
+        },
+        {
+          ...article,
+          slug: 'recent-podcast',
+          section: 'podcast',
+          title: 'Recent Podcast Story',
+        },
+        {
+          ...article,
+          slug: 'old-news',
+          publication_date:
+            '2026-07-10T10:00:00+00:00',
+          modified_date:
+            now.toISOString(),
+        },
+        {
+          ...article,
+          slug: 'future-news',
+          publication_date:
+            '2026-07-20T10:00:00+00:00',
+        },
+        {
+          ...article,
+          slug: 'recent-access',
+          section: 'access',
+          title: 'Access Page',
+        },
+        {
+          ...article,
+          slug: 'recent-unknown',
+          section: 'unknown',
+          title: 'Unknown Category',
+        },
+      ],
+      {
+        siteUrl,
+        now,
+      }
+    );
+
+    assert.match(xml, /xmlns:news=/);
+
+    assert.match(
+      xml,
+      /<news:publication_date>2026-07-18T10:00:00\+00:00<\/news:publication_date>/
+    );
+
+    assert.match(
+      xml,
+      /AI &amp; Research &lt;Today&gt;/
+    );
+
+    for (
+      const slug of [
+        'ai-news',
+        'recent-tech',
+        'recent-people',
+        'recent-places',
+        'recent-unspoken',
+        'recent-podcast',
+      ]
+    ) {
+      assert.match(
+        xml,
+        new RegExp(slug)
+      );
+    }
+
+    assert.doesNotMatch(
+      xml,
+      /old-news|future-news|recent-access|recent-unknown/
+    );
+
+    assert.match(
+      buildNewsSitemapXml(
+        [],
+        { siteUrl }
+      ),
+      /<urlset[\s\S]*<\/urlset>/
+    );
+  }
+);
 
 test('social metadata uses the cover image, then only a branded fallback', () => {
   const metadata = buildArticleMetadata(article, {

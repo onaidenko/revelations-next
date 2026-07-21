@@ -3,6 +3,7 @@ import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import DropsMarquee from '@/components/drops-marquee';
 import { getPublishedArticles } from '@/lib/cms-articles';
+import { isEditorialSection } from '@/lib/sections';
 
 function formatDate(value, variant = 'full') {
   if (!value) return '';
@@ -36,7 +37,13 @@ function formatSectionLabel(article) {
 }
 
 export default async function HomePage() {
-  const articles = (await getPublishedArticles()).slice(0, 10);
+  const articles = (
+    await getPublishedArticles()
+  )
+    .filter((article) =>
+      isEditorialSection(article.section)
+    )
+    .slice(0, 10);
 
   const hero = articles[0] || null;
   const secondary = articles.slice(1, 3);

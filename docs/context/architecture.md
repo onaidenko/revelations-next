@@ -140,10 +140,12 @@
 
 ## Public frontend content mapping
 
-- `app/page.jsx` получает десять последних опубликованных материалов через
-  `getPublishedArticles()` без ограничения по editorial section.
+- `app/page.jsx` получает опубликованные материалы через
+  `getPublishedArticles()`, оставляет разделы News, People, Tech, Places,
+  Unspoken и Podcast и показывает десять самых новых в общей хронологии.
 - Hero, secondary cards и общий latest feed показывают фактический раздел
-  каждой статьи. Section pages продолжают использовать собственные фильтры.
+  каждой статьи. Access не является editorial section. Section pages
+  продолжают использовать собственные фильтры.
 - Общая ссылка homepage feed ведёт в `/archive`, а не в `/news`.
 
 ## Editorial taxonomy and related content
@@ -202,8 +204,10 @@
   новой article в section, article — real modified date с publication
   fallback.
 - `app/news-sitemap.xml/route.js` отдаёт валидный Google News sitemap
-  только для News articles, опубликованных в последние 48 часов по
-  publication date. Revalidation равна 300 seconds.
+  для свежих публикаций разделов News, People, Tech, Places, Unspoken и
+  Podcast, опубликованных в последние 48 часов по publication date.
+  Access и неизвестные sections исключаются. Revalidation равна
+  300 seconds.
 - Article metadata использует cover image для Open Graph/Twitter; при
   её отсутствии применяется только branded social fallback. Article
   JSON-LD добавляет `image` только для фактической cover image.
