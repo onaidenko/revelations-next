@@ -14,8 +14,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-EXPECTED_ARTICLES = 52
-
 TOPIC_KEYWORDS: dict[str, list[str]] = {
     "ai-data": [
         "artificial intelligence",
@@ -197,6 +195,26 @@ def reviewed_assignment_keys(decisions: dict[str, Any]) -> set[tuple[str, str, t
     return keys
 
 
+def taxonomy_governance_state(
+    live_slugs: set[str],
+    taxonomy_slugs: set[str],
+    tag_slugs: set[str],
+) -> dict[str, list[str]]:
+    approved_slugs = taxonomy_slugs | tag_slugs
+
+    return {
+        "map_mismatch": sorted(
+            taxonomy_slugs ^ tag_slugs
+        ),
+        "missing_live": sorted(
+            approved_slugs - live_slugs
+        ),
+        "pending_live": sorted(
+            live_slugs - approved_slugs
+        ),
+    }
+
+
 def run_audit(args: argparse.Namespace) -> dict[str, Any]:
     cms_api = args.cms_api.rstrip("/")
     taxonomy = json.loads(args.map.read_text(encoding="utf-8"))
@@ -208,10 +226,6 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
         raise RuntimeError(f"CMS health failed: {health}")
 
     articles = fetch_articles(cms_api)
-    if len(articles) != EXPECTED_ARTICLES:
-        raise RuntimeError(
-            f"expected {EXPECTED_ARTICLES} published articles, got {len(articles)}"
-        )
 
     taxonomy_by_slug = {
         item["slug"]: item for item in taxonomy.get("assignments", [])
@@ -229,22 +243,37 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     article_rows: list[dict[str, Any]] = []
 
-    if live_slugs != set(taxonomy_by_slug):
+    governance = taxonomy_governance_state(
+        live_slugs,
+        set(taxonomy_by_slug),
+        set(tags_by_slug),
+    )
+
+    if governance["map_mismatch"]:
         findings.append(
             {
                 "severity": "critical",
-                "code": "taxonomy_map_slug_drift",
+                "code": "approved_map_slug_mismatch",
                 "slug": None,
-                "message": "Live CMS slugs differ from the approved taxonomy map.",
+                "message": (
+                    "The approved taxonomy and entity-tag maps "
+                    "contain different article slugs."
+                ),
+                "actual": governance["map_mismatch"],
             }
         )
-    if live_slugs != set(tags_by_slug):
+
+    if governance["missing_live"]:
         findings.append(
             {
                 "severity": "critical",
-                "code": "tag_map_slug_drift",
+                "code": "approved_article_missing_from_cms",
                 "slug": None,
-                "message": "Live CMS slugs differ from the approved entity-tag map.",
+                "message": (
+                    "One or more articles from the approved maps "
+                    "are no longer present in the published CMS collection."
+                ),
+                "actual": governance["missing_live"],
             }
         )
 
@@ -267,6 +296,23 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
 
         article_findings: list[dict[str, Any]] = []
 
+        article_row = {
+            "slug": slug,
+            "title": strip_html(article.get("title")),
+            "url": f"https://revelations.me/{slug}",
+            "primary_topic": primary,
+            "secondary_topics": secondary,
+            "series": series,
+            "locations": locations,
+            "entity_tags": entity_tags,
+            "taxonomy_status": (
+                article.get("taxonomy_status")
+                or "proposed"
+            ),
+            "semantic_scores": {},
+            "findings": article_findings,
+        }
+
         def add(severity: str, code: str, message: str, expected_value: Any = None, actual_value: Any = None) -> None:
             item = {
                 "severity": severity,
@@ -281,6 +327,19 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
                 item["actual"] = actual_value
             findings.append(item)
             article_findings.append(item)
+
+        if expected is None and expected_tags is None:
+            add(
+                "info",
+                "taxonomy_governance_pending",
+                (
+                    "Published article is newer than the approved "
+                    "taxonomy snapshots and is pending editorial governance."
+                ),
+            )
+
+            article_rows.append(article_row)
+            continue
 
         if not primary or primary not in all_topics:
             add(
@@ -397,21 +456,8 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
                 {"primary_topic": primary, "score": primary_score},
             )
 
-        article_rows.append(
-            {
-                "slug": slug,
-                "title": strip_html(article.get("title")),
-                "url": f"https://revelations.me/{slug}",
-                "primary_topic": primary,
-                "secondary_topics": secondary,
-                "series": series,
-                "locations": locations,
-                "entity_tags": entity_tags,
-                "taxonomy_status": article.get("taxonomy_status") or "proposed",
-                "semantic_scores": scores,
-                "findings": article_findings,
-            }
-        )
+        article_row["semantic_scores"] = scores
+        article_rows.append(article_row)
 
     severity_counts = Counter(item["severity"] for item in findings)
     issue_counts = Counter(item["code"] for item in findings)
@@ -430,6 +476,10 @@ def run_audit(args: argparse.Namespace) -> dict[str, Any]:
         "cms_api": cms_api,
         "summary": {
             "published_articles": len(articles),
+            "pending_governance": len(
+                governance["pending_live"]
+            ),
+            "pending_slugs": governance["pending_live"],
             "review_candidates": len(review_slugs),
             "review_slugs": review_slugs,
             "critical": severity_counts.get("critical", 0),
@@ -491,6 +541,7 @@ def write_outputs(result: dict[str, Any], output_dir: Path) -> None:
         "",
         f"- Generated: `{result['generated_at']}`",
         f"- Published articles: **{summary['published_articles']}**",
+        f"- Pending governance: **{summary['pending_governance']}**",
         f"- Review candidates: **{summary['review_candidates']}**",
         f"- Critical: **{summary['critical']}**",
         f"- High: **{summary['high']}**",
@@ -539,6 +590,8 @@ def write_outputs(result: dict[str, Any], output_dir: Path) -> None:
         [
             "===== SEO 2C TAXONOMY AUDIT COMPLETE =====",
             f"published_articles={summary['published_articles']}",
+            f"pending_governance={summary['pending_governance']}",
+            f"pending_slugs={','.join(summary['pending_slugs'])}",
             f"review_candidates={summary['review_candidates']}",
             f"review_slugs={','.join(summary['review_slugs'])}",
             f"critical={summary['critical']}",
@@ -564,6 +617,39 @@ def self_test() -> None:
         "content": "",
     }
     assert semantic_scores(sample)["ai-data"] > 0
+
+    additive_state = taxonomy_governance_state(
+        {"approved", "new-article"},
+        {"approved"},
+        {"approved"},
+    )
+
+    assert additive_state == {
+        "map_mismatch": [],
+        "missing_live": [],
+        "pending_live": ["new-article"],
+    }
+
+    missing_state = taxonomy_governance_state(
+        set(),
+        {"approved"},
+        {"approved"},
+    )
+
+    assert missing_state["missing_live"] == [
+        "approved"
+    ]
+
+    mismatch_state = taxonomy_governance_state(
+        {"approved"},
+        {"approved"},
+        set(),
+    )
+
+    assert mismatch_state["map_mismatch"] == [
+        "approved"
+    ]
+
     print("self_test=passed")
 
 

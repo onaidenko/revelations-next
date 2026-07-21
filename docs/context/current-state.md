@@ -1624,3 +1624,15 @@ Base44 и DNS/domain cutover.
   publication date.
 - Добавлены regression checks для всех шести разделов, Access, неизвестного
   section, старой и будущей публикации.
+
+## Additive-safe taxonomy deployment audit
+
+- Frontend deploy коммита `bc543b2` остановился до build/upload, потому что
+  taxonomy audit жёстко ожидал 52 published articles, а после публикации
+  AGIBOT CMS вернул 53.
+- Удалён frozen article count.
+- Утверждённые taxonomy/tag snapshots продолжают проверяться fail-closed.
+- Новые статьи вне обоих snapshots получают
+  `taxonomy_governance_pending` и не создают critical/drift failure.
+- Pending slugs и их количество добавлены в JSON и текстовый summary.
+- Добавлен Python self-test и Node regression test.

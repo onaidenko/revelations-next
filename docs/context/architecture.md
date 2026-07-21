@@ -167,6 +167,11 @@
 - `data/seo/editorial-taxonomy-v2.json` is the normalized approved proposal.
   `import-editorial-taxonomy.php` validates and plans it in dry-run by default;
   apply requires explicit flags and is not run against production in this stage.
+- Taxonomy governance treats the approved taxonomy and tag maps as snapshots.
+  Existing mapped articles remain fail-closed: missing approved articles,
+  map disagreement and metadata drift remain blocking. Newly published articles
+  outside both snapshots are reported as `taxonomy_governance_pending` and do
+  not block unrelated frontend deployments.
 
 ## CMS cache revalidation
 
