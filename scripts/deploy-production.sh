@@ -686,6 +686,74 @@ if [[ "$REVALIDATION_GET" != "405" ]]; then
   fail "revalidation_get=$REVALIDATION_GET"
 fi
 
+ABOUT_LOWER_STATUS="$(
+  curl -sS \
+    --connect-timeout 3 \
+    --max-time 15 \
+    -o /dev/null \
+    -w '%{http_code}' \
+    "$SITE_URL/about"
+)"
+
+if [[ "$ABOUT_LOWER_STATUS" != "200" ]]; then
+  fail "about_lower_status=$ABOUT_LOWER_STATUS"
+fi
+
+ABOUT_HEADERS="$BACKUP/about-legacy-headers.txt"
+
+ABOUT_LEGACY_STATUS="$(
+  curl -sS \
+    --connect-timeout 3 \
+    --max-time 15 \
+    -D "$ABOUT_HEADERS" \
+    -o /dev/null \
+    -w '%{http_code}' \
+    "$SITE_URL/About"
+)"
+
+ABOUT_LEGACY_LOCATION="$(
+  tr -d '\r' < "$ABOUT_HEADERS" |
+    sed -n \
+      's/^[Ll][Oo][Cc][Aa][Tt][Ii][Oo][Nn]:[[:space:]]*//p' |
+    tail -n 1
+)"
+
+if [[ "$ABOUT_LEGACY_STATUS" != "301" ]]; then
+  fail "about_legacy_status=$ABOUT_LEGACY_STATUS"
+fi
+
+if [[ "$ABOUT_LEGACY_LOCATION" != "$SITE_URL/about" ]]; then
+  fail "about_legacy_location=$ABOUT_LEGACY_LOCATION"
+fi
+
+ABOUT_CHAIN="$(
+  curl -sS -L \
+    --max-redirs 3 \
+    --connect-timeout 3 \
+    --max-time 20 \
+    -o /dev/null \
+    -w '%{http_code}|%{url_effective}|%{num_redirects}' \
+    "$SITE_URL/About"
+)"
+
+IFS='|' read -r \
+  ABOUT_FINAL_STATUS \
+  ABOUT_FINAL_URL \
+  ABOUT_REDIRECT_COUNT \
+  <<< "$ABOUT_CHAIN"
+
+if [[ "$ABOUT_FINAL_STATUS" != "200" ]]; then
+  fail "about_final_status=$ABOUT_FINAL_STATUS"
+fi
+
+if [[ "$ABOUT_FINAL_URL" != "$SITE_URL/about" ]]; then
+  fail "about_final_url=$ABOUT_FINAL_URL"
+fi
+
+if [[ "$ABOUT_REDIRECT_COUNT" != "1" ]]; then
+  fail "about_redirect_count=$ABOUT_REDIRECT_COUNT"
+fi
+
 STAGING_HEADERS="$BACKUP/staging-headers.txt"
 STAGING_STATUS="$(
   curl -sS \
@@ -721,6 +789,13 @@ echo "RUNTIME_SECRET_PRESENT=$RUNTIME_SECRET_PRESENT"
 echo "PUBLIC_MANIFEST_MATCH=yes"
 echo "CMS_HEALTH=$CMS_HEALTH"
 echo "REVALIDATION_GET=$REVALIDATION_GET"
+echo "ABOUT_LOWER_STATUS=$ABOUT_LOWER_STATUS"
+echo "ABOUT_LEGACY_STATUS=$ABOUT_LEGACY_STATUS"
+echo "ABOUT_LEGACY_LOCATION=$ABOUT_LEGACY_LOCATION"
+echo "ABOUT_FINAL_STATUS=$ABOUT_FINAL_STATUS"
+echo "ABOUT_FINAL_URL=$ABOUT_FINAL_URL"
+echo "ABOUT_REDIRECT_COUNT=$ABOUT_REDIRECT_COUNT"
+echo "ABOUT_REDIRECT=passed"
 echo "STAGING_STATUS=$STAGING_STATUS"
 REMOTE_SCRIPT
 REMOTE_STATUS=$?
@@ -735,6 +810,7 @@ fi
 grep -Fqx 'DEPLOY_RESULT=success' "$REMOTE_LOG"
 grep -Fqx 'RUNTIME_ENV_TRANSFERRED=yes' "$REMOTE_LOG"
 grep -Fqx 'PUBLIC_MANIFEST_MATCH=yes' "$REMOTE_LOG"
+grep -Fqx 'ABOUT_REDIRECT=passed' "$REMOTE_LOG"
 
 test -z "$(git status --porcelain=v1 --untracked-files=all)"
 test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
@@ -754,6 +830,13 @@ sed -n \
   -e '/^PUBLIC_MANIFEST_MATCH=/p' \
   -e '/^CMS_HEALTH=/p' \
   -e '/^REVALIDATION_GET=/p' \
+  -e '/^ABOUT_LOWER_STATUS=/p' \
+  -e '/^ABOUT_LEGACY_STATUS=/p' \
+  -e '/^ABOUT_LEGACY_LOCATION=/p' \
+  -e '/^ABOUT_FINAL_STATUS=/p' \
+  -e '/^ABOUT_FINAL_URL=/p' \
+  -e '/^ABOUT_REDIRECT_COUNT=/p' \
+  -e '/^ABOUT_REDIRECT=/p' \
   -e '/^STAGING_STATUS=/p' \
   "$REMOTE_LOG"
 echo "cms_writes=0"
