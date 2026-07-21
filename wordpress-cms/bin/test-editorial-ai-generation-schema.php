@@ -141,7 +141,7 @@ revelations_schema_test(
     ) &&
     str_contains(
         $generation_source,
-        'The server reconstructs'
+        'Never invent a source paragraph ID'
     ),
     'prompt requires server-owned evidence references'
 );
@@ -437,6 +437,30 @@ $generation_function =
         $generation_source,
         'revelations_editorial_generate_draft_with_ai'
     );
+
+revelations_schema_test(
+    str_contains(
+        $generation_function,
+        'Direct quotes are optional.'
+    ) &&
+    str_contains(
+        $generation_function,
+        'return direct_quotes as an empty array'
+    ) &&
+    str_contains(
+        $generation_function,
+        'exact same quote_text must appear'
+    ) &&
+    str_contains(
+        $generation_function,
+        'unchanged as one contiguous substring'
+    ) &&
+    str_contains(
+        $generation_function,
+        'If exact reuse is uncertain, omit the direct quote'
+    ),
+    'generation prompt requires exact body reuse or omission of direct quotes'
+);
 
 revelations_schema_test(
     str_contains(

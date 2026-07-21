@@ -262,7 +262,10 @@ function revelations_editorial_ai_article_schema(): array {
                 ),
 
                 'description' =>
-                    'Direct quotes actually used in the article and the paragraph ID containing each exact quote.',
+                    'Optional direct quotes actually used in the article. ' .
+                    'Each quote_text must be an exact contiguous substring ' .
+                    'of both the referenced source paragraph and an article ' .
+                    'body block.',
             ),
 
             'blocks' => array(
@@ -887,10 +890,23 @@ function revelations_editorial_generate_draft_with_ai(
         "Evidence IDs must support the complete meaning of the block, including " .
         "its numbers, dates, amounts and attributed statements. " .
         "Never invent a source paragraph ID and never return source evidence text. " .
-        "Return only direct quotes actually used in the article. For each " .
-        "quote, copy quote_text exactly from one supplied paragraph and " .
-        "return that paragraph's evidence_id. The server reconstructs " .
-        "evidence and checks the exact quote; do not claim verification.\n\n" .
+        "Direct quotes are optional. Prefer paraphrase unless a short " .
+        "quote materially improves the article. If the article does not " .
+        "use a direct quote, return direct_quotes as an empty array and " .
+        "do not use quote blocks. " .
+        "For every direct_quotes item, copy quote_text exactly from one " .
+        "supplied paragraph, preserving capitalization, punctuation, " .
+        "apostrophes and wording. The exact same quote_text must appear " .
+        "unchanged as one contiguous substring in a body block text or " .
+        "list item. The matching evidence_id must identify the supplied " .
+        "paragraph containing that exact text. Never return a source " .
+        "quotation only as evidence while paraphrasing or omitting it " .
+        "from the article body. Before returning JSON, check every " .
+        "direct_quotes item against both the source evidence and article " .
+        "body. If exact reuse is uncertain, omit the direct quote, " .
+        "paraphrase it and return no direct_quotes item for it. The server " .
+        "reconstructs evidence and checks exact quotes; do not claim " .
+        "verification.\n\n" .
 
         "Return article body blocks only. " .
         "Do not put the article title inside the blocks. " .
