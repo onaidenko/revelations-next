@@ -6,6 +6,7 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/Home', destination: '/', permanent: true },
+      { source: '/About', destination: '/about', permanent: true },
       { source: '/article/:slug', destination: '/:slug', permanent: true },
       { source: '/section/:sectionId', destination: '/:sectionId', permanent: true },
     ];
