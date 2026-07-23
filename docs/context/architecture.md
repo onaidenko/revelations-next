@@ -281,3 +281,16 @@
 - Remote deploy output is captured without an SSH-to-`tee` pipeline. Success is
   emitted only after runtime transfer, public verification and all surrounding
   checks have passed.
+
+
+## Public brand identity graph
+
+- `REVELATIONS` is the canonical publication and site name.
+- `Revelations Media` and `revelations.me` are alternative names.
+- The root graph identifies REVELATIONS as a `NewsMediaOrganization`
+  based in Dubai and connects its official Instagram, X and YouTube
+  profiles through `sameAs`.
+- JULS is represented as the publishing parent brand. No `legalName`,
+  company registration or legal identifier is asserted.
+- About, Contact, footer and metadata use the same canonical public
+  description.

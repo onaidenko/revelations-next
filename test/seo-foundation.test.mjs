@@ -239,13 +239,36 @@ test('article, site graph and breadcrumbs keep images and authors truthful', () 
   const organization = buildOrganizationJsonLd({
     siteUrl: 'https://revelations.me',
     siteName: 'REVELATIONS',
-    logoUrl: 'https://revelations.me/media/brand/revelations-logo.png',
+    alternateNames: [
+      'Revelations Media',
+      'revelations.me',
+    ],
+    description:
+      'REVELATIONS is a Dubai-based media publication.',
+    logoUrl:
+      'https://revelations.me/media/brand/revelations-logo.png',
     organizationId,
+    sameAs: [
+      'https://www.instagram.com/revelations_me/',
+      'https://x.com/revelations_new',
+      'https://www.youtube.com/@revelations_podcast',
+    ],
+    contactEmail: 'info@julscorp.com',
+    locationName:
+      'Dubai, United Arab Emirates',
+    publisherBrandName: 'JULS',
   });
   const website = buildWebsiteJsonLd({
     siteUrl: 'https://revelations.me',
     siteName: 'REVELATIONS',
-    websiteId: 'https://revelations.me/#website',
+    alternateNames: [
+      'Revelations Media',
+      'revelations.me',
+    ],
+    description:
+      'REVELATIONS is a Dubai-based media publication.',
+    websiteId:
+      'https://revelations.me/#website',
     organizationId,
   });
 
@@ -271,6 +294,39 @@ test('article, site graph and breadcrumbs keep images and authors truthful', () 
     ['Home', 'News', article.title]
   );
   assert.equal(buildArticleBreadcrumbJsonLd({ ...article, section: 'unknown' }, siteUrl), null);
-  assert.equal(organization['@id'], organizationId);
-  assert.equal(website.publisher['@id'], organizationId);
+  assert.equal(
+    organization['@type'],
+    'NewsMediaOrganization'
+  );
+  assert.equal(
+    organization['@id'],
+    organizationId
+  );
+  assert.equal(
+    organization.parentOrganization.name,
+    'JULS'
+  );
+  assert.equal(
+    organization.location.name,
+    'Dubai, United Arab Emirates'
+  );
+  assert.deepEqual(
+    organization.sameAs,
+    [
+      'https://www.instagram.com/revelations_me/',
+      'https://x.com/revelations_new',
+      'https://www.youtube.com/@revelations_podcast',
+    ]
+  );
+  assert.deepEqual(
+    website.alternateName,
+    [
+      'Revelations Media',
+      'revelations.me',
+    ]
+  );
+  assert.equal(
+    website.publisher['@id'],
+    organizationId
+  );
 });

@@ -273,3 +273,15 @@
   data remains available. When a configured CMS becomes unavailable, build or
   regeneration fails explicitly so Next.js can keep the last successful
   cached output and retry later.
+
+
+## Brand identity
+
+- **Решение:** canonical entity — REVELATIONS, a Dubai-based
+  future-facing media publication.
+- **Решение:** JULS указывается как publishing brand and parent
+  organization, но не как зарегистрированное legal entity.
+- **Решение:** official Instagram, X and YouTube profiles are connected
+  through visible links and Organization `sameAs`.
+- **Решение:** public identity copy is kept materially consistent across
+  metadata, About, Contact, footer and structured data.

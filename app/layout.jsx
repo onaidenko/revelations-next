@@ -1,11 +1,17 @@
 import './globals.css';
 import {
   BRAND_LOGO_URL,
+  CONTACT_EMAIL,
   DEFAULT_DESCRIPTION,
   DEFAULT_IMAGE,
+  DEFAULT_TITLE,
   ORGANIZATION_ID,
+  ORGANIZATION_LOCATION_NAME,
+  PUBLISHER_BRAND_NAME,
+  SITE_ALTERNATE_NAMES,
   SITE_NAME,
   SITE_URL,
+  SOCIAL_PROFILE_URLS,
   WEBSITE_ID,
 } from '@/lib/site';
 import {
@@ -17,7 +23,7 @@ import {
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'REVELATIONS — People, Technology, Places & Culture',
+    default: DEFAULT_TITLE,
     template: '%s — REVELATIONS',
   },
   description: DEFAULT_DESCRIPTION,
@@ -25,14 +31,14 @@ export const metadata = {
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,
-    title: 'REVELATIONS — People, Technology, Places & Culture',
+    title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
     url: SITE_URL,
     images: [DEFAULT_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'REVELATIONS — People, Technology, Places & Culture',
+    title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
     images: [DEFAULT_IMAGE],
   },
@@ -45,14 +51,31 @@ export default function RootLayout({ children }) {
       buildWebsiteJsonLd({
         siteUrl: SITE_URL,
         siteName: SITE_NAME,
+        alternateNames:
+          SITE_ALTERNATE_NAMES,
+        description:
+          DEFAULT_DESCRIPTION,
         websiteId: WEBSITE_ID,
         organizationId: ORGANIZATION_ID,
       }),
       buildOrganizationJsonLd({
         siteUrl: SITE_URL,
         siteName: SITE_NAME,
+        alternateNames:
+          SITE_ALTERNATE_NAMES,
+        description:
+          DEFAULT_DESCRIPTION,
         logoUrl: BRAND_LOGO_URL,
-        organizationId: ORGANIZATION_ID,
+        organizationId:
+          ORGANIZATION_ID,
+        sameAs:
+          SOCIAL_PROFILE_URLS,
+        contactEmail:
+          CONTACT_EMAIL,
+        locationName:
+          ORGANIZATION_LOCATION_NAME,
+        publisherBrandName:
+          PUBLISHER_BRAND_NAME,
       }),
     ],
   };

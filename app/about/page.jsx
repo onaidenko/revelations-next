@@ -1,15 +1,48 @@
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import { buildPageMetadata } from '@/lib/seo';
-import { SITE_URL } from '@/lib/site';
+import {
+  CONTACT_EMAIL,
+  DEFAULT_DESCRIPTION,
+  PUBLISHER_BRAND_NAME,
+  SITE_URL,
+  SOCIAL_PROFILES,
+} from '@/lib/site';
 
 export const metadata = buildPageMetadata({
-  title: 'About Revelations — Future-Facing Lifestyle Media',
-  description:
-    'Revelations is a future-facing lifestyle media platform covering people, technology, culture, places and the unspoken forces shaping tomorrow.',
+  title:
+    'About REVELATIONS — Dubai-Based Future-Facing Media',
+  description: DEFAULT_DESCRIPTION,
   pathname: '/about',
   siteUrl: SITE_URL,
 });
+
+const EDITORIAL_SECTIONS = [
+  [
+    'News',
+    'Signals, developments and announcements shaping what comes next.',
+  ],
+  [
+    'People',
+    'Founders, investors, creators and the decisions behind their work.',
+  ],
+  [
+    'Tech',
+    'Technology, artificial intelligence and real-world transformation.',
+  ],
+  [
+    'Places',
+    'Spaces where the future is already embedded in everyday experience.',
+  ],
+  [
+    'Unspoken',
+    'The risks, failures and uncomfortable realities hidden behind progress.',
+  ],
+  [
+    'Podcast',
+    'Conversations that reveal the experience behind technology and ambition.',
+  ],
+];
 
 export default function AboutPage() {
   return (
@@ -23,82 +56,109 @@ export default function AboutPage() {
           </span>
 
           <h1 className="mb-6 font-display text-4xl leading-[1.1] tracking-tight text-foreground md:text-6xl">
-            A media for those who build the future —
-            <span className="italic"> and those who see it first.</span>
+            A Dubai-based media publication for those building what comes next.
           </h1>
 
           <p className="mb-12 max-w-2xl font-body text-lg leading-relaxed text-muted-foreground">
-            We tell honest stories of founders, ideas, and the spaces where
-            the future is already happening.
+            REVELATIONS is a Dubai-based future-facing media publication
+            covering technology, people, places, culture and podcasts.
+            Published by {PUBLISHER_BRAND_NAME}.
           </p>
         </header>
 
-        <div className="space-y-8">
+        <div className="space-y-12">
           <div className="h-px bg-gradient-to-r from-rose/40 via-border/30 to-transparent" />
 
-          <div className="space-y-6 font-body text-base leading-[1.8] text-muted-foreground">
+          <section className="space-y-6 font-body text-base leading-[1.8] text-muted-foreground">
             <p>
-              REVELATIONS is a curated media platform for founders, investors,
-              and people building the future. Born as a podcast. Built as a
-              media platform.
+              Born as a podcast and built into an editorial platform,
+              REVELATIONS documents the people, technologies and environments
+              already shaping the next reality.
             </p>
 
             <p>
-              We don&apos;t chase trends. We identify signals. We don&apos;t
-              publish everything — only what is worth revealing. Each piece is
-              intentional. Each story is selected because it reshapes how you
-              think.
+              We do not publish everything. We select stories that provide
+              context, reveal meaningful signals and help readers understand
+              what is changing before it becomes obvious.
             </p>
-
-            <p>
-              Our editorial is organized not by topics, but by perspectives:
-              signals, emergence, environments, transformations, truths,
-              decisions, conversations, forms, and meaning.
-            </p>
-          </div>
-
-          <div className="my-12 h-px bg-gradient-to-r from-transparent via-border/30 to-transparent" />
+          </section>
 
           <section>
             <h2 className="mb-6 font-display text-3xl text-foreground">
-              Philosophy
+              What we cover
             </h2>
 
-            <div className="space-y-6 font-body text-base leading-[1.8] text-muted-foreground">
+            <div className="space-y-5">
+              {EDITORIAL_SECTIONS.map(
+                ([name, description]) => (
+                  <div
+                    key={name}
+                    className="border-t border-border/30 pt-5"
+                  >
+                    <h3 className="mb-2 font-mono text-[11px] uppercase tracking-[0.18em] text-rose">
+                      {name}
+                    </h3>
+
+                    <p className="font-body text-base leading-relaxed text-muted-foreground">
+                      {description}
+                    </p>
+                  </div>
+                )
+              )}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="mb-6 font-display text-3xl text-foreground">
+              Publisher
+            </h2>
+
+            <div className="space-y-5 font-body text-base leading-[1.8] text-muted-foreground">
               <p>
-                We believe the future is not something that happens to you —
-                it&apos;s something built by people with taste, conviction, and
-                courage. REVELATIONS serves as a filter: a curated lens through
-                which you see what matters before everyone else.
+                REVELATIONS is published and operated under the
+                {' '}
+                {PUBLISHER_BRAND_NAME}
+                {' '}
+                brand. The publication is based in Dubai and works with
+                contributors, founders and partners globally.
               </p>
 
               <p>
-                We are not mass media. We are not a blog. We are a selective
-                editorial platform that values depth over reach, signal over
-                noise, and revelation over explanation.
+                Editorial, partnership and media inquiries:
+                {' '}
+                <a
+                  href={`mailto:${CONTACT_EMAIL}`}
+                  className="border-b border-rose/50 text-foreground"
+                >
+                  {CONTACT_EMAIL}
+                </a>
               </p>
             </div>
           </section>
 
-          <div className="my-12 h-px bg-gradient-to-r from-transparent via-border/30 to-transparent" />
-
           <section>
             <h2 className="mb-6 font-display text-3xl text-foreground">
-              Editorial Vision
+              Official channels
             </h2>
 
-            <div className="space-y-6 font-body text-base leading-[1.8] text-muted-foreground">
-              <p>
-                Frankly about tech, people, and places already living in the
-                next reality. We tell honest stories of founders, ideas, and
-                the spaces where the future is already happening.
-              </p>
-
-              <p className="font-display text-xl italic text-foreground">
-                “Not everything is published. Only what is worth revealing.”
-              </p>
+            <div className="flex flex-wrap gap-4">
+              {SOCIAL_PROFILES.map(({ name, url }) => (
+                <a
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full border border-border/40 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-rose/40 hover:text-foreground"
+                >
+                  {name}
+                </a>
+              ))}
             </div>
           </section>
+
+          <p className="font-display text-xl italic text-foreground">
+            “Not everything is published. Only what is worth revealing.”
+          </p>
         </div>
       </main>
 

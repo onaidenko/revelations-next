@@ -1636,3 +1636,16 @@ Base44 и DNS/domain cutover.
   `taxonomy_governance_pending` и не создают critical/drift failure.
 - Pending slugs и их количество добавлены в JSON и текстовый summary.
 - Добавлен Python self-test и Node regression test.
+
+
+## REVELATIONS entity identity foundation
+
+- Canonical identity defined as a Dubai-based future-facing media
+  publication published by JULS.
+- Added alternative names `Revelations Media` and `revelations.me`.
+- Organization graph upgraded to `NewsMediaOrganization`.
+- Added official Instagram, X and YouTube profiles through `sameAs`.
+- Added Dubai location, editorial contact and JULS parent brand.
+- About now reflects News, People, Tech, Places, Unspoken and Podcast.
+- Contact and footer expose the same publisher and social identity.
+- No unsupported legal-company claims were added.
