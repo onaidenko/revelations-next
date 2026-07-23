@@ -294,3 +294,15 @@
   company registration or legal identifier is asserted.
 - About, Contact, footer and metadata use the same canonical public
   description.
+
+
+## Social distribution drafts
+
+- Editorial Desk contains a separate Social Drafts tab.
+- The first channel entity is X.
+- Each Editorial Desk article may store one private, copy-ready X draft.
+- The entity stores text, status, source hash, origin, model, timestamps,
+  operator ID and one previous version.
+- X draft generation uses only the saved WordPress article.
+- The public canonical article URL is appended server-side.
+- No X API integration or automatic social publication is active.

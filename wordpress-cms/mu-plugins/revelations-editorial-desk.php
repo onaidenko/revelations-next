@@ -166,6 +166,7 @@ function revelations_render_editorial_desk(): void {
     $allowed_views = array(
         'candidates',
         'drafts',
+        'social',
         'logs',
         'settings',
     );
@@ -221,6 +222,7 @@ function revelations_render_editorial_desk(): void {
         $tabs = array(
             'candidates' => 'Candidates',
             'drafts'     => 'AI Drafts',
+            'social'     => 'Social Drafts',
             'logs'       => 'Run Logs',
             'settings'   => 'Settings',
         );
@@ -389,6 +391,16 @@ $ai_readiness = function_exists(
                 revelations_editorial_render_drafts();
             }
             ?>
+        <?php elseif ( 'social' === $active_view ) : ?>
+            <?php
+            if (
+                function_exists(
+                    'revelations_editorial_render_social_drafts'
+                )
+            ) {
+                revelations_editorial_render_social_drafts();
+            }
+            ?>
         <?php elseif ( 'logs' === $active_view ) : ?>
             <?php
             if (
@@ -415,7 +427,7 @@ $ai_readiness = function_exists(
             <strong>Editorial Desk is operational.</strong>
 
             Private candidate storage, News, People, Places and Tech RSS previews, and source snapshots are active.
-            AI draft generation is active. Publication remains manual.
+            AI article and social-draft generation are active. Publication remains manual.
         </div>
     </div>
     <?php

@@ -1649,3 +1649,18 @@ Base44 и DNS/domain cutover.
 - About now reflects News, People, Tech, Places, Unspoken and Podcast.
 - Contact and footer expose the same publisher and social identity.
 - No unsupported legal-company claims were added.
+
+
+## X social draft MVP
+
+- Added a Social Drafts tab to Editorial Desk.
+- Added private X draft entities for published and unpublished Editorial
+  Desk articles.
+- Added explicit AI generation from the saved WordPress article only.
+- Added server-owned canonical URL construction and 280-character
+  validation.
+- Added manual editing, live character count, copy action and manual
+  posted status.
+- Added article-change detection through a source hash.
+- Added one previous-version backup before replacement.
+- No X credentials, X API calls or automatic posting were introduced.

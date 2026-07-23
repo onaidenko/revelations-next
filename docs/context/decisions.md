@@ -285,3 +285,16 @@
   through visible links and Organization `sameAs`.
 - **Решение:** public identity copy is kept materially consistent across
   metadata, About, Contact, footer and structured data.
+
+
+## Manual social distribution
+
+- **Решение:** social distribution starts with copy-ready drafts rather
+  than direct API publication.
+- **Решение:** X is implemented as an independent article-level entity.
+- **Решение:** generation is explicit and never triggered automatically
+  by WordPress publication.
+- **Решение:** canonical article URL is appended and validated by the
+  server rather than trusted to the model.
+- **Решение:** an X draft cannot be marked posted when its source article
+  has changed since generation or manual save.
