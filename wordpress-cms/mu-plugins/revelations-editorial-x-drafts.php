@@ -245,12 +245,27 @@ function revelations_editorial_x_source_hash(
 function revelations_editorial_x_is_article(
     WP_Post $post
 ): bool {
-    return 'post' === $post->post_type
-        && metadata_exists(
-            'post',
-            (int) $post->ID,
-            '_revelations_editorial_candidate_id'
-        );
+    if ( 'post' !== $post->post_type ) {
+        return false;
+    }
+
+    if ( 'publish' === $post->post_status ) {
+        return true;
+    }
+
+    return in_array(
+        $post->post_status,
+        array(
+            'draft',
+            'pending',
+            'private',
+        ),
+        true
+    ) && metadata_exists(
+        'post',
+        (int) $post->ID,
+        '_revelations_editorial_candidate_id'
+    );
 }
 
 /** @return true|WP_Error */
@@ -830,7 +845,7 @@ add_action(
 
 /** @return WP_Post[] */
 function revelations_editorial_x_articles(): array {
-    return get_posts(
+    $articles = get_posts(
         array(
             'post_type' => 'post',
             'post_status' => array(
@@ -839,15 +854,21 @@ function revelations_editorial_x_articles(): array {
                 'pending',
                 'private',
             ),
-            'posts_per_page' => 50,
+            'posts_per_page' => -1,
             'orderby' => 'modified',
             'order' => 'DESC',
-            'meta_query' => array(
-                array(
-                    'key' => '_revelations_editorial_candidate_id',
-                    'compare' => 'EXISTS',
-                ),
-            ),
+        )
+    );
+
+    return array_values(
+        array_filter(
+            $articles,
+            static function ( $post ): bool {
+                return $post instanceof WP_Post
+                    && revelations_editorial_x_is_article(
+                        $post
+                    );
+            }
         )
     );
 }

@@ -65,6 +65,21 @@ test(
       /Nothing is published to X automatically\./
     );
 
+    assert.match(
+      xDrafts,
+      /if \( 'publish' === \$post->post_status \)/
+    );
+
+    assert.match(
+      xDrafts,
+      /'posts_per_page'\s*=>\s*-1/
+    );
+
+    assert.doesNotMatch(
+      xDrafts,
+      /'posts_per_page'\s*=>\s*50/
+    );
+
     assert.doesNotMatch(
       xDrafts,
       /api\.x\.com|api\.twitter\.com/

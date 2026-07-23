@@ -90,6 +90,23 @@ revelations_x_test(
     'manual publication contract is explicit'
 );
 
+revelations_x_test(
+    is_string( $source ) &&
+    str_contains(
+        $source,
+        "if ( 'publish' === \$post->post_status )"
+    ) &&
+    str_contains(
+        $source,
+        "'posts_per_page' => -1"
+    ) &&
+    ! str_contains(
+        $source,
+        "'posts_per_page' => 50"
+    ),
+    'all published articles are eligible without a hard query limit'
+);
+
 echo "x_draft_tests_passed=$passed\n";
 echo "x_draft_tests_failed=$failed\n";
 exit( 0 === $failed ? 0 : 1 );

@@ -1654,8 +1654,9 @@ Base44 и DNS/domain cutover.
 ## X social draft MVP
 
 - Added a Social Drafts tab to Editorial Desk.
-- Added private X draft entities for published and unpublished Editorial
-  Desk articles.
+- Added private X draft entities for every published WordPress article.
+- Unpublished articles remain available only when linked to Editorial Desk;
+  unrelated technical drafts are excluded.
 - Added explicit AI generation from the saved WordPress article only.
 - Added server-owned canonical URL construction and 280-character
   validation.

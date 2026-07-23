@@ -300,7 +300,8 @@
 
 - Editorial Desk contains a separate Social Drafts tab.
 - The first channel entity is X.
-- Each Editorial Desk article may store one private, copy-ready X draft.
+- Every published WordPress article may store one private, copy-ready X draft.
+- Unpublished posts are eligible only when linked to an Editorial Desk candidate.
 - The entity stores text, status, source hash, origin, model, timestamps,
   operator ID and one previous version.
 - X draft generation uses only the saved WordPress article.

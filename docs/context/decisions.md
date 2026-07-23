@@ -292,6 +292,9 @@
 - **Решение:** social distribution starts with copy-ready drafts rather
   than direct API publication.
 - **Решение:** X is implemented as an independent article-level entity.
+- **Решение:** all published WordPress articles are eligible, including
+  legacy articles imported before Editorial Desk existed; unpublished
+  posts require an Editorial Desk candidate link.
 - **Решение:** generation is explicit and never triggered automatically
   by WordPress publication.
 - **Решение:** canonical article URL is appended and validated by the
