@@ -1930,3 +1930,20 @@ Base44 и DNS/domain cutover.
 - The footer canonical tagline remains rendered. No production frontend, CMS,
   cache, content or configuration was accessed or changed. This release awaits
   explicit product-owner visual approval on staging.
+
+## Approved visual frontend production rollout (2026-07-25)
+
+- The explicit staging-first approval gate completed and production now runs
+  `aa0acda27877be09552a69621cc6fd2f828f6b32`, the documentation-only
+  descendant of the approved visual commit `dadc7cce8943274fe3d01a66983a5d6b86330123`.
+  The exact descendant diff affects only this state document; no runtime or
+  visual artifact changed after staging approval.
+- The reviewed fail-closed deployment retained rollback assets at
+  `/root/revelations-production-before-20260724-220350` and
+  `/var/www/revelations-production.previous-20260724-220350`, both containing
+  prior release `7f68c77b4bcd3d7263abb633687474befff01a14`.
+- Production service, loopback/public HTTPS, CMS health, Nginx configuration,
+  sitemap, News sitemap, robots and representative article smoke tests passed.
+  The five existing pilot revelations remain rendered and AGIBOT remains
+  without one. No CMS data, cache, signed revalidation or publication action
+  occurred in the frontend rollout.
