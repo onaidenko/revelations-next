@@ -64,6 +64,27 @@
   production author records, article relations, migration, deploy or CMS write
   occurred in this stage.
 
+## REVELATIONS Article Template — Stage 2B.1
+
+- Stage 2A and Stage 2B infrastructure were deployed to production at
+  `2f71f3e7536c0ee61180ec0775bcfca2f97e391d`. The frontend and CMS health
+  checks passed; no production author entities or article relations were
+  created because the approved source did not yet contain an executable,
+  auditable migration CLI.
+- `wordpress-cms/bin/migrate-editorial-authors.php` is implemented locally for
+  later controlled use only. It has explicit audit, provisioning, migration
+  and verification modes; write modes require `--confirm`, preflight the
+  complete scope and refuse unexpected bylines, malformed/different existing
+  relations and author-identity conflicts. It is not deployed or executed
+  against production in this implementation stage.
+- Intended later commands (with the actual production WordPress root) are:
+  `--audit`, `--provision-dry-run`, `--provision --confirm`,
+  `--migration-dry-run`, `--migrate --confirm` and `--verify`, each with
+  `--wordpress-root=/var/www/revelations-cms/public`; `--json` provides a
+  machine-readable report. The tool uses full preflight plus deterministic
+  per-record write verification and rerunnable idempotence, rather than
+  claiming a database transaction it cannot safely guarantee.
+
 ## REVELATIONS brand and editorial style contract
 
 - Canonical source-controlled brand assets are `BRAND_NAME` (`REVELATIONS`),
