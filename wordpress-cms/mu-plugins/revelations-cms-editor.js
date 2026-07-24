@@ -102,6 +102,7 @@
             return [];
         }
     }
+    function authorIds(value) { try { const parsed = JSON.parse(normalizeText(value) || '[]'); return Array.isArray(parsed) ? [...new Set(parsed.map(Number).filter(Boolean))] : []; } catch { return []; } }
 
     function statusRow(item) {
         const ready = Boolean(item.ready);
@@ -283,7 +284,7 @@
                         revelation: 'revelations_revelation', sourceNote: 'revelations_source_note', editorialNote: 'revelations_editorial_note', disclosure: 'revelations_disclosure', publicSources: 'revelations_public_sources',
                     }[key];
                     return normalizeText(meta[metaKey]) !== normalizeText(snapshot[key]);
-                });
+                }) || normalizeText(meta._revelations_author_profile_ids) !== normalizeText(snapshot.authorProfileIds);
         }
 
         let reviewReady = true;
@@ -486,6 +487,13 @@
                         );
                     },
                 }),
+
+                el('div', { style: { margin: '20px 0' } },
+                    el('h3', { style: { margin: '0 0 6px', fontSize: '13px' } }, 'AUTHOR(S)'),
+                    el('p', { style: { margin: '0 0 8px', color: '#646970', fontSize: '12px' } }, 'Canonical ordered profiles. Legacy displayed author remains unchanged.'),
+                    authorIds(meta._revelations_author_profile_ids).map(function (id, index) { const ids=authorIds(meta._revelations_author_profile_ids); return el('div',{key:id,style:{display:'flex',gap:'6px',alignItems:'center',marginBottom:'6px'}},el(components.SelectControl,{value:String(id),options:(editorData.authorProfiles||[]).map(function(author){return {label:author.name,value:String(author.id)};}),onChange:function(value){const next=ids.slice();next[index]=Number(value);updateMeta('_revelations_author_profile_ids',JSON.stringify([...new Set(next)]));}}),el(components.Button,{isSecondary:true,isSmall:true,disabled:index===0,onClick:function(){const next=ids.slice();[next[index-1],next[index]]=[next[index],next[index-1]];updateMeta('_revelations_author_profile_ids',JSON.stringify(next));}},'Move up'),el(components.Button,{isDestructive:true,isSmall:true,onClick:function(){updateMeta('_revelations_author_profile_ids',JSON.stringify(ids.filter(function(_,i){return i!==index;})));}},'Remove')); }),
+                    el(components.Button,{isSecondary:true,isSmall:true,onClick:function(){const first=(editorData.authorProfiles||[])[0];if(first)updateMeta('_revelations_author_profile_ids',JSON.stringify(authorIds(meta._revelations_author_profile_ids).concat(first.id)));}},'Add author')
+                ),
 
                 el(components.SelectControl, {
                     label: 'Editorial category',

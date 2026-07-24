@@ -1917,6 +1917,7 @@ function revelations_editorial_ai_create_version_backup(
         '_rev_ai_editorial_note' => get_post_meta( $draft_id, 'revelations_editorial_note', true ),
         '_rev_ai_disclosure' => get_post_meta( $draft_id, 'revelations_disclosure', true ),
         '_rev_ai_public_sources' => get_post_meta( $draft_id, 'revelations_public_sources', true ),
+        '_rev_ai_author_profile_ids' => get_post_meta( $draft_id, '_revelations_author_profile_ids', true ),
 
         '_rev_ai_draft_kind' =>
             get_post_meta(

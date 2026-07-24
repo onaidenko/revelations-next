@@ -179,6 +179,7 @@ function revelations_editorial_publish_gate_changed_fields( int $post_id, array 
 
         'displayed_author' =>
             'revelations_author',
+        'author_profiles' => '_revelations_author_profile_ids',
         'revelation' => 'revelations_revelation',
         'source_note' => 'revelations_source_note',
         'editorial_note' => 'revelations_editorial_note',
@@ -214,7 +215,7 @@ function revelations_editorial_publish_gate_changed_fields( int $post_id, array 
 }
 
 function revelations_editorial_publish_gate_changed_field_label( string $key ): string {
-    return array( 'title' => 'Title', 'content' => 'Article content', 'excerpt' => 'Excerpt', 'category' => 'Category', 'tags' => 'Tags', 'seo_title' => 'SEO title', 'seo_description' => 'SEO description', 'displayed_author' => 'Displayed author', 'revelation' => 'THE REVELATION', 'source_note' => 'Source note', 'editorial_note' => 'Editorial note', 'disclosure' => 'Disclosure', 'public_sources' => 'Public sources', 'ai_review_metadata' => 'AI editorial review metadata' )[ $key ] ?? 'Article content';
+    return array( 'title' => 'Title', 'content' => 'Article content', 'excerpt' => 'Excerpt', 'category' => 'Category', 'tags' => 'Tags', 'seo_title' => 'SEO title', 'seo_description' => 'SEO description', 'displayed_author' => 'Displayed author', 'author_profiles' => 'Author profiles', 'revelation' => 'THE REVELATION', 'source_note' => 'Source note', 'editorial_note' => 'Editorial note', 'disclosure' => 'Disclosure', 'public_sources' => 'Public sources', 'ai_review_metadata' => 'AI editorial review metadata' )[ $key ] ?? 'Article content';
 }
 
 /**
@@ -564,6 +565,7 @@ add_filter(
                 foreach ( array( 'revelation' => 'revelations_revelation', 'source_note' => 'revelations_source_note', 'editorial_note' => 'revelations_editorial_note', 'disclosure' => 'revelations_disclosure', 'public_sources' => 'revelations_public_sources' ) as $proposal_key => $meta_key ) {
                     if ( array_key_exists( $meta_key, $meta ) ) $proposal[ $proposal_key ] = (string) $meta[ $meta_key ];
                 }
+                if ( array_key_exists( '_revelations_author_profile_ids', $meta ) ) $proposal['author_profiles'] = (string) $meta['_revelations_author_profile_ids'];
             }
         }
 
@@ -733,6 +735,7 @@ add_filter(
             foreach ( array( 'revelation' => 'revelations_revelation', 'source_note' => 'revelations_source_note', 'editorial_note' => 'revelations_editorial_note', 'disclosure' => 'revelations_disclosure', 'public_sources' => 'revelations_public_sources' ) as $proposal_key => $meta_key ) {
                 if ( array_key_exists( $meta_key, $meta_input ) ) $proposal[ $proposal_key ] = (string) $meta_input[ $meta_key ];
             }
+            if ( array_key_exists( '_revelations_author_profile_ids', $meta_input ) ) $proposal['author_profiles'] = (string) $meta_input['_revelations_author_profile_ids'];
         }
 
         $reason =

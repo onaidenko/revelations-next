@@ -140,6 +140,21 @@
 
 ## Public frontend content mapping
 
+## Article author entities
+
+- `revelations-editorial-authors.php` owns the non-login `rev_author` CPT and
+  the ordered article relation `_revelations_author_profile_ids`.
+- Public-ready profiles require active state, canonical name, meaningful bio
+  and at least one published linked article. Next.js renders them at
+  `/authors/{slug}`; only these profiles enter the regular sitemap.
+- The public article API keeps `displayed_author` and additively exposes
+  `author_profiles`. Canonical relation identity is independent of profile
+  readiness: thin entities canonicalize bylines without links/cards/profile
+  URLs, while public-ready profiles receive stable Person/Organization IDs.
+- The exact historical-string migration map is dry-run infrastructure only;
+  no author records or article relations were provisioned or migrated in
+  production during Stage 2B.
+
 - `app/page.jsx` получает опубликованные материалы через
   `getPublishedArticles()`, оставляет разделы News, People, Tech, Places,
   Unspoken и Podcast и показывает десять самых новых в общей хронологии.

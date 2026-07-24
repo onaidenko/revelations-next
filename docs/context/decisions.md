@@ -22,6 +22,9 @@
 - **Решение:** future canonical mapping is exact, never fuzzy: Julia U. and Julia Yupiterskaya map to Julia Yupiterskaya; Alina K. and empty authors map to Alina B.; Anonymous and Editorial Team map to Editorial Team. The current catalog is not migrated in Stage 2A.
 - **Решение:** Julia Yupiterskaya is the canonical display name and has the verified LinkedIn URL `https://www.linkedin.com/in/julia-upiter/`. Do not infer biography or further affiliations. Alina B. receives no invented surname, biography or social link.
 - **Решение:** an author profile may be indexable only when active, named, meaningfully biographical and linked to at least one published article.
+- **Решение:** Stage 2B implements the `rev_author`/ordered-relation/API/profile
+  infrastructure and exact dry-run mapping only. Production provisioning and
+  migration remain a separately approved operation.
 
 ## Future FAQ and image attribution
 

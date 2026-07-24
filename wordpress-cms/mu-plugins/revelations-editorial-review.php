@@ -81,6 +81,8 @@ function revelations_editorial_review_content_hash(
                 true
             ),
 
+        'author_profiles' => get_post_meta( $draft_id, '_revelations_author_profile_ids', true ),
+
         'revelation' => get_post_meta( $draft_id, 'revelations_revelation', true ),
         'source_note' => get_post_meta( $draft_id, 'revelations_source_note', true ),
         'editorial_note' => get_post_meta( $draft_id, 'revelations_editorial_note', true ),
@@ -122,6 +124,7 @@ function revelations_editorial_review_field_hashes( int $draft_id ): array {
         'seo_title' => (string) get_post_meta( $draft_id, 'revelations_seo_title', true ),
         'seo_description' => (string) get_post_meta( $draft_id, 'revelations_seo_description', true ),
         'displayed_author' => (string) get_post_meta( $draft_id, 'revelations_author', true ),
+        'author_profiles' => (string) get_post_meta( $draft_id, '_revelations_author_profile_ids', true ),
         'revelation' => (string) get_post_meta( $draft_id, 'revelations_revelation', true ),
         'source_note' => (string) get_post_meta( $draft_id, 'revelations_source_note', true ),
         'editorial_note' => (string) get_post_meta( $draft_id, 'revelations_editorial_note', true ),

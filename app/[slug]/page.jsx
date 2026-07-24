@@ -19,6 +19,7 @@ import {
   getPublishedArticles,
   getRelatedArticles,
   formatDate,
+  formatArticleAuthors,
 } from '@/lib/cms-articles';
 
 import { SECTIONS } from '@/lib/sections';
@@ -101,6 +102,7 @@ export default async function ArticlePage({
     taxonomy,
   });
   const readingTime = formatReadingTime(article.content);
+  const byline = formatArticleAuthors(article);
 
   return (
     <div className="min-h-screen bg-background">
@@ -158,8 +160,8 @@ export default async function ArticlePage({
             )}
 
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-              {article.author && <span>By {article.author}</span>}
-              {article.author && publicationDate && <span aria-hidden="true">·</span>}
+              {byline && <span>By {article.author_profiles?.length ? article.author_profiles.map((author, index) => (<span key={author.slug}>{index > 0 && (index === article.author_profiles.length - 1 ? ' and ' : ', ')}{author.is_public_profile ? <Link href={`/authors/${author.slug}`} className="transition-colors hover:text-foreground">{author.name}</Link> : author.name}</span>)) : byline}</span>}
+              {byline && publicationDate && <span aria-hidden="true">·</span>}
               {publicationDate && (
                 <time dateTime={publicationDate}>
                   {formatDate(publicationDate)}
@@ -227,8 +229,20 @@ export default async function ArticlePage({
                 )}
                 {article.source_note && <section className="mb-6"><h2 className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-rose">SOURCE NOTE</h2><p>{article.source_note}</p></section>}
                 {article.editorial_note && <section className="mb-6"><h2 className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-rose">EDITORIAL NOTE</h2><p>{article.editorial_note}</p></section>}
-                {article.disclosure && <section className="border-l-2 border-rose/60 pl-4"><h2 className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-foreground">DISCLOSURE</h2><p>{article.disclosure}</p></section>}
+            {article.disclosure && <section className="border-l-2 border-rose/60 pl-4"><h2 className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-foreground">DISCLOSURE</h2><p>{article.disclosure}</p></section>}
               </aside>
+            )}
+
+            {article.author_profiles?.some((author) => author.is_public_profile) && (
+              <section className="mt-12 border-t border-border/30 pt-8" aria-labelledby="about-author">
+                <h2 id="about-author" className="mb-6 font-mono text-[10px] uppercase tracking-[0.2em] text-rose">ABOUT THE AUTHOR</h2>
+                <div className="space-y-6">{article.author_profiles.filter((author) => author.is_public_profile).map((author) => (
+                  <div key={author.slug} className="flex gap-4">
+                    {author.image?.url && <img src={author.image.url} alt={author.image.alt || author.name} className="h-16 w-16 rounded-full object-cover" />}
+                    <div><h3 className="font-display text-xl text-foreground">{author.name}</h3>{author.role && <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-rose">{author.role}</p>}{author.bio && <p className="mt-2 font-body text-sm leading-relaxed text-muted-foreground">{author.bio}</p>}<Link href={`/authors/${author.slug}`} className="mt-3 inline-block font-mono text-[10px] uppercase tracking-[0.15em] text-rose hover:text-foreground">All stories</Link></div>
+                  </div>
+                ))}</div>
+              </section>
             )}
 
             <ArticleTaxonomy value={taxonomy} />

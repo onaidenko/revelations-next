@@ -332,7 +332,9 @@ function revelations_cms_editor_data(
         'editorialNote' => (string) get_post_meta( $post_id, 'revelations_editorial_note', true ),
         'disclosure' => (string) get_post_meta( $post_id, 'revelations_disclosure', true ),
         'publicSources' => (string) get_post_meta( $post_id, 'revelations_public_sources', true ),
+        'authorProfileIds' => (string) get_post_meta( $post_id, '_revelations_author_profile_ids', true ),
     );
+    $data['authorProfiles'] = array_map( static function ( WP_Post $author ): array { return array( 'id' => $author->ID, 'name' => $author->post_title ); }, get_posts( array( 'post_type'=>'rev_author', 'post_status'=>array('publish','draft','private'), 'posts_per_page'=>100, 'orderby'=>'title', 'order'=>'ASC' ) ) );
 
     return $data;
 }

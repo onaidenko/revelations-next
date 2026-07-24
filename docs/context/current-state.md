@@ -50,6 +50,20 @@
 - Future Stage 2B author identities and profile/indexability policy are now
   recorded in `docs/context/decisions.md`.
 
+## REVELATIONS Article Template — Stage 2B
+
+- Added the `rev_author` editorial entity, ordered optional article relation,
+  additive public author API, canonical frontend bylines, author cards and
+  `/authors/{slug}` route.
+- Public profiles are indexable and added to the sitemap only when active,
+  named, meaningful-biography complete and linked to published articles.
+- Canonical article relations resolve the approved byline immediately even for
+  thin profiles; those relations have no profile URL, link, card or sitemap
+  entry until the separate public-readiness threshold is met.
+- Exact provisioning/migration helpers exist only for dry-run validation. No
+  production author records, article relations, migration, deploy or CMS write
+  occurred in this stage.
+
 ## REVELATIONS brand and editorial style contract
 
 - Canonical source-controlled brand assets are `BRAND_NAME` (`REVELATIONS`),

@@ -108,6 +108,16 @@ function revelations_api_prepare_article( WP_Post $post ): array {
             'taxonomy_status'       => 'proposed',
             'manual_related'        => array(),
         );
+    $author_profiles = array();
+    if ( function_exists( 'revelations_author_relation' ) ) {
+        foreach ( revelations_author_relation( get_post_meta( $post_id, '_revelations_author_profile_ids', true ) ) as $author_id ) {
+            $author = get_post( $author_id );
+            if ( $author instanceof WP_Post && function_exists( 'revelations_author_public_data' ) ) {
+                $count = new WP_Query( array( 'post_type'=>'post', 'post_status'=>'publish', 'meta_key'=>'_revelations_author_profile_ids', 'meta_value'=>'"' . $author_id . '"', 'posts_per_page'=>1, 'fields'=>'ids' ) );
+                $data = revelations_author_article_data( $author, (int) $count->found_posts ); if ( $data ) $author_profiles[] = $data;
+            }
+        }
+    }
 
     return array(
         'id' => $post_id,
@@ -140,6 +150,7 @@ function revelations_api_prepare_article( WP_Post $post ): array {
             'revelations_author',
             true
         ),
+        'author_profiles' => $author_profiles,
 
         /* Only explicit public editorial enrichment is serialized here. */
         'revelation' => ( $value = trim( (string) get_post_meta( $post_id, 'revelations_revelation', true ) ) ) !== ''
@@ -210,6 +221,18 @@ function revelations_api_prepare_article( WP_Post $post ): array {
 
         'link' => get_permalink( $post ),
     );
+}
+
+function revelations_api_authors( WP_REST_Request $request ): WP_REST_Response {
+    $authors = get_posts( array( 'post_type'=>'rev_author', 'post_status'=>'publish', 'posts_per_page'=>100, 'orderby'=>'title', 'order'=>'ASC' ) ); $items=array();
+    foreach ( $authors as $author ) { $count=(new WP_Query(array('post_type'=>'post','post_status'=>'publish','meta_key'=>'_revelations_author_profile_ids','meta_value'=>'"'.$author->ID.'"','posts_per_page'=>1,'fields'=>'ids')))->found_posts; $data=function_exists('revelations_author_public_data')?revelations_author_public_data($author,(int)$count):null; if($data)$items[]=$data; }
+    return new WP_REST_Response( array( 'items'=>$items ), 200 );
+}
+function revelations_api_author( WP_REST_Request $request ) {
+    $author = get_page_by_path( sanitize_title( $request->get_param('slug') ), OBJECT, 'rev_author' ); if ( ! $author instanceof WP_Post ) return new WP_Error('revelations_author_not_found','Author not found.',array('status'=>404));
+    $articles = get_posts( array( 'post_type'=>'post','post_status'=>'publish','meta_key'=>'_revelations_author_profile_ids','meta_value'=>'"'.$author->ID.'"','posts_per_page'=>100,'orderby'=>'date','order'=>'DESC' ) );
+    $data=function_exists('revelations_author_public_data')?revelations_author_public_data($author,count($articles)):null; if(!$data)return new WP_Error('revelations_author_not_found','Author not found.',array('status'=>404));
+    return new WP_REST_Response( array( 'author'=>$data,'articles'=>array_map('revelations_api_prepare_article',$articles) ),200 );
 }
 
 /**
@@ -398,6 +421,8 @@ add_action(
                 'permission_callback' => '__return_true',
             )
         );
+        register_rest_route( 'revelations/v1', '/authors', array( 'methods'=>WP_REST_Server::READABLE, 'callback'=>'revelations_api_authors', 'permission_callback'=>'__return_true' ) );
+        register_rest_route( 'revelations/v1', '/authors/(?P<slug>[a-z0-9-]+)', array( 'methods'=>WP_REST_Server::READABLE, 'callback'=>'revelations_api_author', 'permission_callback'=>'__return_true' ) );
 
         register_rest_route(
             'revelations/v1',

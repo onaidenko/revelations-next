@@ -1,6 +1,7 @@
 import {
   getAllTaxonomyHubs,
   getPublishedArticles,
+  getPublicAuthors,
 } from '@/lib/cms-articles';
 import { SITE_URL } from '@/lib/site';
 import { buildMainSitemapEntries } from '@/lib/seo';
@@ -28,21 +29,22 @@ const STATIC_PATHS = [
 ];
 
 export default async function sitemap() {
-  const [articles, hubsByType] =
+  const [articles, hubsByType, authors] =
     await Promise.all([
       getPublishedArticles(),
       getAllTaxonomyHubs(),
+      getPublicAuthors(),
     ]);
 
   const taxonomyHubs = Object.values(
     hubsByType
   ).flat();
 
-  return buildMainSitemapEntries({
+  return [...buildMainSitemapEntries({
     articles,
     siteUrl: SITE_URL,
     staticPaths: STATIC_PATHS,
     sectionPaths: SECTION_PATHS,
     taxonomyHubs,
-  });
+  }), ...authors.map((author) => ({ url: `${SITE_URL}/authors/${author.slug}` }))];
 }
