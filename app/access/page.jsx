@@ -5,7 +5,7 @@ import { buildPageMetadata } from '@/lib/seo';
 import { SITE_URL } from '@/lib/site';
 
 export const metadata = buildPageMetadata({
-  title: 'Access — REVELATIONS',
+  title: 'Access',
   description:
     'Request selective access to the REVELATIONS Inner Circle.',
   pathname: '/access',

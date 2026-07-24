@@ -89,11 +89,11 @@ export default function SiteFooter() {
 
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-border/20 pt-8 md:flex-row">
           <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-            © {new Date().getFullYear()} REVELATIONS · Published by {PUBLISHER_BRAND_NAME}
+            © {new Date().getFullYear()} REVELATIONS - Published by {PUBLISHER_BRAND_NAME}
           </span>
 
           <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-            Selective · Intelligent · Cinematic
+            Selective - Intelligent - Cinematic
           </span>
         </div>
       </div>

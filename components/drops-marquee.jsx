@@ -2,7 +2,7 @@ const DROPS = [
   "AI is no longer a tool. It's becoming a layer between you and your decisions.",
   "Most AI founders don't believe in AGI. They believe in funding cycles.",
   "The real impact of AI is not automation. It's delegation of thinking.",
-  "The first version barely worked. But it already replaced something important — human hesitation.",
+  "The first version barely worked. But it already replaced something important - human hesitation.",
   "You don't notice the technology here. That's how you know it's working.",
 ];
 

@@ -11,7 +11,7 @@ import {
 
 export const metadata = buildPageMetadata({
   title:
-    'About REVELATIONS — Dubai-Based Future-Facing Media',
+    'About - Future-Facing Media from Dubai',
   description: DEFAULT_DESCRIPTION,
   pathname: '/about',
   siteUrl: SITE_URL,
@@ -71,8 +71,7 @@ export default function AboutPage() {
 
           <section className="space-y-6 font-body text-base leading-[1.8] text-muted-foreground">
             <p>
-              Born as a podcast and built into an editorial platform,
-              REVELATIONS documents the people, technologies and environments
+              Born as a podcast. Built as a media platform. REVELATIONS documents the people, technologies and environments
               already shaping the next reality.
             </p>
 

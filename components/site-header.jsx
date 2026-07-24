@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import ThemeToggle from './theme-toggle';
+import { BRAND_TAGLINE } from '@/lib/site';
 
 const LOGO_URL =
   '/media/brand/revelations-logo.png';
@@ -56,7 +57,7 @@ export default function SiteHeader() {
           </Link>
 
           <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground/60 md:text-[10px]">
-            Born as a podcast. Built as a media platform.
+            {BRAND_TAGLINE}
           </span>
         </div>
 

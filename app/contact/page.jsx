@@ -10,7 +10,7 @@ import {
 } from '@/lib/site';
 
 export const metadata = buildPageMetadata({
-  title: 'Contact REVELATIONS',
+  title: 'Contact',
   description:
     'Contact REVELATIONS, a Dubai-based media publication published by JULS, for editorial requests, interviews, partnerships and media inquiries.',
   pathname: '/contact',

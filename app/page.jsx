@@ -4,6 +4,11 @@ import SiteFooter from '@/components/site-footer';
 import DropsMarquee from '@/components/drops-marquee';
 import { getPublishedArticles } from '@/lib/cms-articles';
 import { isEditorialSection } from '@/lib/sections';
+import {
+  BRAND_DESCRIPTOR,
+  BRAND_NAME,
+  BRAND_TAGLINE,
+} from '@/lib/site';
 
 function formatDate(value, variant = 'full') {
   if (!value) return '';
@@ -54,6 +59,18 @@ export default async function HomePage() {
       <SiteHeader />
 
       <main className="pt-48 md:pt-56">
+        <section className="mx-auto mb-12 max-w-7xl px-6 md:px-12">
+          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-rose">
+            {BRAND_NAME}
+          </p>
+          <p className="mt-3 font-display text-2xl text-foreground md:text-3xl">
+            {BRAND_TAGLINE}
+          </p>
+          <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            {BRAND_DESCRIPTOR}
+          </p>
+        </section>
+
         {hero && (
           <section className="mx-auto max-w-7xl px-6 md:px-12">
             <div className="mb-5 flex items-center justify-between gap-6">

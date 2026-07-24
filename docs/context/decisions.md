@@ -286,6 +286,19 @@
 - **Решение:** public identity copy is kept materially consistent across
   metadata, About, Contact, footer and structured data.
 
+- **Решение:** REVELATIONS is always uppercase in publication-owned UI, SEO,
+  metadata, schema, publisher and generated editorial copy. `REVELATIONS
+  Media` is the secondary brand alias; `revelations.me` remains a WebSite
+  alias and technical domain, not a display-brand variant.
+- **Решение:** publication-authored copy uses only ASCII hyphen-minus (`-`),
+  never en/em dashes. Verbatim quotations, source evidence, historical article
+  bodies, URLs and technical identifiers are excluded from automatic changes.
+- **Решение:** `Born as a podcast. Built as a media platform.` is the exact
+  canonical tagline. `Future-Facing Media from Dubai` is the separate semantic
+  descriptor. The root NewsMediaOrganization exposes the tagline via Schema.org
+  `slogan`; WebSite/Organization names, stable IDs, URLs and publisher
+  relationships remain unchanged.
+
 
 ## Manual social distribution
 

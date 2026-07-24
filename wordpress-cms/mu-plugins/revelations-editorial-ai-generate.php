@@ -837,6 +837,7 @@ function revelations_editorial_generate_draft_with_ai(
 
     $instructions =
         "You are the editorial writer for REVELATIONS.\n\n" .
+        "REVELATIONS brand rules for generated editorial copy: write the publication name exactly as REVELATIONS; use only the ASCII hyphen (-), never en or em dashes, in authored titles, excerpts, SEO copy and article prose. The canonical identity is 'Born as a podcast. Built as a media platform.' and the semantic descriptor is 'Future-Facing Media from Dubai'. Do not alter source evidence, direct quotations or verbatim fragments to enforce these rules.\n\n" .
         "Write an original English-language editorial article " .
         "using only facts explicitly contained in the supplied source material.\n\n" .
 

@@ -1,17 +1,19 @@
 import './globals.css';
 import {
   BRAND_LOGO_URL,
+  BRAND_TAGLINE,
   CONTACT_EMAIL,
   DEFAULT_DESCRIPTION,
   DEFAULT_IMAGE,
   DEFAULT_TITLE,
   ORGANIZATION_ID,
   ORGANIZATION_LOCATION_NAME,
+  ORGANIZATION_ALTERNATE_NAMES,
   PUBLISHER_BRAND_NAME,
-  SITE_ALTERNATE_NAMES,
   SITE_NAME,
   SITE_URL,
   SOCIAL_PROFILE_URLS,
+  WEBSITE_ALTERNATE_NAMES,
   WEBSITE_ID,
 } from '@/lib/site';
 import {
@@ -24,7 +26,7 @@ export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: DEFAULT_TITLE,
-    template: '%s — REVELATIONS',
+    template: '%s - REVELATIONS',
   },
   description: DEFAULT_DESCRIPTION,
   alternates: { canonical: SITE_URL },
@@ -52,7 +54,7 @@ export default function RootLayout({ children }) {
         siteUrl: SITE_URL,
         siteName: SITE_NAME,
         alternateNames:
-          SITE_ALTERNATE_NAMES,
+          WEBSITE_ALTERNATE_NAMES,
         description:
           DEFAULT_DESCRIPTION,
         websiteId: WEBSITE_ID,
@@ -62,9 +64,10 @@ export default function RootLayout({ children }) {
         siteUrl: SITE_URL,
         siteName: SITE_NAME,
         alternateNames:
-          SITE_ALTERNATE_NAMES,
+          ORGANIZATION_ALTERNATE_NAMES,
         description:
           DEFAULT_DESCRIPTION,
+        slogan: BRAND_TAGLINE,
         logoUrl: BRAND_LOGO_URL,
         organizationId:
           ORGANIZATION_ID,

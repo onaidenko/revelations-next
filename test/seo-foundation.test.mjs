@@ -240,11 +240,12 @@ test('article, site graph and breadcrumbs keep images and authors truthful', () 
     siteUrl: 'https://revelations.me',
     siteName: 'REVELATIONS',
     alternateNames: [
-      'Revelations Media',
-      'revelations.me',
+      'REVELATIONS Media',
     ],
     description:
       'REVELATIONS is a Dubai-based media publication.',
+    slogan:
+      'Born as a podcast. Built as a media platform.',
     logoUrl:
       'https://revelations.me/media/brand/revelations-logo.png',
     organizationId,
@@ -262,7 +263,7 @@ test('article, site graph and breadcrumbs keep images and authors truthful', () 
     siteUrl: 'https://revelations.me',
     siteName: 'REVELATIONS',
     alternateNames: [
-      'Revelations Media',
+      'REVELATIONS Media',
       'revelations.me',
     ],
     description:
@@ -310,6 +311,14 @@ test('article, site graph and breadcrumbs keep images and authors truthful', () 
     organization.location.name,
     'Dubai, United Arab Emirates'
   );
+  assert.equal(
+    organization.slogan,
+    'Born as a podcast. Built as a media platform.'
+  );
+  assert.deepEqual(
+    organization.alternateName,
+    ['REVELATIONS Media']
+  );
   assert.deepEqual(
     organization.sameAs,
     [
@@ -321,7 +330,7 @@ test('article, site graph and breadcrumbs keep images and authors truthful', () 
   assert.deepEqual(
     website.alternateName,
     [
-      'Revelations Media',
+      'REVELATIONS Media',
       'revelations.me',
     ]
   );

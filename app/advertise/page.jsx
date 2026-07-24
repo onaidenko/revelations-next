@@ -17,7 +17,7 @@ const FORMATS = [
   {
     name: 'Artifacts Spotlight',
     description:
-      'Your product presented as a cultural artifact — visual, conceptual, significant.',
+      'Your product presented as a cultural artifact - visual, conceptual, significant.',
   },
   {
     name: 'Inner Circle Access',
@@ -34,7 +34,7 @@ const AUDIENCE = [
 ];
 
 export const metadata = buildPageMetadata({
-  title: 'Advertise — REVELATIONS',
+  title: 'Advertise',
   description:
     'Partner with REVELATIONS through editorial placements, podcast features, artifact spotlights and selected collaborations.',
   pathname: '/advertise',
@@ -59,7 +59,7 @@ export default function AdvertisePage() {
           </h1>
 
           <p className="max-w-xl font-body text-lg leading-relaxed text-muted-foreground">
-            REVELATIONS is not for everyone. Our audience is curated —
+            REVELATIONS is not for everyone. Our audience is curated -
             founders, investors, and operators who shape industries before the
             rest notices.
           </p>

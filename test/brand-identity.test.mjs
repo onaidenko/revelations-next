@@ -22,7 +22,7 @@ test(
 
     assert.match(
       site,
-      /Dubai-based future-facing media publication/
+      /Future-Facing Media from Dubai/
     );
 
     assert.match(
@@ -48,6 +48,11 @@ test(
     assert.match(
       seo,
       /alternateName/
+    );
+
+    assert.match(
+      seo,
+      /slogan/
     );
 
     assert.match(

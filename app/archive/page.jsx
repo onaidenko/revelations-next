@@ -84,7 +84,7 @@ export default async function ArchivePage() {
           </h1>
 
           <p className="max-w-xl font-body text-sm leading-relaxed text-muted-foreground">
-            Every published piece — across people, technology, culture,
+            Every published piece - across people, technology, culture,
             places, unspoken narratives, and conversations.
           </p>
 

@@ -1,5 +1,29 @@
 # Текущее состояние
 
+## REVELATIONS brand and editorial style contract
+
+- Canonical source-controlled brand assets are `BRAND_NAME` (`REVELATIONS`),
+  `BRAND_TAGLINE` (`Born as a podcast. Built as a media platform.`) and
+  `BRAND_DESCRIPTOR` (`Future-Facing Media from Dubai`) in `lib/site.js`.
+- Owned UI, metadata templates, schema descriptions and future AI generation
+  use the uppercase brand spelling and ASCII hyphen-minus. Source evidence,
+  verbatim quotations, technical identifiers, URLs and historical article
+  bodies are explicitly outside automatic normalization.
+- `docs/editorial-style.md` is the authoritative style contract; `AGENTS.md`
+  requires it for editorial, UI, SEO, metadata, CMS generation, AI generation
+  and publisher-identity work. Focused Node coverage guards these assets and
+  the prompt boundary between generated editorial copy and exact evidence.
+- The root `NewsMediaOrganization` retains its stable identity and publisher
+  relationships while exposing the exact canonical tagline through Schema.org
+  `slogan`. WebSite alternate names remain `REVELATIONS Media` and
+  `revelations.me`; the Organization alternate name is only `REVELATIONS Media`.
+- Final regression passed: full Node suite (74/74), ESLint, focused
+  brand/schema/style diagnostics and the production build. A local production
+  artifact audit verified homepage, Podcast, People, Tech, Places, About and
+  the Sam Kaploushenko article: expected titles/H1s, production canonical URLs,
+  exact root schema identity and no staging URLs. Static title inputs do not
+  duplicate the layout-level ` - REVELATIONS` suffix.
+
 Дата фиксации: 2026-07-21.
 
 ## Git и окружение

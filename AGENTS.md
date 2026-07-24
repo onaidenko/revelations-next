@@ -1,5 +1,13 @@
 # Codex repository rules
 
+## REVELATIONS editorial style
+
+For any editorial, UI copy, SEO, metadata, CMS generation, AI generation or
+publisher identity task, read and obey `docs/editorial-style.md` before
+editing. It is the authoritative contract for the REVELATIONS spelling,
+brand assets, hyphen typography and treatment of quotations and historical
+editorial content.
+
 - В начале каждой задачи прочитать `docs/context/`.
 - Всегда проверить `pwd`, текущую ветку, `git status` и незакоммиченный diff.
 - Фактический код и состояние Git имеют приоритет над текстовым контекстом.
