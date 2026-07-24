@@ -10,6 +10,8 @@ test('author entity, exact migration, and public privacy contracts exist', () =>
   assert.match(authors, /revelations_author_migration_report/);
   assert.match(authors, /revelations_author_is_public_ready/);
   assert.match(api, /'author_profiles'/);
+  assert.match(api, /'meta_value'=>\(string\) \$author_id, 'compare'=>'LIKE'/);
+  assert.doesNotMatch(api, /'meta_value'=>'"' \. \$author_id/);
   for (const privateValue of ['email', 'capabilities', 'edit_url']) assert.doesNotMatch(api, new RegExp(`'${privateValue}'`));
 });
 test('frontend preserves legacy bylines and supports canonical ordered profiles', () => {
