@@ -1,5 +1,9 @@
 # REVELATIONS — migration phase 1
 
+Project governance: [`docs/PROJECT_CONSTITUTION.md`](docs/PROJECT_CONSTITUTION.md).
+Any user-visible frontend work must be reviewed on staging and explicitly
+approved by the product owner before a separately authorized production deploy.
+
 Independent Next.js staging build created from the Base44 ZIP and Article CSV.
 
 ## Current scope

@@ -1,5 +1,10 @@
 # REVELATIONS production Nginx rules
 
+Read [`../../docs/PROJECT_CONSTITUTION.md`](../../docs/PROJECT_CONSTITUTION.md)
+before operational work. User-visible frontend changes require staging review
+and explicit product-owner approval before a separately authorized production
+deployment.
+
 Production Nginx configuration:
 
     /etc/nginx/sites-available/revelations-production

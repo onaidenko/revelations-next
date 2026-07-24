@@ -1,5 +1,11 @@
 # REVELATIONS
 
+This project context is governed by [`../PROJECT_CONSTITUTION.md`](../PROJECT_CONSTITUTION.md).
+The current editorial focus is Artificial Intelligence and Wellness within
+Emerging Technology. Historical Web3/crypto coverage remains factual but is
+not automatically a primary current brand signal. Art is a future direction,
+not an approved top-level section.
+
 REVELATIONS — избирательная медиа-платформа для основателей, инвесторов и людей, создающих будущее. Она отбирает значимые сигналы и истории о людях, технологиях, культуре, местах и силах, формирующих будущее.
 
 ## Глобальная редакционная политика

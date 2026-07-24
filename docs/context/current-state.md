@@ -1847,3 +1847,14 @@ Base44 и DNS/domain cutover.
 - Production frontend, CMS, cache and content remain unchanged. Product-owner
   visual review on staging is the next gate; no production deployment is
   authorized by this stage.
+
+## Project Constitution (2026-07-25)
+
+- `docs/PROJECT_CONSTITUTION.md` is the canonical permanent governance source
+  for brand identity, ASCII-hyphen copy, canonical Julia resolution, Human
+  Review, public/private evidence, non-fabrication and staging-first visual
+  approval.
+- Governance surfaces reference the Constitution and a Node regression test
+  protects its six required markers. Any user-visible frontend change now has
+  an explicit staging QA and product-owner approval gate before a separately
+  authorized production deployment.

@@ -1,5 +1,9 @@
 # Подтверждённая архитектура
 
+Project-wide governance, evidence boundaries and the staging-first visual
+approval requirement are canonical in
+[`../PROJECT_CONSTITUTION.md`](../PROJECT_CONSTITUTION.md).
+
 ## WordPress CMS
 
 Редакционная CMS реализована набором WordPress MU plugins в `wordpress-cms/mu-plugins/`. Файлы хранятся в Git как снимок исходников; live-каталог WordPress не является Git-репозиторием.

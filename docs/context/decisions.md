@@ -1,5 +1,9 @@
 # Архитектурные и редакционные решения
 
+The permanent conflict and staging-first rules live in
+[`../PROJECT_CONSTITUTION.md`](../PROJECT_CONSTITUTION.md). This decision log
+cannot override that Constitution without explicit product-owner approval.
+
 ## Publication dates
 
 - **Решение:** visible CMS-derived article dates use the UTC calendar date of

@@ -1,5 +1,9 @@
 # REVELATIONS editorial and brand style
 
+This style guide implements the permanent rules in
+[`PROJECT_CONSTITUTION.md`](PROJECT_CONSTITUTION.md). The Constitution wins on
+conflict.
+
 ## Canonical brand assets
 
 - Brand name: `REVELATIONS`.
@@ -22,7 +26,7 @@ article content. Never bulk-normalize imported article bodies.
 
 ## Identity hierarchy
 
-When a major brand surface can naturally carry all three elements, use:
+When a major brand surface needs both identity and semantic positioning, use:
 
 REVELATIONS
 
@@ -32,6 +36,9 @@ Future-Facing Media from Dubai
 
 The tagline tells the brand story; the descriptor explains the entity to
 readers, search engines and retrieval systems. They are not interchangeable.
+The homepage header is an explicit exception: it carries the REVELATIONS mark,
+the exact tagline and navigation only. Do not add a duplicate identity block
+below it or mechanically repeat the descriptor.
 
 ## Page and metadata conventions
 

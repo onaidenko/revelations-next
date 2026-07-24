@@ -1,5 +1,10 @@
 # Codex repository rules
 
+`docs/PROJECT_CONSTITUTION.md` is the permanent project-governance contract.
+Read and obey it before work. In particular, any user-visible frontend change
+is staging-first and requires explicit product-owner visual approval before a
+separately authorized production deployment.
+
 ## REVELATIONS editorial style
 
 For any editorial, UI copy, SEO, metadata, CMS generation, AI generation or

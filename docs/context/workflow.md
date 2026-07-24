@@ -1,5 +1,11 @@
 # Рабочая последовательность
 
+Before every task read and obey [`../PROJECT_CONSTITUTION.md`](../PROJECT_CONSTITUTION.md).
+For any user-visible frontend change, its staging-first visual approval gate is
+mandatory: local checks -> production-configured build -> staging -> functional
+and visual QA -> explicit product-owner approval -> separately authorized
+production deployment. Production is never a visual test environment.
+
 1. **Pre-flight:** прочитать `docs/context/`; проверить `pwd`, ветку, HEAD, upstream, `git status` и полный незакоммиченный diff.
 2. **Анализ:** изучить целевой код, связанные определения, вызовы, consumers и существующие проверки. Сверить текстовый контекст с кодом и Git.
 3. **Минимальный plan:** определить наименьшее изменение, критерии готовности, риски и разрешённые действия.
