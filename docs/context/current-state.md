@@ -1947,3 +1947,8 @@ Base44 и DNS/domain cutover.
   The five existing pilot revelations remain rendered and AGIBOT remains
   without one. No CMS data, cache, signed revalidation or publication action
   occurred in the frontend rollout.
+- The local control session disconnected while the reviewed remote workflow was
+  still reporting. Read-only recovery checks found the exact same approved
+  artifact active; the runner performed two healthy same-artifact service
+  restarts during the interrupted/retried control sessions. Final post-deploy
+  logs contain no Nginx error after the switch, and no rollback was required.
