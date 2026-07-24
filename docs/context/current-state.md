@@ -1824,3 +1824,26 @@ Base44 и DNS/domain cutover.
 - Local validation passed: `git diff --check`, 86/86 Node tests, ESLint and
   the production-configured build. No production deploy, production CMS write,
   production cache invalidation or staging mutation has occurred yet.
+
+## Visual redesign - staging deployment (2026-07-24)
+
+- Staging now runs frontend commit
+  `1c80ab90f4e7aa85d2b6b18739a9fdd00a19d057` at
+  `https://staging.revelations.me`. The active release carries a `REVISION`
+  marker; rollback remains at
+  `/var/www/revelations-staging-backup-retry-20260724-210000`.
+- The initial switch failed before service startup because the uploaded release
+  directory was not traversable by the `deploy` service user. It was rolled
+  back immediately; ownership was corrected on the isolated candidate and the
+  retry then passed. Staging is active and returns public HTTP 200.
+- The public staging homepage has its route-specific staging canonical and
+  `X-Robots-Tag: noindex, nofollow, noarchive`. The five requested pilot
+  routes return 200. Sam, Daria, Arman, Anastasia and ELYS render THE
+  REVELATION; the checked non-pilot AGIBOT article does not.
+- The three People pilot articles render their populated THE REVELATION data
+  from the fresh frontend build. The prior issue was the old staging
+  build/cache path, not a missing or rewritten CMS value. No CMS data was
+  changed.
+- Production frontend, CMS, cache and content remain unchanged. Product-owner
+  visual review on staging is the next gate; no production deployment is
+  authorized by this stage.
