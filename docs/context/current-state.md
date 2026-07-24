@@ -60,9 +60,10 @@
 - Canonical article relations resolve the approved byline immediately even for
   thin profiles; those relations have no profile URL, link, card or sitemap
   entry until the separate public-readiness threshold is met.
-- Exact provisioning/migration helpers exist only for dry-run validation. No
-  production author records, article relations, migration, deploy or CMS write
-  occurred in this stage.
+- The production rollout now has three canonical thin profiles and ordered
+  canonical relations on all 53 published articles: Julia Yupiterskaya 15,
+  Alina B. 31 and Editorial Team 7. The legacy `revelations_author` values
+  remain unchanged.
 
 ## REVELATIONS Article Template — Stage 2B.1
 
@@ -71,19 +72,35 @@
   checks passed; no production author entities or article relations were
   created because the approved source did not yet contain an executable,
   auditable migration CLI.
-- `wordpress-cms/bin/migrate-editorial-authors.php` is implemented locally for
-  later controlled use only. It has explicit audit, provisioning, migration
-  and verification modes; write modes require `--confirm`, preflight the
-  complete scope and refuse unexpected bylines, malformed/different existing
-  relations and author-identity conflicts. It is not deployed or executed
-  against production in this implementation stage.
-- Intended later commands (with the actual production WordPress root) are:
-  `--audit`, `--provision-dry-run`, `--provision --confirm`,
-  `--migration-dry-run`, `--migrate --confirm` and `--verify`, each with
-  `--wordpress-root=/var/www/revelations-cms/public`; `--json` provides a
-  machine-readable report. The tool uses full preflight plus deterministic
-  per-record write verification and rerunnable idempotence, rather than
-  claiming a database transaction it cannot safely guarantee.
+- The controlled CLI is deployed at
+  `/var/www/revelations-cms/public/bin/migrate-editorial-authors.php`. Its
+  audit, provisioning, repair, migration and verification modes require a
+  full preflight; write modes require `--confirm`.
+
+## REVELATIONS Article Template - Stage 2B.2 production rollout
+
+- Production provisioning initially exposed a safe conflict: WordPress returns
+  the registered `person` meta default for a newly created entity, so the
+  former CLI skipped Editorial Team's required `organization` write. Stage
+  2B.2 commit `28149b94160fe69404ea477c94f35de7a53a61da` writes and verifies
+  the canonical schema type on creation.
+- A separate `--repair-canonical` mode may change only the approved schema
+  type of an exact, unique canonical `rev_author` identity. It refuses wrong
+  type, slug, name, duplicates and ambiguity; it does not alter bio, role,
+  portrait, unrelated sameAs or editorial content.
+- Editorial Team ID 302 was repaired from `person` to `organization` after a
+  fresh backup at
+  `/root/revelations-author-repair-before-20260724-185803/revelations-cms.sql.gz`.
+  Provisioning and repair then returned zero pending changes.
+- A separate pre-migration backup is
+  `/root/revelations-author-migration-before-20260724-185901/revelations-cms.sql.gz`.
+  Migration applied all 53 relations, and immediate dry-run plus `--verify`
+  returned zero pending writes, conflicts, unexpected values, malformed
+  relations and skips.
+- All 53 published articles passed the relation and public API audit. Thin
+  profiles keep canonical visible bylines but have no public author route,
+  card or sitemap entry. Representative JSON-LD emits Person for Julia and
+  Alina, Organization for Editorial Team, and no thin-profile `@id`.
 
 ## REVELATIONS brand and editorial style contract
 

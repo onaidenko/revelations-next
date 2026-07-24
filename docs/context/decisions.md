@@ -25,6 +25,11 @@
 - **Решение:** Stage 2B implements the `rev_author`/ordered-relation/API/profile
   infrastructure and exact dry-run mapping only. Production provisioning and
   migration remain a separately approved operation.
+- **Решение:** canonical provisioning writes and verifies the configured schema
+  type even when WordPress supplies a metadata default. A canonical repair is
+  an explicit, separately confirmed operation limited to the exact configured
+  `rev_author` identity and approved schema-type field; generic schema
+  conflicts remain blocking.
 
 ## Future FAQ and image attribution
 

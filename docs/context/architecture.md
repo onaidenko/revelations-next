@@ -151,9 +151,14 @@
   `author_profiles`. Canonical relation identity is independent of profile
   readiness: thin entities canonicalize bylines without links/cards/profile
   URLs, while public-ready profiles receive stable Person/Organization IDs.
-- The exact historical-string migration map is dry-run infrastructure only;
-  no author records or article relations were provisioned or migrated in
-  production during Stage 2B.
+- The exact historical-string migration map is applied only by the controlled
+  CLI after full audit gates. Production has three canonical thin entities and
+  53 ordered article relations (Julia 15, Alina 31, Editorial Team 7).
+- Canonical provisioning explicitly persists and reads back schema type because
+  WordPress metadata defaults do not prove that a desired non-default value was
+  written. A separate repair mode can reconcile only that approved field for
+  an exact, unique configured canonical identity; ordinary conflicts remain
+  fail-closed.
 
 - `app/page.jsx` получает опубликованные материалы через
   `getPublishedArticles()`, оставляет разделы News, People, Tech, Places,
