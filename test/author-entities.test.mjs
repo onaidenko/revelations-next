@@ -6,7 +6,7 @@ const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 test('author entity, exact migration, and public privacy contracts exist', () => {
   const authors = read('../wordpress-cms/mu-plugins/revelations-editorial-authors.php');
   const api = read('../wordpress-cms/mu-plugins/revelations-public-api.php');
-  for (const value of ['rev_author', '_revelations_author_profile_ids', "'person'", "'organization'", 'Julia U.', 'julia-yupiterskaya', 'editorial-team']) assert.match(authors, new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  for (const value of ['rev_author', '_revelations_author_profile_ids', "'person'", "'organization'", 'Julia U.', 'Julia Yupiterskaya', 'Julia Upiterskaya', 'julia-upiterskaya', 'editorial-team']) assert.match(authors, new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.match(authors, /revelations_author_migration_report/);
   assert.match(authors, /revelations_author_is_public_ready/);
   assert.match(api, /'author_profiles'/);

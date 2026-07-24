@@ -6,6 +6,7 @@
  * Usage (all commands require --wordpress-root=/path/to/wordpress):
  *   --audit | --provision-dry-run | --provision --confirm |
  *   --repair-canonical-dry-run | --repair-canonical --confirm |
+ *   --activate-julia-profile-dry-run | --activate-julia-profile --confirm |
  *   --migration-dry-run | --migrate --confirm | --verify [--json]
  */
 declare(strict_types=1);
@@ -17,7 +18,7 @@ const REVELATIONS_AUTHOR_MIGRATION_EXIT_VERIFY = 5;
 
 function revelations_author_migration_canonical_authors(): array {
     return array(
-        'julia-yupiterskaya' => array('name' => 'Julia Yupiterskaya', 'slug' => 'julia-yupiterskaya', 'schema_type' => 'person', 'same_as' => array('https://www.linkedin.com/in/julia-upiter/')),
+        'julia-upiterskaya' => array('name' => 'Julia Upiterskaya', 'slug' => 'julia-upiterskaya', 'schema_type' => 'person', 'same_as' => array('https://www.linkedin.com/in/julia-upiter/'), 'predecessors' => array(array('name' => 'Julia Yupiterskaya', 'slug' => 'julia-yupiterskaya'))),
         'alina-b' => array('name' => 'Alina B.', 'slug' => 'alina-b', 'schema_type' => 'person', 'same_as' => array()),
         'editorial-team' => array('name' => 'Editorial Team', 'slug' => 'editorial-team', 'schema_type' => 'organization', 'same_as' => array()),
     );
@@ -29,7 +30,7 @@ function revelations_author_migration_legacy_state(bool $exists, mixed $raw): ar
     if (!is_string($raw)) return array('kind' => 'non_string', 'raw' => $raw, 'key' => null, 'target' => null);
     if ('' === $raw) return array('kind' => 'empty_string', 'raw' => '', 'key' => '', 'target' => 'alina-b');
     if ('' === trim($raw)) return array('kind' => 'whitespace_only', 'raw' => $raw, 'key' => null, 'target' => null);
-    $map = array('Julia U.' => 'julia-yupiterskaya', 'Julia Yupiterskaya' => 'julia-yupiterskaya', 'Alina B.' => 'alina-b', 'Alina K.' => 'alina-b', 'Anonymous' => 'editorial-team', 'Editorial Team' => 'editorial-team');
+    $map = array('Julia U.' => 'julia-upiterskaya', 'Julia Yupiterskaya' => 'julia-upiterskaya', 'Julia Upiterskaya' => 'julia-upiterskaya', 'Alina B.' => 'alina-b', 'Alina K.' => 'alina-b', 'Anonymous' => 'editorial-team', 'Editorial Team' => 'editorial-team');
     return array('kind' => isset($map[$raw]) ? 'approved' : 'unexpected', 'raw' => $raw, 'key' => $raw, 'target' => $map[$raw] ?? null);
 }
 
@@ -85,25 +86,42 @@ function revelations_author_migration_same_as(mixed $raw): array|false {
     return array_values(array_unique($urls));
 }
 
+function revelations_author_migration_identity_state(array $record, array $desired): ?string {
+    if ('rev_author' !== ($record['post_type'] ?? null)) return null;
+    if ($desired['slug'] === ($record['slug'] ?? null) && $desired['name'] === ($record['name'] ?? null)) return 'canonical';
+    foreach ($desired['predecessors'] ?? array() as $predecessor) if ($predecessor['slug'] === ($record['slug'] ?? null) && $predecessor['name'] === ($record['name'] ?? null)) return 'predecessor';
+    return null;
+}
+
+function revelations_author_migration_identity_matches(array $records, array $desired): array {
+    return array_values(array_filter($records, static function (array $record) use ($desired): bool {
+        if ($desired['slug'] === ($record['slug'] ?? null) || $desired['name'] === ($record['name'] ?? null)) return true;
+        foreach ($desired['predecessors'] ?? array() as $predecessor) if ($predecessor['slug'] === ($record['slug'] ?? null) || $predecessor['name'] === ($record['name'] ?? null)) return true;
+        return false;
+    }));
+}
+
 /** Planner records only safe, narrow changes and never alters bio, role, image, or active state. */
 function revelations_author_migration_plan_provision(array $records): array {
     $summary = array('create' => 0, 'update' => 0, 'unchanged' => 0, 'conflicts' => 0); $rows = array(); $wanted = revelations_author_migration_canonical_authors();
     foreach ($wanted as $slug => $desired) {
-        $matches = array_values(array_filter($records, static fn(array $record): bool => $slug === ($record['slug'] ?? null) || ('rev_author' === ($record['post_type'] ?? null) && $desired['name'] === ($record['name'] ?? null))));
+        $matches = revelations_author_migration_identity_matches($records, $desired);
         $row = array('desired' => $desired, 'matching_id' => null, 'metadata_matches' => false, 'action' => 'create', 'conflicts' => array());
         if (count($matches) > 1) { $row['action'] = 'conflict'; $row['conflicts'][] = 'duplicate_slug'; }
         elseif (1 === count($matches)) {
             $record = $matches[0]; $row['matching_id'] = (int) ($record['id'] ?? 0);
+            $identity_state = revelations_author_migration_identity_state($record, $desired);
             if ('rev_author' !== ($record['post_type'] ?? null)) $row['conflicts'][] = 'slug_wrong_post_type';
-            if ($slug !== ($record['slug'] ?? null)) $row['conflicts'][] = 'canonical_identity_duplicate';
-            if ($desired['name'] !== ($record['name'] ?? null)) $row['conflicts'][] = 'canonical_name_mismatch';
+            if ('predecessor' === $identity_state) $row['conflicts'][] = 'canonical_predecessor_requires_repair';
+            elseif ($slug !== ($record['slug'] ?? null)) $row['conflicts'][] = 'canonical_identity_duplicate';
+            elseif ($desired['name'] !== ($record['name'] ?? null)) $row['conflicts'][] = 'canonical_name_mismatch';
             if (!in_array(($record['schema_type'] ?? null), array('', $desired['schema_type']), true)) $row['conflicts'][] = 'schema_type_mismatch';
             $same_as = revelations_author_migration_same_as($record['same_as'] ?? '');
             if (false === $same_as) $row['conflicts'][] = 'same_as_malformed';
-            elseif ('julia-yupiterskaya' === $slug && array() !== $same_as && !in_array($desired['same_as'][0], $same_as, true)) $row['conflicts'][] = 'same_as_conflict';
+            elseif ('julia-upiterskaya' === $slug && array() !== $same_as && !in_array($desired['same_as'][0], $same_as, true)) $row['conflicts'][] = 'same_as_conflict';
             if ($row['conflicts']) $row['action'] = 'conflict';
             else {
-                $needs = ('publish' !== ($record['status'] ?? null)) || '' === ($record['schema_type'] ?? '') || ('julia-yupiterskaya' === $slug && array() === $same_as);
+                $needs = ('publish' !== ($record['status'] ?? null)) || '' === ($record['schema_type'] ?? '') || ('julia-upiterskaya' === $slug && array() === $same_as);
                 $row['action'] = $needs ? 'update' : 'unchanged'; $row['metadata_matches'] = !$needs;
             }
         }
@@ -121,18 +139,18 @@ function revelations_author_migration_plan_canonical_repair(array $records): arr
     $summary = array('repairs' => 0, 'unchanged' => 0, 'conflicts' => 0);
     $rows = array();
     foreach (revelations_author_migration_canonical_authors() as $slug => $desired) {
-        $matches = array_values(array_filter($records, static fn(array $record): bool => $slug === ($record['slug'] ?? null) || ('rev_author' === ($record['post_type'] ?? null) && $desired['name'] === ($record['name'] ?? null))));
-        $row = array('desired' => $desired, 'matching_id' => null, 'current_schema_type' => null, 'action' => 'conflict', 'conflicts' => array());
+        $matches = revelations_author_migration_identity_matches($records, $desired);
+        $row = array('desired' => $desired, 'matching_id' => null, 'current_schema_type' => null, 'identity_state' => null, 'action' => 'conflict', 'conflicts' => array());
         if (1 !== count($matches)) {
             $row['conflicts'][] = count($matches) ? 'ambiguous_canonical_identity' : 'canonical_entity_missing';
         } else {
             $record = $matches[0];
             $row['matching_id'] = (int) ($record['id'] ?? 0);
             $row['current_schema_type'] = (string) ($record['schema_type'] ?? '');
+            $row['identity_state'] = revelations_author_migration_identity_state($record, $desired);
             if ('rev_author' !== ($record['post_type'] ?? null)) $row['conflicts'][] = 'slug_wrong_post_type';
-            if ($slug !== ($record['slug'] ?? null)) $row['conflicts'][] = 'canonical_slug_mismatch';
-            if ($desired['name'] !== ($record['name'] ?? null)) $row['conflicts'][] = 'canonical_name_mismatch';
-            if (!$row['conflicts']) $row['action'] = $desired['schema_type'] === $row['current_schema_type'] ? 'unchanged' : 'repair';
+            if (null === $row['identity_state']) $row['conflicts'][] = 'canonical_identity_mismatch';
+            if (!$row['conflicts']) $row['action'] = ('canonical' === $row['identity_state'] && $desired['schema_type'] === $row['current_schema_type']) ? 'unchanged' : 'repair';
         }
         if ('repair' === $row['action']) $summary['repairs']++;
         elseif ('unchanged' === $row['action']) $summary['unchanged']++;
@@ -144,9 +162,10 @@ function revelations_author_migration_plan_canonical_repair(array $records): arr
 
 function revelations_author_migration_wp_author_records(): array {
     $records = array();
-    foreach (get_posts(array('post_type' => 'rev_author', 'post_status' => 'any', 'posts_per_page' => -1)) as $post) $records[] = array('id'=>$post->ID,'slug'=>$post->post_name,'name'=>$post->post_title,'post_type'=>$post->post_type,'status'=>$post->post_status,'schema_type'=>(string)get_post_meta($post->ID,'revelations_author_schema_type',true),'same_as'=>get_post_meta($post->ID,'revelations_author_same_as',true));
-    /* One exact query per approved slug detects collisions in every post type. */
-    foreach (revelations_author_migration_canonical_authors() as $slug => $_) foreach (get_posts(array('post_type' => 'any', 'post_status' => 'any', 'posts_per_page' => -1, 'name' => $slug)) as $post) $records[] = array('id'=>$post->ID,'slug'=>$post->post_name,'name'=>$post->post_title,'post_type'=>$post->post_type,'status'=>$post->post_status,'schema_type'=>(string)get_post_meta($post->ID,'revelations_author_schema_type',true),'same_as'=>get_post_meta($post->ID,'revelations_author_same_as',true));
+    $record = static fn(WP_Post $post): array => array('id'=>$post->ID,'slug'=>$post->post_name,'name'=>$post->post_title,'excerpt'=>$post->post_excerpt,'post_type'=>$post->post_type,'status'=>$post->post_status,'schema_type'=>(string)get_post_meta($post->ID,'revelations_author_schema_type',true),'same_as'=>get_post_meta($post->ID,'revelations_author_same_as',true),'role'=>(string)get_post_meta($post->ID,'revelations_author_role',true),'active'=>(string)get_post_meta($post->ID,'revelations_author_active',true));
+    foreach (get_posts(array('post_type' => 'rev_author', 'post_status' => 'any', 'posts_per_page' => -1)) as $post) $records[] = $record($post);
+    /* Exact canonical and predecessor slugs detect collisions in every post type. */
+    foreach (revelations_author_migration_canonical_authors() as $desired) foreach (array_merge(array($desired), $desired['predecessors'] ?? array()) as $identity) foreach (get_posts(array('post_type' => 'any', 'post_status' => 'any', 'posts_per_page' => -1, 'name' => $identity['slug'])) as $post) $records[] = $record($post);
     $unique = array(); foreach ($records as $record) $unique[(string)$record['id']] = $record; return array_values($unique);
 }
 
@@ -167,7 +186,7 @@ function revelations_author_migration_apply_provision(array $plan): void {
         elseif ('update' === $row['action']) { $result = wp_update_post(array('ID'=>$id,'post_status'=>'publish'), true); if (is_wp_error($result)) throw new RuntimeException($result->get_error_message()); }
         if ($created || !metadata_exists('post',$id,'revelations_author_schema_type')) update_post_meta($id,'revelations_author_schema_type',$desired['schema_type']);
         if ($desired['schema_type'] !== get_post_meta($id,'revelations_author_schema_type',true)) throw new RuntimeException('Canonical schema type did not persist for '.$slug);
-        $same = revelations_author_migration_same_as(get_post_meta($id,'revelations_author_same_as',true)); if ('julia-yupiterskaya' === $slug && array() === $same) update_post_meta($id,'revelations_author_same_as',wp_json_encode($desired['same_as']));
+        $same = revelations_author_migration_same_as(get_post_meta($id,'revelations_author_same_as',true)); if ('julia-upiterskaya' === $slug && array() === $same) update_post_meta($id,'revelations_author_same_as',wp_json_encode($desired['same_as']));
     }
 }
 
@@ -175,9 +194,46 @@ function revelations_author_migration_apply_canonical_repair(array $plan): void 
     if ($plan['summary']['conflicts']) throw new RuntimeException('Canonical repair conflicts block writes.');
     foreach ($plan['authors'] as $slug => $row) if ('repair' === $row['action']) {
         $desired = $row['desired']; $id = (int) $row['matching_id'];
-        if (false === update_post_meta($id,'revelations_author_schema_type',$desired['schema_type'])) throw new RuntimeException('Canonical schema repair failed for '.$slug);
+        if ('predecessor' === $row['identity_state']) {
+            $result = wp_update_post(array('ID'=>$id,'post_name'=>$desired['slug'],'post_title'=>$desired['name']), true);
+            if (is_wp_error($result)) throw new RuntimeException('Canonical identity repair failed for '.$slug.': '.$result->get_error_message());
+        }
+        if ($desired['schema_type'] !== get_post_meta($id,'revelations_author_schema_type',true) && false === update_post_meta($id,'revelations_author_schema_type',$desired['schema_type'])) throw new RuntimeException('Canonical schema repair failed for '.$slug);
         if ($desired['schema_type'] !== get_post_meta($id,'revelations_author_schema_type',true)) throw new RuntimeException('Canonical schema repair did not persist for '.$slug);
     }
+}
+
+function revelations_author_migration_julia_profile(): array {
+    return array('slug'=>'julia-upiterskaya','name'=>'Julia Upiterskaya','role'=>'Founder of JULS and REVELATIONS','bio'=>'Julia Upiterskaya is a Dubai-based communications entrepreneur, founder of JULS and REVELATIONS, and an international technology moderator and speaker. With more than 10 years of experience across media, communications and events, she has worked with over 100 companies across emerging technology and innovation. Her current focus spans artificial intelligence, wellness and the technologies reshaping how people live, work and build businesses. Through JULS and REVELATIONS, Julia works at the intersection of strategic communications, founder positioning, technology, culture and global communities.','active'=>'1');
+}
+
+/** Activation may change only Julia's approved public profile fields after identity reconciliation. */
+function revelations_author_migration_plan_julia_profile(array $records): array {
+    $canonical = revelations_author_migration_canonical_authors()['julia-upiterskaya'];
+    $profile = revelations_author_migration_julia_profile();
+    $matches = revelations_author_migration_identity_matches($records, $canonical);
+    $row = array('desired'=>$profile,'matching_id'=>null,'action'=>'conflict','changes'=>array(),'conflicts'=>array());
+    if (1 !== count($matches)) $row['conflicts'][] = count($matches) ? 'ambiguous_julia_identity' : 'julia_entity_missing';
+    else {
+        $record = $matches[0]; $row['matching_id'] = (int) ($record['id'] ?? 0);
+        if ('canonical' !== revelations_author_migration_identity_state($record,$canonical)) $row['conflicts'][] = 'julia_identity_requires_repair';
+        if ('person' !== ($record['schema_type'] ?? null)) $row['conflicts'][] = 'julia_schema_type_mismatch';
+        $same_as = revelations_author_migration_same_as($record['same_as'] ?? '');
+        if (false === $same_as || $canonical['same_as'] !== $same_as) $row['conflicts'][] = 'julia_same_as_mismatch';
+        if (!$row['conflicts']) {
+            foreach (array('excerpt'=>'bio','role'=>'role','active'=>'active') as $current => $desired_key) if ((string) ($record[$current] ?? '') !== $profile[$desired_key]) $row['changes'][] = $desired_key;
+            $row['action'] = $row['changes'] ? 'activate' : 'unchanged';
+        }
+    }
+    return array('profile'=>$row,'summary'=>array('activations'=>'activate' === $row['action'] ? 1 : 0,'unchanged'=>'unchanged' === $row['action'] ? 1 : 0,'conflicts'=>$row['conflicts'] ? 1 : 0));
+}
+
+function revelations_author_migration_apply_julia_profile(array $plan): void {
+    $row = $plan['profile']; if ($plan['summary']['conflicts']) throw new RuntimeException('Julia profile activation conflicts block writes.'); if ('activate' !== $row['action']) return;
+    $profile = $row['desired']; $id = (int) $row['matching_id'];
+    if (in_array('bio',$row['changes'],true)) { $result = wp_update_post(array('ID'=>$id,'post_excerpt'=>$profile['bio']), true); if (is_wp_error($result)) throw new RuntimeException('Julia bio update failed: '.$result->get_error_message()); }
+    if (in_array('role',$row['changes'],true) && false === update_post_meta($id,'revelations_author_role',$profile['role'])) throw new RuntimeException('Julia role update failed.');
+    if (in_array('active',$row['changes'],true) && false === update_post_meta($id,'revelations_author_active',$profile['active'])) throw new RuntimeException('Julia active-state update failed.');
 }
 
 function revelations_author_migration_apply_articles(array $plan): void {
@@ -192,7 +248,7 @@ function revelations_author_migration_apply_articles(array $plan): void {
 function revelations_author_migration_render(array $report, bool $json): void {
     if ($json) { echo wp_json_encode($report, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE).PHP_EOL; return; }
     echo "REVELATIONS author migration\n";
-    foreach (array('provision','repair','migration') as $section) if (isset($report[$section]['summary'])) {
+    foreach (array('provision','repair','profile','migration') as $section) if (isset($report[$section]['summary'])) {
         echo strtoupper($section)."\n";
         foreach ($report[$section]['summary'] as $key => $value) echo str_pad((string)$key, 24).(is_array($value) ? wp_json_encode($value) : (string)$value).PHP_EOL;
     }
@@ -203,18 +259,18 @@ function revelations_author_migration_render(array $report, bool $json): void {
 }
 
 function revelations_author_migration_cli(): int {
-    $allowed = array('--wordpress-root','--audit','--provision-dry-run','--provision','--repair-canonical-dry-run','--repair-canonical','--migration-dry-run','--migrate','--verify','--confirm','--json');
+    $allowed = array('--wordpress-root','--audit','--provision-dry-run','--provision','--repair-canonical-dry-run','--repair-canonical','--activate-julia-profile-dry-run','--activate-julia-profile','--migration-dry-run','--migrate','--verify','--confirm','--json');
     for ($i = 1; $i < count($_SERVER['argv'] ?? array()); $i++) {
         $argument = (string) $_SERVER['argv'][$i];
         if ('--wordpress-root' === $argument) { $i++; continue; }
         $name = explode('=', $argument, 2)[0];
         if (!in_array($name, $allowed, true)) { fwrite(STDERR, "Unknown argument: $argument\n"); return REVELATIONS_AUTHOR_MIGRATION_EXIT_INVALID; }
     }
-    $options = getopt('', array('wordpress-root:','audit','provision-dry-run','provision','repair-canonical-dry-run','repair-canonical','migration-dry-run','migrate','verify','confirm','json'));
-    $modes = array_filter(array('audit','provision-dry-run','provision','repair-canonical-dry-run','repair-canonical','migration-dry-run','migrate','verify'), static fn(string $mode): bool => array_key_exists($mode,$options));
+    $options = getopt('', array('wordpress-root:','audit','provision-dry-run','provision','repair-canonical-dry-run','repair-canonical','activate-julia-profile-dry-run','activate-julia-profile','migration-dry-run','migrate','verify','confirm','json'));
+    $modes = array_filter(array('audit','provision-dry-run','provision','repair-canonical-dry-run','repair-canonical','activate-julia-profile-dry-run','activate-julia-profile','migration-dry-run','migrate','verify'), static fn(string $mode): bool => array_key_exists($mode,$options));
     $root = rtrim((string)($options['wordpress-root'] ?? ''), '/');
     if (1 !== count($modes) || '' === $root || !is_file($root.'/wp-load.php')) { fwrite(STDERR,"Usage requires one mode and --wordpress-root=/path/to/wordpress.\n"); return REVELATIONS_AUTHOR_MIGRATION_EXIT_INVALID; }
-    $mode = array_values($modes)[0]; if (in_array($mode,array('provision','repair-canonical','migrate'),true) && !array_key_exists('confirm',$options)) { fwrite(STDERR,"Write modes require --confirm.\n"); return REVELATIONS_AUTHOR_MIGRATION_EXIT_INVALID; }
+    $mode = array_values($modes)[0]; if (in_array($mode,array('provision','repair-canonical','activate-julia-profile','migrate'),true) && !array_key_exists('confirm',$options)) { fwrite(STDERR,"Write modes require --confirm.\n"); return REVELATIONS_AUTHOR_MIGRATION_EXIT_INVALID; }
     define('WP_USE_THEMES', false); require_once $root.'/wp-load.php';
     $json = array_key_exists('json',$options); $provision = revelations_author_migration_plan_provision(revelations_author_migration_wp_author_records());
     if ('audit' === $mode) { $audit = revelations_author_migration_plan_articles(revelations_author_migration_wp_articles(), revelations_author_migration_resolved_targets($provision)); revelations_author_migration_render(array('mode'=>$mode,'provision'=>$provision,'migration'=>$audit,'canonical_authors'=>revelations_author_migration_canonical_authors()),$json); return ($provision['summary']['conflicts'] || $audit['summary']['unexpected_values']) ? REVELATIONS_AUTHOR_MIGRATION_EXIT_UNSAFE : 0; }
@@ -223,6 +279,9 @@ function revelations_author_migration_cli(): int {
     $repair = revelations_author_migration_plan_canonical_repair(revelations_author_migration_wp_author_records());
     if ('repair-canonical-dry-run' === $mode) { revelations_author_migration_render(array('mode'=>$mode,'repair'=>$repair),$json); return $repair['summary']['conflicts'] ? REVELATIONS_AUTHOR_MIGRATION_EXIT_UNSAFE : 0; }
     if ('repair-canonical' === $mode) { try { revelations_author_migration_apply_canonical_repair($repair); } catch (RuntimeException $e) { fwrite(STDERR,$e->getMessage().PHP_EOL); return REVELATIONS_AUTHOR_MIGRATION_EXIT_WRITE; } $after=revelations_author_migration_plan_canonical_repair(revelations_author_migration_wp_author_records()); revelations_author_migration_render(array('mode'=>$mode,'repair'=>$after),$json); return $after['summary']['repairs']||$after['summary']['conflicts'] ? REVELATIONS_AUTHOR_MIGRATION_EXIT_VERIFY : 0; }
+    $profile = revelations_author_migration_plan_julia_profile(revelations_author_migration_wp_author_records());
+    if ('activate-julia-profile-dry-run' === $mode) { revelations_author_migration_render(array('mode'=>$mode,'profile'=>$profile),$json); return $profile['summary']['conflicts'] ? REVELATIONS_AUTHOR_MIGRATION_EXIT_UNSAFE : 0; }
+    if ('activate-julia-profile' === $mode) { try { revelations_author_migration_apply_julia_profile($profile); } catch (RuntimeException $e) { fwrite(STDERR,$e->getMessage().PHP_EOL); return REVELATIONS_AUTHOR_MIGRATION_EXIT_WRITE; } $after=revelations_author_migration_plan_julia_profile(revelations_author_migration_wp_author_records()); revelations_author_migration_render(array('mode'=>$mode,'profile'=>$after),$json); return $after['summary']['activations']||$after['summary']['conflicts'] ? REVELATIONS_AUTHOR_MIGRATION_EXIT_VERIFY : 0; }
     $targets = revelations_author_migration_resolved_targets($provision); $migration = revelations_author_migration_plan_articles(revelations_author_migration_wp_articles(),$targets);
     if ('migration-dry-run' === $mode) { revelations_author_migration_render(array('mode'=>$mode,'migration'=>$migration),$json); return ($migration['summary']['conflicts']||$migration['summary']['unexpected_values']||$migration['summary']['skipped']) ? REVELATIONS_AUTHOR_MIGRATION_EXIT_UNSAFE : 0; }
     if ('migrate' === $mode) { try { revelations_author_migration_apply_articles($migration); } catch (RuntimeException $e) { fwrite(STDERR,$e->getMessage().PHP_EOL); return REVELATIONS_AUTHOR_MIGRATION_EXIT_WRITE; } $after=revelations_author_migration_plan_articles(revelations_author_migration_wp_articles(),revelations_author_migration_resolved_targets(revelations_author_migration_plan_provision(revelations_author_migration_wp_author_records()))); revelations_author_migration_render(array('mode'=>$mode,'migration'=>$after),$json); return $after['summary']['pending_writes']||$after['summary']['conflicts']||$after['summary']['unexpected_values']||$after['summary']['skipped'] ? REVELATIONS_AUTHOR_MIGRATION_EXIT_VERIFY : 0; }
