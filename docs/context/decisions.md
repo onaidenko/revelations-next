@@ -19,8 +19,8 @@
 ## Future Stage 2B author profiles
 
 - **Решение:** author entities use dedicated `rev_author` records and public `/authors/{slug}` routes. Article relationships are ordered `author_profiles` arrays from the start. Entity schema type is explicitly `person` or `organization`; Editorial Team is an Organization, never a Person.
-- **Решение:** future canonical mapping is exact, never fuzzy: Julia U. and Julia Yupiterskaya map to Julia Yupiterskaya; Alina K. and empty authors map to Alina B.; Anonymous and Editorial Team map to Editorial Team. The current catalog is not migrated in Stage 2A.
-- **Решение:** Julia Yupiterskaya is the canonical display name and has the verified LinkedIn URL `https://www.linkedin.com/in/julia-upiter/`. Do not infer biography or further affiliations. Alina B. receives no invented surname, biography or social link.
+- **Решение:** canonical mapping is exact, never fuzzy: Julia U., the historical Julia Yupiterskaya spelling and Julia Upiterskaya map to Julia Upiterskaya; Alina K. and empty authors map to Alina B.; Anonymous and Editorial Team map to Editorial Team.
+- **Решение:** Julia Upiterskaya is the canonical display name and has the verified LinkedIn URL `https://www.linkedin.com/in/julia-upiter/`. The former Yupiterskaya spelling is a legacy migration alias only. Her current approved positioning is Founder of JULS and REVELATIONS, focused on Artificial Intelligence and Wellness within Emerging Technology. Do not infer further biography, affiliations or Web3-primary positioning.
 - **Решение:** an author profile may be indexable only when active, named, meaningfully biographical and linked to at least one published article.
 - **Решение:** Stage 2B implements the `rev_author`/ordered-relation/API/profile
   infrastructure and exact dry-run mapping only. Production provisioning and

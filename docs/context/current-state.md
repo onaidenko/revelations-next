@@ -60,8 +60,8 @@
 - Canonical article relations resolve the approved byline immediately even for
   thin profiles; those relations have no profile URL, link, card or sitemap
   entry until the separate public-readiness threshold is met.
-- The production rollout now has three canonical thin profiles and ordered
-  canonical relations on all 53 published articles: Julia Yupiterskaya 15,
+- The production rollout now has three canonical profiles and ordered
+  canonical relations on all 53 published articles: Julia Upiterskaya 15,
   Alina B. 31 and Editorial Team 7. The legacy `revelations_author` values
   remain unchanged.
 
@@ -101,6 +101,20 @@
   profiles keep canonical visible bylines but have no public author route,
   card or sitemap entry. Representative JSON-LD emits Person for Julia and
   Alina, Organization for Editorial Team, and no thin-profile `@id`.
+
+## REVELATIONS Stage 2B.3 and Stage 2C production rollout
+
+- Julia entity ID 300 was reconciled in place from the superseded
+  `Julia Yupiterskaya` / `julia-yupiterskaya` identity to Julia Upiterskaya /
+  `julia-upiterskaya`; all 15 relations were preserved. Legacy source values
+  remain accepted only as explicit migration aliases.
+- Fresh backups: identity `/root/revelations-julia-identity-before-20260724-192758/revelations-cms.sql.gz` and profile `/root/revelations-julia-profile-before-20260724-192959/revelations-cms.sql.gz`.
+- Julia is active and public-ready with the approved bio, role and LinkedIn.
+  Her profile and Person ID are live at `/authors/julia-upiterskaya`; all 15
+  bylines and cards use the canonical identity. Alina and Editorial Team remain thin.
+- Final frontend release `7f68c77b4bcd3d7263abb633687474befff01a14` and CMS API
+  lookup fixes expose numeric JSON relations correctly. Audit remains 53/53:
+  Julia 15, Alina 31 and Editorial Team 7, with zero pending writes or conflicts.
 
 ## REVELATIONS brand and editorial style contract
 

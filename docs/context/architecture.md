@@ -152,8 +152,10 @@
   readiness: thin entities canonicalize bylines without links/cards/profile
   URLs, while public-ready profiles receive stable Person/Organization IDs.
 - The exact historical-string migration map is applied only by the controlled
-  CLI after full audit gates. Production has three canonical thin entities and
-  53 ordered article relations (Julia 15, Alina 31, Editorial Team 7).
+  CLI after full audit gates. Julia Upiterskaya is the public-ready Person;
+  Julia U. and Julia Yupiterskaya remain explicit legacy aliases. Alina and
+  Editorial Team remain thin. Production has 53 ordered article relations
+  (Julia 15, Alina 31, Editorial Team 7).
 - Canonical provisioning explicitly persists and reads back schema type because
   WordPress metadata defaults do not prove that a desired non-default value was
   written. A separate repair mode can reconcile only that approved field for
