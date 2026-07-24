@@ -28,8 +28,15 @@ export default function ShareButton({ url }) {
   return (
     <button
       onClick={copy}
-      className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground border border-border/40 rounded-full px-4 py-1.5"
+      type="button"
+      className="group inline-flex items-center gap-2 border-b border-border/50 pb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-rose/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose"
     >
+      <span
+        aria-hidden="true"
+        className="grid h-4 w-4 place-items-center border border-current text-[9px] leading-none transition-transform group-hover:-translate-y-0.5"
+      >
+        ↗
+      </span>
       {copied ? 'Copied ✓' : 'Copy link'}
     </button>
   );

@@ -1805,3 +1805,22 @@ Base44 и DNS/domain cutover.
 - Added article-change detection through a source hash.
 - Added one previous-version backup before replacement.
 - No X credentials, X API calls or automatic posting were introduced.
+
+## Visual redesign - local implementation awaiting staging QA (2026-07-24)
+
+- The visual redesign is implemented locally only. The homepage removes its
+  duplicate identity block because the fixed header already carries the logo
+  and canonical tagline.
+- Article layout now uses a wider `max-w-4xl` header, `max-w-[88rem]` hero,
+  `max-w-6xl` THE REVELATION treatment and `max-w-2xl` reading column. Body
+  type is 17px on mobile and 18px from tablet upwards.
+- THE REVELATION now sits between hero and body as a full editorial break.
+  The author card, text-link Copy Link control and taxonomy presentation were
+  redesigned without changing CMS data or public schema contracts.
+- Homepage, section cards and related cards now resolve the canonical ordered
+  author profile names through `formatArticleAuthors()`, so listing bylines do
+  not fall back to legacy displayed-author aliases when a canonical profile
+  relation exists.
+- Local validation passed: `git diff --check`, 86/86 Node tests, ESLint and
+  the production-configured build. No production deploy, production CMS write,
+  production cache invalidation or staging mutation has occurred yet.

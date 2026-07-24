@@ -1,6 +1,9 @@
 import Link from 'next/link';
 
-import { formatDate } from '@/lib/cms-articles';
+import {
+  formatArticleAuthors,
+  formatDate,
+} from '@/lib/cms-articles';
 import { SECTIONS } from '@/lib/sections';
 
 export default function ArticleCard({
@@ -8,6 +11,7 @@ export default function ArticleCard({
   large = false,
 }) {
   const section = SECTIONS[article.section];
+  const byline = formatArticleAuthors(article);
 
   return (
     <Link href={`/${article.slug}`} className="group block">
@@ -50,6 +54,12 @@ export default function ArticleCard({
         <p className="line-clamp-2 font-body text-sm leading-relaxed text-muted-foreground">
           {article.excerpt}
         </p>
+      )}
+
+      {byline && (
+        <span className="mt-4 block font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+          By {byline}
+        </span>
       )}
     </Link>
   );

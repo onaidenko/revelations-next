@@ -1,6 +1,9 @@
 import Link from 'next/link';
 
-import { formatDate } from '@/lib/cms-articles';
+import {
+  formatArticleAuthors,
+  formatDate,
+} from '@/lib/cms-articles';
 import { SECTIONS } from '@/lib/sections';
 
 export default function SectionArticleCard({
@@ -11,6 +14,7 @@ export default function SectionArticleCard({
 
   const date =
     article.publication_date || article.created_date;
+  const byline = formatArticleAuthors(article);
 
   if (large) {
     return (
@@ -49,9 +53,9 @@ export default function SectionArticleCard({
           </p>
         )}
 
-        {article.author && (
+        {byline && (
           <span className="mt-4 block font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
-            By {article.author}
+            By {byline}
           </span>
         )}
       </Link>
@@ -95,9 +99,9 @@ export default function SectionArticleCard({
           </p>
         )}
 
-        {article.author && (
+        {byline && (
           <span className="mt-2 block font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
-            By {article.author}
+            By {byline}
           </span>
         )}
       </div>

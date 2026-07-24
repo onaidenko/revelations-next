@@ -197,13 +197,18 @@ html.dark body  { background-color: #0A0A0A; }
   background: hsl(var(--rose) / 0.5);
 }
 
-.article-prose { color: hsl(var(--foreground)); font-family: var(--font-body); line-height: 1.85; }
+.article-prose { color: hsl(var(--foreground)); font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.9; }
 .article-prose h1,.article-prose h2,.article-prose h3 { font-family: var(--font-display); margin: 2rem 0 1rem; line-height: 1.2; }
 .article-prose h2 { font-size: 2rem; } .article-prose h3 { font-size: 1.5rem; }
 .article-prose p,.article-prose ul,.article-prose ol,.article-prose blockquote { margin: 1.25rem 0; }
 .article-prose a { color: hsl(var(--rose)); text-decoration: underline; }
 .article-prose ul { list-style: disc; padding-left: 1.5rem; } .article-prose ol { list-style: decimal; padding-left: 1.5rem; }
 .article-prose blockquote { border-left: 2px solid hsl(var(--rose)); padding-left: 1rem; color: hsl(var(--muted-foreground)); }
+
+@media (min-width: 768px) {
+  .article-prose { font-size: 1.125rem; }
+  .article-taxonomy { margin-left: -6rem; margin-right: -6rem; }
+}
 
 @keyframes revelations-marquee {
   from {

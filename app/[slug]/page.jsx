@@ -103,6 +103,7 @@ export default async function ArticlePage({
   });
   const readingTime = formatReadingTime(article.content);
   const byline = formatArticleAuthors(article);
+  const publicAuthors = article.author_profiles?.filter((author) => author.is_public_profile) || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,7 +127,7 @@ export default async function ArticlePage({
 
       <main>
         <article className="pb-12 pt-48 md:pt-56">
-          <header className="mx-auto max-w-3xl px-6">
+          <header className="mx-auto max-w-4xl px-6 md:px-10">
             {headerLabels.length > 0 && (
               <div
                 aria-label="Article topics"
@@ -149,12 +150,12 @@ export default async function ArticlePage({
               </div>
             )}
 
-            <h1 className="mb-6 font-display text-4xl leading-[1.1] tracking-tight text-foreground md:text-5xl lg:text-6xl">
+            <h1 className="mb-7 max-w-5xl font-display text-4xl leading-[1.05] tracking-tight text-foreground md:text-6xl lg:text-7xl">
               {article.title}
             </h1>
 
             {article.excerpt && (
-              <p className="mb-8 font-body text-lg leading-relaxed text-muted-foreground">
+              <p className="mb-9 max-w-3xl font-body text-lg leading-relaxed text-muted-foreground md:text-xl">
                 {article.excerpt}
               </p>
             )}
@@ -179,28 +180,31 @@ export default async function ArticlePage({
           </header>
 
           {article.cover_image && (
-            <div className="mx-auto mt-12 max-w-6xl px-6 md:px-12">
+            <div className="mx-auto mt-14 max-w-[88rem] px-6 md:px-10">
               <img
                 src={article.cover_image}
                 alt={article.cover_image_alt}
-                className="h-[40vh] w-full object-contain md:h-[60vh]"
+                className="h-[42vh] w-full object-contain md:h-[68vh]"
                 loading="eager"
                 fetchPriority="high"
               />
             </div>
           )}
 
-          <div className="mx-auto max-w-3xl px-6 py-12">
-            {article.revelation && (
-              <section className="mb-12 border-l-2 border-rose/60 pl-6" aria-labelledby="article-revelation">
-                <h2 id="article-revelation" className="mb-4 font-mono text-[10px] uppercase tracking-[0.25em] text-rose">
+          {article.revelation && (
+            <section className="mx-auto mt-16 max-w-6xl px-6 md:mt-24 md:px-10" aria-labelledby="article-revelation">
+              <div className="border-y border-rose/35 py-8 md:py-12">
+                <h2 id="article-revelation" className="mb-5 font-mono text-[10px] uppercase tracking-[0.25em] text-rose">
                   THE REVELATION
                 </h2>
-                <p className="font-display text-2xl leading-snug text-foreground md:text-3xl">
+                <p className="max-w-5xl font-display text-3xl leading-[1.16] text-foreground md:text-5xl lg:text-6xl">
                   {article.revelation}
                 </p>
-              </section>
-            )}
+              </div>
+            </section>
+          )}
+
+          <div className="mx-auto max-w-2xl px-6 py-14 md:py-20">
 
             <ArticleBody
               content={article.content}
@@ -233,13 +237,13 @@ export default async function ArticlePage({
               </aside>
             )}
 
-            {article.author_profiles?.some((author) => author.is_public_profile) && (
-              <section className="mt-12 border-t border-border/30 pt-8" aria-labelledby="about-author">
-                <h2 id="about-author" className="mb-6 font-mono text-[10px] uppercase tracking-[0.2em] text-rose">ABOUT THE AUTHOR</h2>
-                <div className="space-y-6">{article.author_profiles.filter((author) => author.is_public_profile).map((author) => (
-                  <div key={author.slug} className="flex gap-4">
-                    {author.image?.url && <img src={author.image.url} alt={author.image.alt || author.name} className="h-16 w-16 rounded-full object-cover" />}
-                    <div><h3 className="font-display text-xl text-foreground">{author.name}</h3>{author.role && <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-rose">{author.role}</p>}{author.bio && <p className="mt-2 font-body text-sm leading-relaxed text-muted-foreground">{author.bio}</p>}{author.same_as?.map((url) => <a key={url} href={url} target="_blank" rel="noreferrer" className="mt-3 mr-4 inline-block font-mono text-[10px] uppercase tracking-[0.15em] text-rose hover:text-foreground">Profile</a>)}<Link href={`/authors/${author.slug}`} className="mt-3 inline-block font-mono text-[10px] uppercase tracking-[0.15em] text-rose hover:text-foreground">All stories</Link></div>
+            {publicAuthors.length > 0 && (
+              <section className="mt-20 border-t border-border/35 pt-8" aria-labelledby="about-author">
+                <h2 id="about-author" className="mb-8 font-mono text-[10px] uppercase tracking-[0.22em] text-rose">ABOUT THE AUTHOR</h2>
+                <div className="space-y-10">{publicAuthors.map((author) => (
+                  <div key={author.slug} className={`grid gap-5 sm:gap-8 ${author.image?.url ? 'sm:grid-cols-[7rem_minmax(0,1fr)]' : ''}`}>
+                    {author.image?.url && <img src={author.image.url} alt={author.image.alt || author.name} className="h-24 w-24 rounded-full object-cover sm:h-28 sm:w-28" />}
+                    <div><h3 className="font-display text-3xl leading-tight text-foreground">{author.name}</h3>{author.role && <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-rose">{author.role}</p>}{author.bio && <p className="mt-5 max-w-xl font-body text-base leading-relaxed text-muted-foreground">{author.bio}</p>}<div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 font-mono text-[10px] uppercase tracking-[0.15em] text-rose"><Link href={`/authors/${author.slug}`} className="transition-colors hover:text-foreground">Profile</Link>{author.same_as?.map((url) => url.includes('linkedin.com') ? <a key={url} href={url} target="_blank" rel="noreferrer" className="transition-colors hover:text-foreground">LinkedIn</a> : null)}<Link href={`/authors/${author.slug}`} className="transition-colors hover:text-foreground">All stories</Link></div></div>
                   </div>
                 ))}</div>
               </section>

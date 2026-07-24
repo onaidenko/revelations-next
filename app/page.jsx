@@ -4,12 +4,8 @@ import SiteFooter from '@/components/site-footer';
 import DropsMarquee from '@/components/drops-marquee';
 import { formatArticleDate } from '@/lib/article-dates';
 import { getPublishedArticles } from '@/lib/cms-articles';
+import { formatArticleAuthors } from '@/lib/cms-articles';
 import { isEditorialSection } from '@/lib/sections';
-import {
-  BRAND_DESCRIPTOR,
-  BRAND_NAME,
-  BRAND_TAGLINE,
-} from '@/lib/site';
 
 function formatSectionLabel(article) {
   const value =
@@ -42,19 +38,7 @@ export default async function HomePage() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
-      <main className="pt-48 md:pt-56">
-        <section className="mx-auto mb-12 max-w-7xl px-6 md:px-12">
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-rose">
-            {BRAND_NAME}
-          </p>
-          <p className="mt-3 font-display text-2xl text-foreground md:text-3xl">
-            {BRAND_TAGLINE}
-          </p>
-          <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-            {BRAND_DESCRIPTOR}
-          </p>
-        </section>
-
+      <main className="pt-40 md:pt-52">
         {hero && (
           <section className="mx-auto max-w-7xl px-6 md:px-12">
             <div className="mb-5 flex items-center justify-between gap-6">
@@ -63,11 +47,11 @@ export default async function HomePage() {
                   {formatSectionLabel(hero)}
                 </span>
 
-                {hero.author && (
+                {formatArticleAuthors(hero) && (
                   <>
                     <span className="h-3 w-px bg-border/60" />
                     <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                      {hero.author}
+                      {formatArticleAuthors(hero)}
                     </span>
                   </>
                 )}
@@ -214,11 +198,11 @@ export default async function HomePage() {
                         )}
                       </span>
 
-                      {article.author && (
+                      {formatArticleAuthors(article) && (
                         <>
                           <span className="h-3 w-px bg-border/40" />
                           <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-muted-foreground">
-                            {article.author}
+                            {formatArticleAuthors(article)}
                           </span>
                         </>
                       )}
