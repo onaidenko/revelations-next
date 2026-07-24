@@ -16,7 +16,7 @@ test('author entity, exact migration, and public privacy contracts exist', () =>
 });
 test('frontend preserves legacy bylines and supports canonical ordered profiles', () => {
   const cms = read('../lib/cms-articles.js'); const page = read('../app/[slug]/page.jsx'); const seo = read('../lib/seo.js');
-  assert.match(cms, /formatArticleAuthors/); assert.match(cms, /author_profiles: \[\]/); assert.match(page, /ABOUT THE AUTHOR/); assert.match(page, /\/authors\/\$\{author\.slug\}/); assert.match(seo, /article\.author_profiles\?\.length/);
+  assert.match(cms, /formatArticleAuthors/); assert.match(cms, /author_profiles: \[\]/); assert.match(page, /ABOUT THE AUTHOR/); assert.match(page, /author\.same_as\?\.map/); assert.match(page, /\/authors\/\$\{author\.slug\}/); assert.match(seo, /article\.author_profiles\?\.length/);
 });
 test('author profile routes and sitemap are public-ready only', () => {
   const route = read('../app/authors/[slug]/page.jsx'); const sitemap = read('../app/sitemap.js');

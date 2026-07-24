@@ -239,7 +239,7 @@ export default async function ArticlePage({
                 <div className="space-y-6">{article.author_profiles.filter((author) => author.is_public_profile).map((author) => (
                   <div key={author.slug} className="flex gap-4">
                     {author.image?.url && <img src={author.image.url} alt={author.image.alt || author.name} className="h-16 w-16 rounded-full object-cover" />}
-                    <div><h3 className="font-display text-xl text-foreground">{author.name}</h3>{author.role && <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-rose">{author.role}</p>}{author.bio && <p className="mt-2 font-body text-sm leading-relaxed text-muted-foreground">{author.bio}</p>}<Link href={`/authors/${author.slug}`} className="mt-3 inline-block font-mono text-[10px] uppercase tracking-[0.15em] text-rose hover:text-foreground">All stories</Link></div>
+                    <div><h3 className="font-display text-xl text-foreground">{author.name}</h3>{author.role && <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-rose">{author.role}</p>}{author.bio && <p className="mt-2 font-body text-sm leading-relaxed text-muted-foreground">{author.bio}</p>}{author.same_as?.map((url) => <a key={url} href={url} target="_blank" rel="noreferrer" className="mt-3 mr-4 inline-block font-mono text-[10px] uppercase tracking-[0.15em] text-rose hover:text-foreground">Profile</a>)}<Link href={`/authors/${author.slug}`} className="mt-3 inline-block font-mono text-[10px] uppercase tracking-[0.15em] text-rose hover:text-foreground">All stories</Link></div>
                   </div>
                 ))}</div>
               </section>
