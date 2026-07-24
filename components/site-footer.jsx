@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import {
-  DEFAULT_DESCRIPTION,
+  BRAND_NAME,
+  BRAND_TAGLINE,
   PUBLISHER_BRAND_NAME,
   SOCIAL_PROFILES,
 } from '@/lib/site';
@@ -58,21 +59,21 @@ export default function SiteFooter() {
         <div className="flex flex-col justify-between gap-12 md:flex-row">
           <div className="max-w-md">
             <h2 className="mb-4 font-display text-2xl tracking-wider text-foreground">
-              REVELATIONS
+              {BRAND_NAME}
             </h2>
 
             <p className="font-body text-sm leading-relaxed text-muted-foreground">
-              {DEFAULT_DESCRIPTION}
+              {BRAND_TAGLINE}
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-4">
+            <div className="mt-7 flex flex-wrap gap-2.5">
               {SOCIAL_PROFILES.map(({ name, url }) => (
                 <a
                   key={url}
                   href={url}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:text-foreground"
+                  className="inline-flex items-center border border-border/50 px-3 py-2 font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground transition-colors duration-300 hover:border-rose/70 hover:bg-rose/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose"
                 >
                   {name}
                 </a>

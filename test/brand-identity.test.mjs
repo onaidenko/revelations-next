@@ -80,9 +80,9 @@ test(
       /Published by/
     );
 
-    assert.match(
-      footer,
-      /Published by/
-    );
+    assert.match(footer, /BRAND_NAME/);
+    assert.match(footer, /BRAND_TAGLINE/);
+    assert.match(footer, /SOCIAL_PROFILES\.map/);
+    assert.doesNotMatch(footer, /DEFAULT_DESCRIPTION/);
   }
 );
