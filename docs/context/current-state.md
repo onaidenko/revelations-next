@@ -1874,3 +1874,17 @@ Base44 и DNS/domain cutover.
   optional Series without separate Primary topic or More topics concepts.
 - This visual refinement requires a fresh staging-only deployment and explicit
   product-owner review. Production remains frozen for this task.
+
+## Visual refinement staging deployment (2026-07-25)
+
+- Staging now runs visual commit
+  `f832c3d291985f8c28c24be381d6f2ee3ec57129`; rollback is retained at
+  `/var/www/revelations-staging-backup-20260725-000100`.
+- Staging service is active, homepage and six checked article routes return
+  HTTP 200, staging canonical is route-correct and the response retains
+  `X-Robots-Tag: noindex, nofollow, noarchive`.
+- All five pilot articles render THE REVELATION through the shared template;
+  the checked non-pilot article remains without it. Homepage listing output
+  includes Julia Upiterskaya and has zero `Julia U.` occurrences.
+- The visual candidate requires explicit product-owner review on staging.
+  Production frontend, CMS content and cache were not changed.
