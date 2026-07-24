@@ -1917,3 +1917,16 @@ Base44 и DNS/domain cutover.
 - Local regression tests, lint and the production-configured build pass. This
   is a staging-only visual candidate and still requires deployment followed by
   explicit product-owner approval; production remains frozen.
+
+## Article header grid alignment staging deployment (2026-07-25)
+
+- Staging now runs `dadc7cce8943274fe3d01a66983a5d6b86330123`; the preceding
+  footer release is retained at
+  `/var/www/revelations-staging-backup-20260725-000300` for rollback.
+- The active service is healthy, staging public HTTP is 200, and the homepage
+  retains `X-Robots-Tag: noindex, nofollow, noarchive`. AGIBOT, ELYS, Sam,
+  Daria and a short-title Apple Intelligence article all return 200 with the
+  shared-grid markup and Copy Link present.
+- The footer canonical tagline remains rendered. No production frontend, CMS,
+  cache, content or configuration was accessed or changed. This release awaits
+  explicit product-owner visual approval on staging.
