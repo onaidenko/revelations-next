@@ -1888,3 +1888,18 @@ Base44 и DNS/domain cutover.
   includes Julia Upiterskaya and has zero `Julia U.` occurrences.
 - The visual candidate requires explicit product-owner review on staging.
   Production frontend, CMS content and cache were not changed.
+
+## Footer refinement staging deployment (2026-07-25)
+
+- Staging now runs footer commit
+  `eef452cf2ea56da3cf76f906a35a86fb1f12f14a`; rollback is retained at
+  `/var/www/revelations-staging-backup-20260725-000200`.
+- Visible footer brand copy now contains only REVELATIONS and the exact
+  canonical tagline. The verbose semantic/publisher description is no longer
+  rendered by the footer component; metadata, schema, About and publisher
+  contexts remain unchanged.
+- Instagram, X and YouTube retain their official URLs and are compact outline
+  text controls with rose hover and keyboard-focus treatment. Staging remains
+  HTTP 200 and `noindex, nofollow, noarchive`.
+- Production frontend, CMS and cache remain untouched. This visual change is
+  staging-only and awaits explicit product-owner approval.
