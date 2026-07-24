@@ -1952,3 +1952,22 @@ Base44 и DNS/domain cutover.
   artifact active; the runner performed two healthy same-artifact service
   restarts during the interrupted/retried control sessions. Final post-deploy
   logs contain no Nginx error after the switch, and no rollback was required.
+
+## Isolated staging CMS and THE REVELATION backfill (2026-07-25)
+
+- Staging CMS is isolated at `https://staging.revelations.me/cms` with separate
+  root `/var/www/revelations-staging-cms`, database `revelations_staging_wp`,
+  database user, PHP-FPM pool and staging-only runtime. It was initialized from
+  the fresh production backup
+  `/root/revelations-staging-cms-provision-before-20260724-225717/production-cms-20260724-225717.sql`.
+  Staging cron, AI generation, outbound HTTP/mail and production revalidation
+  are disabled; the endpoint inherits staging noindex protection.
+- The staging frontend now reads only the isolated CMS endpoint. A disposable
+  staging-only option was created, verified absent from production, then
+  removed. Reviewer `oleg_revelations` is staging user ID `1`.
+- Product-owner-supplied manifest v3 passed canonical validation and its 31
+  exact texts were applied only to staging through the shared Human Review
+  function. Readback and second audit are clean: 31 new current reviews plus
+  five preserved pilots equals 36 staging revelations. Podcast and seven thin
+  Unspoken records remain excluded. Production remains at five revelations;
+  Stage 2D.2 dateModified remains open.
