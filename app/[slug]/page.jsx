@@ -189,6 +189,17 @@ export default async function ArticlePage({
           )}
 
           <div className="mx-auto max-w-3xl px-6 py-12">
+            {article.revelation && (
+              <section className="mb-12 border-l-2 border-rose/60 pl-6" aria-labelledby="article-revelation">
+                <h2 id="article-revelation" className="mb-4 font-mono text-[10px] uppercase tracking-[0.25em] text-rose">
+                  THE REVELATION
+                </h2>
+                <p className="font-display text-2xl leading-snug text-foreground md:text-3xl">
+                  {article.revelation}
+                </p>
+              </section>
+            )}
+
             <ArticleBody
               content={article.content}
               format={article.content_format}
@@ -198,6 +209,26 @@ export default async function ArticlePage({
               <YouTubeEmbed
                 url={article.youtube_url}
               />
+            )}
+
+            {(article.public_sources.length > 0 || article.source_note || article.editorial_note || article.disclosure) && (
+              <aside className="mt-12 border-t border-border/30 pt-8 font-body text-sm leading-relaxed text-muted-foreground" aria-label="Article editorial context">
+                {article.public_sources.length > 0 && (
+                  <section className="mb-6" aria-labelledby="article-public-sources">
+                    <h2 id="article-public-sources" className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-rose">PUBLIC SOURCES</h2>
+                    <ol className="space-y-2 pl-5">
+                      {article.public_sources.map((source) => (
+                        <li key={`${source.label}-${source.url}`}>
+                          <a className="underline decoration-rose/50 underline-offset-4 transition-colors hover:text-foreground" href={source.url} target="_blank" rel="noreferrer">{source.label}</a>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                )}
+                {article.source_note && <section className="mb-6"><h2 className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-rose">SOURCE NOTE</h2><p>{article.source_note}</p></section>}
+                {article.editorial_note && <section className="mb-6"><h2 className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-rose">EDITORIAL NOTE</h2><p>{article.editorial_note}</p></section>}
+                {article.disclosure && <section className="border-l-2 border-rose/60 pl-4"><h2 className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-foreground">DISCLOSURE</h2><p>{article.disclosure}</p></section>}
+              </aside>
             )}
 
             <ArticleTaxonomy value={taxonomy} />

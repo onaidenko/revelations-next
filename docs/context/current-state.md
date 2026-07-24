@@ -28,14 +28,27 @@
   hero-to-body transition and responsive label wrapping. Header labels use
   normal inline flow so long terms wrap naturally. The checked mobile layout
   has no horizontal overflow.
-- Stage 1 is ready for its approved local commit; no push or deploy is part of
-  this stage.
+- Stage 1 was committed as `a9d6fd7` and pushed to `origin/admin-editorial`;
+  no deploy was performed.
 - Article publication timestamps are authoritative UTC instants. Visible CMS
   article dates use their UTC calendar date explicitly, so rendering is stable
   across build, server and visitor timezones; JSON-LD preserves the original
   full timestamp.
 
 Дата проверки: 2026-07-24.
+
+## REVELATIONS Article Template — Stage 2A
+
+- Added optional, human-approved public enrichment: THE REVELATION, Source
+  Note, Editorial Note, Disclosure and ordered Public Sources.
+- Enrichment is additive across WordPress meta, Gutenberg, Human Review,
+  publication change detection, private version backup/restore, public API,
+  Next.js normalization and the article page. Empty legacy values remain safe.
+- The public API has no fallback to private source snapshots, AI metadata or
+  fact-check evidence. Stage 2A adds no Author CPT, FAQ, image-credit feature,
+  CMS migration, deploy or live-CMS write.
+- Future Stage 2B author identities and profile/indexability policy are now
+  recorded in `docs/context/decisions.md`.
 
 ## REVELATIONS brand and editorial style contract
 

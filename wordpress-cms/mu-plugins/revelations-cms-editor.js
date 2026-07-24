@@ -88,6 +88,21 @@
         );
     }
 
+    function publicSources(value) {
+        try {
+            const parsed = JSON.parse(normalizeText(value) || '[]');
+            return Array.isArray(parsed)
+                ? parsed.filter(function (source) {
+                    return source && typeof source === 'object';
+                }).map(function (source) {
+                    return { label: normalizeText(source.label), url: normalizeText(source.url) };
+                })
+                : [];
+        } catch {
+            return [];
+        }
+    }
+
     function statusRow(item) {
         const ready = Boolean(item.ready);
 
@@ -261,7 +276,14 @@
                 ) !==
                     normalizeText(
                         snapshot.seoDescription
-                    );
+                    ) ||
+
+                ['revelation', 'sourceNote', 'editorialNote', 'disclosure', 'publicSources'].some(function (key) {
+                    const metaKey = {
+                        revelation: 'revelations_revelation', sourceNote: 'revelations_source_note', editorialNote: 'revelations_editorial_note', disclosure: 'revelations_disclosure', publicSources: 'revelations_public_sources',
+                    }[key];
+                    return normalizeText(meta[metaKey]) !== normalizeText(snapshot[key]);
+                });
         }
 
         let reviewReady = true;
@@ -507,6 +529,41 @@
                         );
                     },
                 }),
+
+                el('hr', { style: { margin: '24px 0 16px' } }),
+                el('h3', { style: { margin: '0 0 6px', fontSize: '13px' } }, 'ARTICLE ENRICHMENT'),
+                el('p', { style: { margin: '0 0 14px', color: '#646970', fontSize: '12px' } }, 'Optional public editorial context. Changes require a new editorial review.'),
+
+                el(components.TextareaControl, {
+                    label: 'THE REVELATION',
+                    help: 'The central editorial takeaway. Plain text, 60-150 words recommended, 180 words maximum.',
+                    rows: 5,
+                    value: meta.revelations_revelation || '',
+                    onChange: function (value) { updateMeta('revelations_revelation', value); },
+                }),
+                el('p', { style: { margin: '-8px 0 14px', fontSize: '12px', color: (normalizeText(meta.revelations_revelation).match(/[\\p{L}\\p{N}]+/gu) || []).length > 180 ? '#b32d2e' : '#646970' } },
+                  (normalizeText(meta.revelations_revelation).match(/[\\p{L}\\p{N}]+/gu) || []).length + ' / 180 words'),
+                el(components.TextareaControl, { label: 'SOURCE NOTE', help: 'Public context about the reporting or source basis.', rows: 3, value: meta.revelations_source_note || '', onChange: function (value) { updateMeta('revelations_source_note', value); } }),
+                el(components.TextareaControl, { label: 'EDITORIAL NOTE', help: 'Public editorial or process context.', rows: 3, value: meta.revelations_editorial_note || '', onChange: function (value) { updateMeta('revelations_editorial_note', value); } }),
+                el(components.TextareaControl, { label: 'DISCLOSURE', help: 'A material relationship, correction, or conflict readers should know about.', rows: 3, value: meta.revelations_disclosure || '', onChange: function (value) { updateMeta('revelations_disclosure', value); } }),
+                el('div', { style: { marginBottom: '16px' } },
+                    el('strong', null, 'PUBLIC SOURCES'),
+                    el('p', { style: { margin: '4px 0 8px', color: '#646970', fontSize: '12px' } }, 'Ordered, editor-approved public sources only.'),
+                    publicSources(meta.revelations_public_sources).map(function (source, index) {
+                        const sources = publicSources(meta.revelations_public_sources);
+                        const save = function (next) { updateMeta('revelations_public_sources', JSON.stringify(next)); };
+                        return el('div', { key: index, style: { borderTop: '1px solid #e0e0e0', paddingTop: '8px' } },
+                            el(components.TextControl, { label: 'Label', value: source.label, onChange: function (value) { sources[index].label = value; save(sources); } }),
+                            el(components.TextControl, { label: 'URL', type: 'url', value: source.url, onChange: function (value) { sources[index].url = value; save(sources); } }),
+                            el('div', { style: { display: 'flex', gap: '6px', marginBottom: '8px' } },
+                                el(components.Button, { isSecondary: true, isSmall: true, disabled: index === 0, onClick: function () { const next = sources.slice(); [next[index - 1], next[index]] = [next[index], next[index - 1]]; save(next); } }, 'Move up'),
+                                el(components.Button, { isSecondary: true, isSmall: true, disabled: index === sources.length - 1, onClick: function () { const next = sources.slice(); [next[index], next[index + 1]] = [next[index + 1], next[index]]; save(next); } }, 'Move down'),
+                                el(components.Button, { isDestructive: true, isSmall: true, onClick: function () { save(sources.filter(function (_, itemIndex) { return itemIndex !== index; })); } }, 'Remove')
+                            )
+                        );
+                    }),
+                    el(components.Button, { isSecondary: true, isSmall: true, onClick: function () { const sources = publicSources(meta.revelations_public_sources); sources.push({ label: '', url: '' }); updateMeta('revelations_public_sources', JSON.stringify(sources)); } }, 'Add source')
+                ),
 
                 el(components.TextControl, {
                     label: 'YouTube URL',

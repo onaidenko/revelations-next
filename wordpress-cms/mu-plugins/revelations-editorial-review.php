@@ -81,6 +81,12 @@ function revelations_editorial_review_content_hash(
                 true
             ),
 
+        'revelation' => get_post_meta( $draft_id, 'revelations_revelation', true ),
+        'source_note' => get_post_meta( $draft_id, 'revelations_source_note', true ),
+        'editorial_note' => get_post_meta( $draft_id, 'revelations_editorial_note', true ),
+        'disclosure' => get_post_meta( $draft_id, 'revelations_disclosure', true ),
+        'public_sources' => get_post_meta( $draft_id, 'revelations_public_sources', true ),
+
         'ai_review_metadata' =>
             function_exists(
                 'revelations_editorial_ai_review_metadata_for_draft'
@@ -116,6 +122,11 @@ function revelations_editorial_review_field_hashes( int $draft_id ): array {
         'seo_title' => (string) get_post_meta( $draft_id, 'revelations_seo_title', true ),
         'seo_description' => (string) get_post_meta( $draft_id, 'revelations_seo_description', true ),
         'displayed_author' => (string) get_post_meta( $draft_id, 'revelations_author', true ),
+        'revelation' => (string) get_post_meta( $draft_id, 'revelations_revelation', true ),
+        'source_note' => (string) get_post_meta( $draft_id, 'revelations_source_note', true ),
+        'editorial_note' => (string) get_post_meta( $draft_id, 'revelations_editorial_note', true ),
+        'disclosure' => (string) get_post_meta( $draft_id, 'revelations_disclosure', true ),
+        'public_sources' => (string) get_post_meta( $draft_id, 'revelations_public_sources', true ),
         'ai_review_metadata' => function_exists( 'revelations_editorial_ai_review_metadata_for_draft' ) ? revelations_editorial_ai_review_metadata_for_draft( $draft_id ) : array(),
     );
     $hashes = array(); foreach ( $values as $key => $value ) $hashes[ $key ] = hash( 'sha256', wp_json_encode( $value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );

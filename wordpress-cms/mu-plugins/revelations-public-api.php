@@ -141,6 +141,16 @@ function revelations_api_prepare_article( WP_Post $post ): array {
             true
         ),
 
+        /* Only explicit public editorial enrichment is serialized here. */
+        'revelation' => ( $value = trim( (string) get_post_meta( $post_id, 'revelations_revelation', true ) ) ) !== ''
+            && function_exists( 'revelations_enrichment_word_count' )
+            && revelations_enrichment_word_count( $value ) <= 180 ? $value : null,
+        'source_note' => ( $value = trim( (string) get_post_meta( $post_id, 'revelations_source_note', true ) ) ) !== '' ? $value : null,
+        'editorial_note' => ( $value = trim( (string) get_post_meta( $post_id, 'revelations_editorial_note', true ) ) ) !== '' ? $value : null,
+        'disclosure' => ( $value = trim( (string) get_post_meta( $post_id, 'revelations_disclosure', true ) ) ) !== '' ? $value : null,
+        'public_sources' => function_exists( 'revelations_enrichment_public_sources' )
+            ? revelations_enrichment_public_sources( $post_id ) : array(),
+
         'section' => isset( $category_data[0] )
             ? $category_data[0]
             : null,

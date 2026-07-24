@@ -9,6 +9,25 @@
   editorial local-date value. An explicit UTC formatter prevents build-server
   or visitor timezone from changing a published calendar date.
 
+## Article Template Stage 2A: editorial enrichment
+
+- **Решение:** Articles may optionally expose editor-approved plain-text `revelation`, `source_note`, `editorial_note`, `disclosure` and ordered `public_sources`. Blank values never block legacy articles or publication.
+- **Решение:** `THE REVELATION` is the editorial takeaway, distinct from H1, deck, SEO description and first body paragraph. Its approved public value is plain text, 60-150 words recommended and 180 words maximum; AI may only make a private suggestion and never silently populate it.
+- **Решение:** public source context is strictly opt-in. Source snapshots, evidence, fact-check flags, AI prompts/responses, internal review reasoning, generation metadata and private-version metadata never enter the public API or become a fallback for an empty public field.
+- **Решение:** public enrichment is review-protected, versioned and restored with the article, while remaining optional and absent from article schema in this stage.
+
+## Future Stage 2B author profiles
+
+- **Решение:** author entities use dedicated `rev_author` records and public `/authors/{slug}` routes. Article relationships are ordered `author_profiles` arrays from the start. Entity schema type is explicitly `person` or `organization`; Editorial Team is an Organization, never a Person.
+- **Решение:** future canonical mapping is exact, never fuzzy: Julia U. and Julia Yupiterskaya map to Julia Yupiterskaya; Alina K. and empty authors map to Alina B.; Anonymous and Editorial Team map to Editorial Team. The current catalog is not migrated in Stage 2A.
+- **Решение:** Julia Yupiterskaya is the canonical display name and has the verified LinkedIn URL `https://www.linkedin.com/in/julia-upiter/`. Do not infer biography or further affiliations. Alina B. receives no invented surname, biography or social link.
+- **Решение:** an author profile may be indexable only when active, named, meaningfully biographical and linked to at least one published article.
+
+## Future FAQ and image attribution
+
+- **Решение:** FAQ is optional, normally three to five useful questions and never more than six. It is not SEO filler; visible content must exactly match FAQ schema when emitted.
+- **Решение:** future image attribution keeps caption, credit and source URL separate. Native attachment captions may be used; credit and source facts must be editor-verified and blank credit never defaults to REVELATIONS.
+
 ## Общая AI-направленность
 
 - **Решение:** AI должен быть центральной темой материала во всех

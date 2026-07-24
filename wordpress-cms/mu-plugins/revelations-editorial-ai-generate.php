@@ -1912,6 +1912,12 @@ function revelations_editorial_ai_create_version_backup(
                 true
             ),
 
+        '_rev_ai_revelation' => get_post_meta( $draft_id, 'revelations_revelation', true ),
+        '_rev_ai_source_note' => get_post_meta( $draft_id, 'revelations_source_note', true ),
+        '_rev_ai_editorial_note' => get_post_meta( $draft_id, 'revelations_editorial_note', true ),
+        '_rev_ai_disclosure' => get_post_meta( $draft_id, 'revelations_disclosure', true ),
+        '_rev_ai_public_sources' => get_post_meta( $draft_id, 'revelations_public_sources', true ),
+
         '_rev_ai_draft_kind' =>
             get_post_meta(
                 $draft_id,

@@ -7,6 +7,66 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/** Return the five optional, editor-approved public enrichment meta keys. */
+function revelations_enrichment_meta_keys(): array {
+    return array(
+        'revelations_revelation',
+        'revelations_source_note',
+        'revelations_editorial_note',
+        'revelations_disclosure',
+        'revelations_public_sources',
+    );
+}
+
+/** Normalize one optional public-text value. */
+function revelations_enrichment_sanitize_text( mixed $value ): string {
+    return sanitize_textarea_field( (string) $value );
+}
+
+/** Count Unicode words without changing editorial punctuation. */
+function revelations_enrichment_word_count( string $value ): int {
+    preg_match_all( "/[\\p{L}\\p{N}]+(?:[’'\\-][\\p{L}\\p{N}]+)*/u", $value, $matches );
+    return count( $matches[0] ?? array() );
+}
+
+/** Revelation remains plain text and must never be silently truncated. */
+function revelations_enrichment_sanitize_revelation( mixed $value ): string {
+    return revelations_enrichment_sanitize_text( $value );
+}
+
+function revelations_enrichment_revelation_is_valid( mixed $value ): bool {
+    return revelations_enrichment_word_count(
+        revelations_enrichment_sanitize_revelation( $value )
+    ) <= 180;
+}
+
+/**
+ * Decode, validate and canonically encode the ordered public-source list.
+ * Malformed entries are rejected as an empty list; private source metadata is
+ * neither accepted nor used as a fallback.
+ */
+function revelations_enrichment_sanitize_public_sources( mixed $value ): string {
+    $items = is_string( $value ) ? json_decode( $value, true ) : $value;
+    if ( ! is_array( $items ) ) return '[]';
+    $result = array();
+    foreach ( $items as $item ) {
+        if ( ! is_array( $item ) ) return '[]';
+        $label = sanitize_text_field( (string) ( $item['label'] ?? '' ) );
+        $url = esc_url_raw( (string) ( $item['url'] ?? '' ), array( 'http', 'https' ) );
+        if ( '' === $label || '' === $url || ! preg_match( '#^https?://#i', $url ) ) return '[]';
+        $result[] = array( 'label' => $label, 'url' => $url );
+    }
+    return (string) wp_json_encode( $result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+}
+
+/** Return safe public sources only from the explicitly approved public field. */
+function revelations_enrichment_public_sources( int $post_id ): array {
+    $decoded = json_decode( (string) get_post_meta( $post_id, 'revelations_public_sources', true ), true );
+    if ( ! is_array( $decoded ) ) return array();
+    $sanitized = revelations_enrichment_sanitize_public_sources( $decoded );
+    return '[]' === $sanitized ? array() : (array) json_decode( $sanitized, true );
+}
+
 /**
  * Rename standard WordPress posts to Articles in the admin interface.
  */
@@ -74,6 +134,31 @@ add_action(
                 'default'           => '',
                 'sanitize_callback' => 'sanitize_text_field',
             ),
+            'revelations_revelation' => array(
+                'type'              => 'string',
+                'default'           => '',
+                'sanitize_callback' => 'revelations_enrichment_sanitize_revelation',
+            ),
+            'revelations_source_note' => array(
+                'type'              => 'string',
+                'default'           => '',
+                'sanitize_callback' => 'revelations_enrichment_sanitize_text',
+            ),
+            'revelations_editorial_note' => array(
+                'type'              => 'string',
+                'default'           => '',
+                'sanitize_callback' => 'revelations_enrichment_sanitize_text',
+            ),
+            'revelations_disclosure' => array(
+                'type'              => 'string',
+                'default'           => '',
+                'sanitize_callback' => 'revelations_enrichment_sanitize_text',
+            ),
+            'revelations_public_sources' => array(
+                'type'              => 'string',
+                'default'           => '[]',
+                'sanitize_callback' => 'revelations_enrichment_sanitize_public_sources',
+            ),
         );
 
         foreach ( $fields as $key => $field ) {
@@ -99,6 +184,20 @@ add_action(
             );
         }
     }
+);
+
+/* Gutenberg saves use REST: reject an over-limit value rather than truncating it. */
+add_filter(
+    'rest_pre_insert_post',
+    static function ( $prepared_post, WP_REST_Request $request ) {
+        if ( is_wp_error( $prepared_post ) || ! $request->has_param( 'meta' ) ) return $prepared_post;
+        $meta = $request->get_param( 'meta' );
+        if ( ! is_array( $meta ) || ! array_key_exists( 'revelations_revelation', $meta ) ) return $prepared_post;
+        if ( revelations_enrichment_revelation_is_valid( $meta['revelations_revelation'] ) ) return $prepared_post;
+        return new WP_Error( 'revelations_revelation_too_long', 'THE REVELATION must not exceed 180 words.', array( 'status' => 400 ) );
+    },
+    90,
+    2
 );
 
 /**
@@ -228,6 +327,11 @@ function revelations_cms_editor_data(
                 'revelations_seo_description',
                 true
             ),
+        'revelation' => (string) get_post_meta( $post_id, 'revelations_revelation', true ),
+        'sourceNote' => (string) get_post_meta( $post_id, 'revelations_source_note', true ),
+        'editorialNote' => (string) get_post_meta( $post_id, 'revelations_editorial_note', true ),
+        'disclosure' => (string) get_post_meta( $post_id, 'revelations_disclosure', true ),
+        'publicSources' => (string) get_post_meta( $post_id, 'revelations_public_sources', true ),
     );
 
     return $data;

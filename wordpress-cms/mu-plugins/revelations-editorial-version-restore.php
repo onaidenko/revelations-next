@@ -361,6 +361,30 @@ function revelations_editorial_ai_restore_readiness(
 
     sort( $current_categories );
 
+    $enrichment_version_meta = array(
+        'revelations_revelation' => '_rev_ai_revelation',
+        'revelations_source_note' => '_rev_ai_source_note',
+        'revelations_editorial_note' => '_rev_ai_editorial_note',
+        'revelations_disclosure' => '_rev_ai_disclosure',
+        'revelations_public_sources' => '_rev_ai_public_sources',
+    );
+    $current_enrichment = array();
+    $version_enrichment = array();
+    foreach ( $enrichment_version_meta as $draft_key => $version_key ) {
+        $current_enrichment[ $draft_key ] = get_post_meta( $draft_id, $draft_key, true );
+        $version_enrichment[ $draft_key ] = get_post_meta( $version_id, $version_key, true );
+    }
+
+    if ( function_exists( 'revelations_enrichment_revelation_is_valid' ) && ! revelations_enrichment_revelation_is_valid( $version_enrichment['revelations_revelation'] ) ) {
+        return new WP_Error( 'restore_invalid_revelation', 'The saved version contains an over-limit THE REVELATION value.' );
+    }
+    if ( function_exists( 'revelations_enrichment_sanitize_public_sources' ) && metadata_exists( 'post', $version_id, '_rev_ai_public_sources' ) ) {
+        $saved_sources = (string) $version_enrichment['revelations_public_sources'];
+        if ( revelations_enrichment_sanitize_public_sources( $saved_sources ) !== $saved_sources ) {
+            return new WP_Error( 'restore_invalid_public_sources', 'The saved version has invalid public source metadata.' );
+        }
+    }
+
     $current_signature = hash(
         'sha256',
         (string) wp_json_encode(
@@ -390,6 +414,7 @@ function revelations_editorial_ai_restore_readiness(
                         'revelations_seo_description',
                         true
                     ),
+                'enrichment' => $current_enrichment,
 
                 'generation_metadata' =>
                     $current_generation_meta,
@@ -420,6 +445,7 @@ function revelations_editorial_ai_restore_readiness(
 
                 'seo_description' =>
                     $seo_description,
+                'enrichment' => $version_enrichment,
 
                 'generation_metadata' =>
                     $version_generation_meta,
@@ -626,6 +652,14 @@ function revelations_editorial_ai_restore_version(
             $key,
             $value
         );
+    }
+
+    foreach ( array( 'revelations_revelation' => '_rev_ai_revelation', 'revelations_source_note' => '_rev_ai_source_note', 'revelations_editorial_note' => '_rev_ai_editorial_note', 'revelations_disclosure' => '_rev_ai_disclosure', 'revelations_public_sources' => '_rev_ai_public_sources' ) as $draft_key => $version_key ) {
+        if ( metadata_exists( 'post', $version_id, $version_key ) ) {
+            update_post_meta( $draft_id, $draft_key, get_post_meta( $version_id, $version_key, true ) );
+        } else {
+            delete_post_meta( $draft_id, $draft_key );
+        }
     }
 
     /*
