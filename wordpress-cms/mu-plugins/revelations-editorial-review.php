@@ -236,6 +236,19 @@ function revelations_editorial_review_status(
     );
 }
 
+/** Complete the canonical review record for the currently persisted article state. */
+function revelations_editorial_review_mark_current( int $post_id, int $reviewer_user_id ): WP_Error|array {
+    $post = get_post( $post_id ); $user = get_user_by( 'id', $reviewer_user_id );
+    if ( ! $post instanceof WP_Post || 'post' !== $post->post_type ) return new WP_Error( 'revelations_review_post', 'Article not found.' );
+    if ( ! $user instanceof WP_User || ! user_can( $user, 'manage_options' ) ) return new WP_Error( 'revelations_review_reviewer', 'Reviewer is not authorized.' );
+    $category_check = function_exists( 'revelations_editorial_category_contract_validate' ) ? revelations_editorial_category_contract_validate( wp_get_post_categories( $post_id ) ) : array( 'code' => '' );
+    if ( '' !== (string) $category_check['code'] ) return new WP_Error( 'revelations_review_category', 'Article taxonomy is invalid.' );
+    $content_hash = revelations_editorial_review_content_hash( $post_id ); if ( '' === $content_hash ) return new WP_Error( 'revelations_review_hash', 'Review hash is unavailable.' );
+    $meta = array( '_revelations_editorial_review_status' => 'reviewed', '_revelations_editorial_reviewed_at' => gmdate( 'c' ), '_revelations_editorial_reviewed_by' => $reviewer_user_id, '_revelations_editorial_review_hash' => $content_hash, '_revelations_editorial_review_field_hashes' => wp_json_encode( revelations_editorial_review_field_hashes( $post_id ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ), '_revelations_editorial_review_changed_fields' => '', '_revelations_editorial_review_word_count' => revelations_editorial_current_draft_word_count( $post_id ) );
+    foreach ( $meta as $key => $value ) update_post_meta( $post_id, $key, $value );
+    return revelations_editorial_review_status( $post_id );
+}
+
 /**
  * Redirect back to AI Drafts.
  *
@@ -330,53 +343,8 @@ add_action(
             );
         }
 
-        $category_check = function_exists( 'revelations_editorial_category_contract_validate' )
-            ? revelations_editorial_category_contract_validate( wp_get_post_categories( $draft_id ) ) : array( 'code' => '' );
-        if ( '' !== (string) $category_check['code'] ) revelations_editorial_review_redirect( array( 'review_error' => 'category' ) );
-        $content_hash =
-            revelations_editorial_review_content_hash(
-                $draft_id
-            );
-
-        if ( '' === $content_hash ) {
-            revelations_editorial_review_redirect(
-                array(
-                    'review_error' => 'hash',
-                )
-            );
-        }
-
-        $meta = array(
-            '_revelations_editorial_review_status' =>
-                'reviewed',
-
-            '_revelations_editorial_reviewed_at' =>
-                gmdate( 'c' ),
-
-            '_revelations_editorial_reviewed_by' =>
-                get_current_user_id(),
-
-            '_revelations_editorial_review_hash' =>
-                $content_hash,
-
-            '_revelations_editorial_review_field_hashes' =>
-                wp_json_encode( revelations_editorial_review_field_hashes( $draft_id ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
-
-            '_revelations_editorial_review_changed_fields' => '',
-
-            '_revelations_editorial_review_word_count' =>
-                revelations_editorial_current_draft_word_count(
-                    $draft_id
-                ),
-        );
-
-        foreach ( $meta as $key => $value ) {
-            update_post_meta(
-                $draft_id,
-                $key,
-                $value
-            );
-        }
+        $review = revelations_editorial_review_mark_current( $draft_id, get_current_user_id() );
+        if ( is_wp_error( $review ) ) revelations_editorial_review_redirect( array( 'review_error' => $review->get_error_code() ) );
 
         revelations_editorial_review_redirect(
             array(
