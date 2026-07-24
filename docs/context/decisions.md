@@ -1,5 +1,14 @@
 # Архитектурные и редакционные решения
 
+## Publication dates
+
+- **Решение:** visible CMS-derived article dates use the UTC calendar date of
+  the authoritative `publication_date` timestamp. JSON-LD retains that full
+  timestamp unchanged.
+- **Причина:** the public CMS API exports a GMT instant but not WordPress's
+  editorial local-date value. An explicit UTC formatter prevents build-server
+  or visitor timezone from changing a published calendar date.
+
 ## Общая AI-направленность
 
 - **Решение:** AI должен быть центральной темой материала во всех

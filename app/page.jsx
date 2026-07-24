@@ -2,6 +2,7 @@ import Link from 'next/link';
 import SiteHeader from '@/components/site-header';
 import SiteFooter from '@/components/site-footer';
 import DropsMarquee from '@/components/drops-marquee';
+import { formatArticleDate } from '@/lib/article-dates';
 import { getPublishedArticles } from '@/lib/cms-articles';
 import { isEditorialSection } from '@/lib/sections';
 import {
@@ -9,23 +10,6 @@ import {
   BRAND_NAME,
   BRAND_TAGLINE,
 } from '@/lib/site';
-
-function formatDate(value, variant = 'full') {
-  if (!value) return '';
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return '';
-  }
-
-  const options =
-    variant === 'compact'
-      ? { month: 'short', day: 'numeric' }
-      : { month: 'short', day: 'numeric', year: 'numeric' };
-
-  return new Intl.DateTimeFormat('en-US', options).format(date);
-}
 
 function formatSectionLabel(article) {
   const value =
@@ -92,8 +76,9 @@ export default async function HomePage() {
                   <>
                     <span className="h-3 w-px bg-border/60" />
                     <span className="font-mono text-[10px] tracking-[0.1em] text-muted-foreground">
-                      {formatDate(
-                        hero.publication_date || hero.created_date
+                      {formatArticleDate(
+                        hero.publication_date || hero.created_date,
+                        'short'
                       )}
                     </span>
                   </>
@@ -164,7 +149,7 @@ export default async function HomePage() {
                     </span>
 
                     <span className="font-mono text-[9px] tracking-[0.1em] text-muted-foreground">
-                      {formatDate(
+                      {formatArticleDate(
                         article.publication_date || article.created_date,
                         'compact'
                       )}
@@ -223,8 +208,9 @@ export default async function HomePage() {
                       <span className="h-3 w-px bg-border/40" />
 
                       <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
-                        {formatDate(
-                          article.publication_date || article.created_date
+                        {formatArticleDate(
+                          article.publication_date || article.created_date,
+                          'short'
                         )}
                       </span>
 

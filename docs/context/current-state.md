@@ -30,6 +30,10 @@
   has no horizontal overflow.
 - Stage 1 is ready for its approved local commit; no push or deploy is part of
   this stage.
+- Article publication timestamps are authoritative UTC instants. Visible CMS
+  article dates use their UTC calendar date explicitly, so rendering is stable
+  across build, server and visitor timezones; JSON-LD preserves the original
+  full timestamp.
 
 Дата проверки: 2026-07-24.
 

@@ -8,6 +8,14 @@ import {
   formatReadingTime,
   readingTimeMinutes,
 } from '../lib/article-presentation.js';
+import { formatArticleDate } from '../lib/article-dates.js';
+
+test('publication dates use the UTC calendar date deterministically', () => {
+  const samPublicationTimestamp = '2026-06-14T21:00:00+00:00';
+
+  assert.equal(formatArticleDate(samPublicationTimestamp), 'June 14, 2026');
+  assert.equal(formatArticleDate(samPublicationTimestamp, 'short'), 'Jun 14, 2026');
+});
 
 test('reading time counts article HTML and Markdown deterministically', () => {
   assert.equal(countArticleWords(''), 0);
