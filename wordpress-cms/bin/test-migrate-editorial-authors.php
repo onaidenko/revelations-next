@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 $meta = array(); $writes = array(); $posts = array();
 function get_post_meta(int $id, string $key, bool $single = true): mixed { global $meta; return $meta[$id][$key] ?? ''; }
+function metadata_exists(string $type, int $id, string $key): bool { global $meta; return isset($meta[$id]) && array_key_exists($key,$meta[$id]); }
 function update_post_meta(int $id, string $key, mixed $value): int { global $meta, $writes; $meta[$id][$key] = $value; $writes[] = array($id,$key,$value); return 1; }
 function wp_json_encode(mixed $value, int $flags = 0): string|false { return json_encode($value, $flags); }
 function is_wp_error(mixed $value): bool { return false; }
