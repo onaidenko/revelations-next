@@ -127,7 +127,7 @@ export default async function ArticlePage({
 
       <main>
         <article className="pb-12 pt-48 md:pt-56">
-          <header className="mx-auto max-w-4xl px-6 md:px-10">
+          <header className="mx-auto max-w-5xl px-6 md:px-10">
             {headerLabels.length > 0 && (
               <div
                 aria-label="Article topics"
@@ -150,12 +150,12 @@ export default async function ArticlePage({
               </div>
             )}
 
-            <h1 className="mb-7 max-w-5xl font-display text-4xl leading-[1.05] tracking-tight text-foreground md:text-6xl lg:text-7xl">
+            <h1 className="mb-7 font-display text-4xl leading-[1.05] tracking-tight text-foreground md:text-6xl lg:text-7xl">
               {article.title}
             </h1>
 
             {article.excerpt && (
-              <p className="mb-9 max-w-3xl font-body text-lg leading-relaxed text-muted-foreground md:text-xl">
+              <p className="mb-9 font-body text-lg leading-relaxed text-muted-foreground md:text-xl">
                 {article.excerpt}
               </p>
             )}

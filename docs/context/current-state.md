@@ -1903,3 +1903,17 @@ Base44 и DNS/domain cutover.
   HTTP 200 and `noindex, nofollow, noarchive`.
 - Production frontend, CMS and cache remain untouched. This visual change is
   staging-only and awaits explicit product-owner approval.
+
+## Article header grid alignment awaiting staging deployment (2026-07-25)
+
+- The article header now uses the same `max-w-5xl` (1024px) editorial grid as
+  the body and THE REVELATION. The previous header cap was `max-w-4xl`
+  (896px), which made the labels, title, deck, metadata and Copy Link begin
+  on a narrower column than the reading content.
+- The redundant nested `max-w-5xl` on the title and the restrictive
+  `max-w-3xl` on the deck are removed, so they inherit the shared header
+  width. Hero width, typography, THE REVELATION, author/taxonomy, footer,
+  homepage, CMS and all content remain unchanged.
+- Local regression tests, lint and the production-configured build pass. This
+  is a staging-only visual candidate and still requires deployment followed by
+  explicit product-owner approval; production remains frozen.

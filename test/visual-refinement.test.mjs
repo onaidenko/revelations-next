@@ -17,9 +17,13 @@ test('article uses one broad editorial reading grid', () => {
   const page = read('../app/[slug]/page.jsx');
 
   assert.match(page, /max-w-\[88rem\]/);
+  assert.match(page, /<header className="mx-auto max-w-5xl px-6 md:px-10">/);
+  assert.doesNotMatch(page, /<header className="mx-auto max-w-4xl/);
   assert.match(page, /mx-auto max-w-5xl px-6 py-14/);
   assert.doesNotMatch(page, /mx-auto max-w-2xl/);
   assert.match(page, /max-w-5xl px-6 md:mt-20/);
+  assert.doesNotMatch(page, /<h1[^>]*max-w-/);
+  assert.doesNotMatch(page, /article\.excerpt[^\n]*max-w-/);
   assert.match(page, /border-l-2 border-rose\/60/);
   assert.doesNotMatch(page, /border-y border-rose/);
   assert.match(page, /text-2xl leading-snug[^"\n]*md:text-3xl lg:text-4xl/);
