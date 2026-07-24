@@ -1,5 +1,38 @@
 # Текущее состояние
 
+## REVELATIONS Article Template — Stage 1
+
+- Shared frontend article template in `app/[slug]/page.jsx` now presents the
+  existing article data in this order: up to three taxonomy-derived labels,
+  H1, existing excerpt, author/date/reading-time metadata, hero, unchanged
+  body, existing taxonomy and related content.
+- Header labels use only the existing section and taxonomy presentation data:
+  section first, then the assigned primary topic, then one secondary topic;
+  the deterministic fallback uses existing series, locations and tags. Terms
+  link only when the existing taxonomy hub resolver provides a public URL.
+- The visible publication date is semantic `<time dateTime>` markup. A pure
+  presentation helper calculates reading time from CMS HTML or legacy Markdown
+  body text at 220 words per minute, with a one-minute minimum and no output
+  for empty content.
+- Canonical URLs, metadata, JSON-LD (including BreadcrumbList and publisher
+  relationships), sitemap and redirect behavior, article bodies, taxonomy
+  components and image loading attributes remain unchanged. No CMS fields,
+  author cards, FAQ, THE REVELATION block or production changes were made.
+- Focused article-presentation coverage, the complete Node suite (77/77),
+  ESLint and the production build pass. A local production-artifact audit
+  verified People, News, Tech, Places and Unspoken representative articles:
+  semantic main/article/header structure, one H1, valid ISO publication dates,
+  labels, reading time, and header → hero → body order.
+- Final desktop/mobile visual QA verified the Sam, long-headline and News
+  templates: label-to-H1 spacing, deck hierarchy, metadata/share placement,
+  hero-to-body transition and responsive label wrapping. Header labels use
+  normal inline flow so long terms wrap naturally. The checked mobile layout
+  has no horizontal overflow.
+- Stage 1 is ready for its approved local commit; no push or deploy is part of
+  this stage.
+
+Дата проверки: 2026-07-24.
+
 ## REVELATIONS brand and editorial style contract
 
 - Canonical source-controlled brand assets are `BRAND_NAME` (`REVELATIONS`),

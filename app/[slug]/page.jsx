@@ -8,6 +8,10 @@ import ArticleBody from '@/components/article-body';
 import ArticleTaxonomy from '@/components/article-taxonomy';
 import ShareButton from '@/components/share-button';
 import YouTubeEmbed from '@/components/youtube-embed';
+import {
+  buildArticleHeaderLabels,
+  formatReadingTime,
+} from '@/lib/article-presentation';
 
 import {
   getArticleBySlug,
@@ -90,6 +94,13 @@ export default async function ArticlePage({
       article,
       SITE_URL
     );
+  const headerLabels = buildArticleHeaderLabels({
+    section: article.section,
+    sectionName:
+      article.section_name || section?.title || article.section,
+    taxonomy,
+  });
+  const readingTime = formatReadingTime(article.content);
 
   return (
     <div className="min-h-screen bg-background">
@@ -111,75 +122,88 @@ export default async function ArticlePage({
 
       <SiteHeader />
 
-      <article className="pb-12 pt-48 md:pt-56">
-        {article.cover_image && (
-          <div className="mx-auto mb-12 max-w-6xl px-6 md:px-12">
-            <img
-              src={article.cover_image}
-              alt={article.cover_image_alt}
-              className="h-[40vh] w-full object-contain md:h-[60vh]"
-              loading="eager"
-              fetchPriority="high"
-            />
-          </div>
-        )}
-
-        <header className="mx-auto max-w-3xl px-6">
-          <div className="mb-6 flex flex-wrap items-center gap-4">
-            <Link
-              href={`/${article.section}`}
-              className="font-mono text-[10px] uppercase tracking-[0.2em] text-rose transition-colors hover:text-foreground"
-            >
-              {article.section_name ||
-                section?.title ||
-                article.section}
-            </Link>
-
-            <span className="h-3 w-px bg-border" />
-
-            <span className="font-mono text-[10px] tracking-[0.1em] text-muted-foreground">
-              {formatDate(publicationDate)}
-            </span>
-          </div>
-
-          <h1 className="mb-6 font-display text-4xl leading-[1.1] tracking-tight text-foreground md:text-5xl lg:text-6xl">
-            {article.title}
-          </h1>
-
-          {article.excerpt && (
-            <p className="mb-8 font-body text-lg leading-relaxed text-muted-foreground">
-              {article.excerpt}
-            </p>
-          )}
-
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            {article.author && (
-              <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-                By {article.author}
-              </span>
+      <main>
+        <article className="pb-12 pt-48 md:pt-56">
+          <header className="mx-auto max-w-3xl px-6">
+            {headerLabels.length > 0 && (
+              <div
+                aria-label="Article topics"
+                className="mb-6 font-mono text-[10px] uppercase leading-relaxed tracking-[0.2em] text-rose"
+              >
+                {headerLabels.map((label, index) => (
+                  <span key={`${label.name}-${label.href || index}`}>
+                    {index > 0 && (
+                      <span aria-hidden="true" className="mx-3 text-muted-foreground">·</span>
+                    )}
+                    {label.href ? (
+                      <Link href={label.href} className="break-words transition-colors hover:text-foreground">
+                        {label.name}
+                      </Link>
+                    ) : (
+                      <span className="break-words">{label.name}</span>
+                    )}
+                  </span>
+                ))}
+              </div>
             )}
 
-            <ShareButton url={canonical} />
-          </div>
+            <h1 className="mb-6 font-display text-4xl leading-[1.1] tracking-tight text-foreground md:text-5xl lg:text-6xl">
+              {article.title}
+            </h1>
 
-          <div className="mt-8 h-px bg-gradient-to-r from-rose/40 via-border/30 to-transparent" />
-        </header>
+            {article.excerpt && (
+              <p className="mb-8 font-body text-lg leading-relaxed text-muted-foreground">
+                {article.excerpt}
+              </p>
+            )}
 
-        <div className="mx-auto max-w-3xl px-6 py-12">
-          <ArticleBody
-            content={article.content}
-            format={article.content_format}
-          />
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+              {article.author && <span>By {article.author}</span>}
+              {article.author && publicationDate && <span aria-hidden="true">·</span>}
+              {publicationDate && (
+                <time dateTime={publicationDate}>
+                  {formatDate(publicationDate)}
+                </time>
+              )}
+              {readingTime && publicationDate && <span aria-hidden="true">·</span>}
+              {readingTime && <span>{readingTime}</span>}
+            </div>
 
-          {article.youtube_url && (
-            <YouTubeEmbed
-              url={article.youtube_url}
-            />
+            <div className="mt-6">
+              <ShareButton url={canonical} />
+            </div>
+
+            <div className="mt-8 h-px bg-gradient-to-r from-rose/40 via-border/30 to-transparent" />
+          </header>
+
+          {article.cover_image && (
+            <div className="mx-auto mt-12 max-w-6xl px-6 md:px-12">
+              <img
+                src={article.cover_image}
+                alt={article.cover_image_alt}
+                className="h-[40vh] w-full object-contain md:h-[60vh]"
+                loading="eager"
+                fetchPriority="high"
+              />
+            </div>
           )}
 
-          <ArticleTaxonomy value={taxonomy} />
-        </div>
-      </article>
+          <div className="mx-auto max-w-3xl px-6 py-12">
+            <ArticleBody
+              content={article.content}
+              format={article.content_format}
+            />
+
+            {article.youtube_url && (
+              <YouTubeEmbed
+                url={article.youtube_url}
+              />
+            )}
+
+            <ArticleTaxonomy value={taxonomy} />
+          </div>
+        </article>
+      </main>
 
       {related.length > 0 && (
         <section className="mx-auto max-w-7xl border-t border-border/20 px-6 pb-24 pt-16 md:px-12">
