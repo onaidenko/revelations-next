@@ -26,11 +26,11 @@ function Group({ label, terms, primary = false }) {
       </span>
 
       <div className="flex flex-wrap items-baseline gap-x-5 gap-y-3">
-        {terms.map((term) => (
+        {terms.map((term, index) => (
           <Term
             key={term.slug}
             term={term}
-            primary={primary}
+            primary={primary && index === 0}
           />
         ))}
       </div>
@@ -43,30 +43,27 @@ export default function ArticleTaxonomy({ value }) {
     return null;
   }
 
+  const topics = [
+    ...(value.primaryTopic ? [value.primaryTopic] : []),
+    ...value.secondaryTopics,
+  ].filter(
+    (term, index, values) =>
+      term &&
+      values.findIndex((item) => item.slug === term.slug) === index
+  );
+
   return (
     <aside
       aria-label="Article taxonomy"
       className="article-taxonomy mt-16 border-b border-border/25"
     >
       <Group
-        label="Primary topic"
-        terms={
-          value.primaryTopic ? [value.primaryTopic] : []
-        }
+        label="Topics"
+        terms={topics}
         primary
       />
-
-      <Group
-        label="More topics"
-        terms={value.secondaryTopics}
-      />
-
       <Group label="Series" terms={value.series} />
-
-      <Group
-        label="Location"
-        terms={value.locations}
-      />
+      <Group label="Location" terms={value.locations} />
 
       <Group label="Entities" terms={value.tags} />
     </aside>

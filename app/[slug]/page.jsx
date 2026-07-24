@@ -160,19 +160,19 @@ export default async function ArticlePage({
               </p>
             )}
 
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
-              {byline && <span>By {article.author_profiles?.length ? article.author_profiles.map((author, index) => (<span key={author.slug}>{index > 0 && (index === article.author_profiles.length - 1 ? ' and ' : ', ')}{author.is_public_profile ? <Link href={`/authors/${author.slug}`} className="transition-colors hover:text-foreground">{author.name}</Link> : author.name}</span>)) : byline}</span>}
-              {byline && publicationDate && <span aria-hidden="true">·</span>}
-              {publicationDate && (
-                <time dateTime={publicationDate}>
-                  {formatDate(publicationDate)}
-                </time>
-              )}
-              {readingTime && publicationDate && <span aria-hidden="true">·</span>}
-              {readingTime && <span>{readingTime}</span>}
-            </div>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:gap-8">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+                {byline && <span>By {article.author_profiles?.length ? article.author_profiles.map((author, index) => (<span key={author.slug}>{index > 0 && (index === article.author_profiles.length - 1 ? ' and ' : ', ')}{author.is_public_profile ? <Link href={`/authors/${author.slug}`} className="transition-colors hover:text-foreground">{author.name}</Link> : author.name}</span>)) : byline}</span>}
+                {byline && publicationDate && <span aria-hidden="true">·</span>}
+                {publicationDate && (
+                  <time dateTime={publicationDate}>
+                    {formatDate(publicationDate)}
+                  </time>
+                )}
+                {readingTime && publicationDate && <span aria-hidden="true">·</span>}
+                {readingTime && <span>{readingTime}</span>}
+              </div>
 
-            <div className="mt-6">
               <ShareButton url={canonical} />
             </div>
 
@@ -192,19 +192,19 @@ export default async function ArticlePage({
           )}
 
           {article.revelation && (
-            <section className="mx-auto mt-16 max-w-6xl px-6 md:mt-24 md:px-10" aria-labelledby="article-revelation">
-              <div className="border-y border-rose/35 py-8 md:py-12">
+            <section className="mx-auto mt-16 max-w-5xl px-6 md:mt-20 md:px-10" aria-labelledby="article-revelation">
+              <div className="border-l-2 border-rose/60 pl-6 md:pl-8">
                 <h2 id="article-revelation" className="mb-5 font-mono text-[10px] uppercase tracking-[0.25em] text-rose">
                   THE REVELATION
                 </h2>
-                <p className="max-w-5xl font-display text-3xl leading-[1.16] text-foreground md:text-5xl lg:text-6xl">
+                <p className="font-display text-2xl leading-snug text-foreground md:text-3xl lg:text-4xl">
                   {article.revelation}
                 </p>
               </div>
             </section>
           )}
 
-          <div className="mx-auto max-w-2xl px-6 py-14 md:py-20">
+          <div className="mx-auto max-w-5xl px-6 py-14 md:px-10 md:py-20">
 
             <ArticleBody
               content={article.content}
@@ -243,7 +243,7 @@ export default async function ArticlePage({
                 <div className="space-y-10">{publicAuthors.map((author) => (
                   <div key={author.slug} className={`grid gap-5 sm:gap-8 ${author.image?.url ? 'sm:grid-cols-[7rem_minmax(0,1fr)]' : ''}`}>
                     {author.image?.url && <img src={author.image.url} alt={author.image.alt || author.name} className="h-24 w-24 rounded-full object-cover sm:h-28 sm:w-28" />}
-                    <div><h3 className="font-display text-3xl leading-tight text-foreground">{author.name}</h3>{author.role && <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-rose">{author.role}</p>}{author.bio && <p className="mt-5 max-w-xl font-body text-base leading-relaxed text-muted-foreground">{author.bio}</p>}<div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 font-mono text-[10px] uppercase tracking-[0.15em] text-rose"><Link href={`/authors/${author.slug}`} className="transition-colors hover:text-foreground">Profile</Link>{author.same_as?.map((url) => url.includes('linkedin.com') ? <a key={url} href={url} target="_blank" rel="noreferrer" className="transition-colors hover:text-foreground">LinkedIn</a> : null)}<Link href={`/authors/${author.slug}`} className="transition-colors hover:text-foreground">All stories</Link></div></div>
+                    <div><h3 className="font-display text-3xl leading-tight text-foreground">{author.name}</h3>{author.role && <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.15em] text-rose">{author.role}</p>}{author.bio && <p className="mt-5 max-w-3xl font-body text-base leading-relaxed text-muted-foreground">{author.bio}</p>}<div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 font-mono text-[10px] uppercase tracking-[0.15em] text-rose"><Link href={`/authors/${author.slug}`} className="transition-colors hover:text-foreground">Profile</Link>{author.same_as?.map((url) => url.includes('linkedin.com') ? <a key={url} href={url} target="_blank" rel="noreferrer" className="transition-colors hover:text-foreground">LinkedIn</a> : null)}<Link href={`/authors/${author.slug}`} className="transition-colors hover:text-foreground">All stories</Link></div></div>
                   </div>
                 ))}</div>
               </section>

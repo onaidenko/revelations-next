@@ -29,14 +29,8 @@ export default function ShareButton({ url }) {
     <button
       onClick={copy}
       type="button"
-      className="group inline-flex items-center gap-2 border-b border-border/50 pb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-rose/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose"
+      className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground underline decoration-border/60 underline-offset-4 transition-colors hover:decoration-rose hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose"
     >
-      <span
-        aria-hidden="true"
-        className="grid h-4 w-4 place-items-center border border-current text-[9px] leading-none transition-transform group-hover:-translate-y-0.5"
-      >
-        ↗
-      </span>
       {copied ? 'Copied ✓' : 'Copy link'}
     </button>
   );

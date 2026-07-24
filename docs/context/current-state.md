@@ -1858,3 +1858,19 @@ Base44 и DNS/domain cutover.
   protects its six required markers. Any user-visible frontend change now has
   an explicit staging QA and product-owner approval gate before a separately
   authorized production deployment.
+
+## Visual refinement awaiting staging approval (2026-07-25)
+
+- The rejected first staging treatment is refined locally without CMS, SEO,
+  schema, author-relation or content changes. The accepted broad hero remains
+  `max-w-[88rem]`; the article body, public editorial context, author module
+  and taxonomy now share `max-w-5xl` rather than the rejected `max-w-2xl`
+  reading strip.
+- THE REVELATION returns to a restrained left rose rule with the shared
+  `max-w-5xl` grid and 24px mobile, 30px tablet and 36px desktop type. The
+  dominant horizontal rules and 48-60px poster treatment are removed.
+- Copy Link shares the desktop metadata row and naturally wraps below it on
+  small screens. Public taxonomy now exposes Topics, Location, Entities and
+  optional Series without separate Primary topic or More topics concepts.
+- This visual refinement requires a fresh staging-only deployment and explicit
+  product-owner review. Production remains frozen for this task.
