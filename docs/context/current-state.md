@@ -1513,6 +1513,20 @@ Base44 и DNS/domain cutover.
   production deployment or CMS, database, staging, content or runtime change
   was performed.
 
+## Production deploy prepare/deploy split
+
+- A Codex execution-control session can disappear after a successful local
+  build and before `UPLOAD_START`; in that observed case no SSH phase, remote
+  backup, previous-release directory or production mutation occurred.
+- Production deployment is therefore split intentionally. The mutation-free
+  prepare command produces an ignored, immutable artifact and JSON manifest
+  bound to the full synchronized commit. The short deploy command requires
+  that exact prepared release and revalidates its manifest, checksum, build
+  marker, production targets, staging-domain absence and prohibited-file
+  absence before it can open an upload connection.
+- Existing bounded SSH transport, streamed remote logging, candidate checks,
+  backup, atomic switch, rollback and public verification remain unchanged.
+
 ## SEO 3B-1 topic discovery implementation
 
 - Added an indexable `/topics` route driven exclusively by

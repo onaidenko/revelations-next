@@ -19,15 +19,18 @@ SSH_OPTIONS=(
 
 EXPECTED_COMMIT=""
 CONFIRM=""
+PREPARED_RELEASE=""
 
 usage() {
   cat <<'EOF'
 Usage:
   bash scripts/deploy-production.sh \
     --expected-commit <full-sha> \
+    --prepared-release .release/production/<full-sha> \
     --confirm deploy-production-<first-12-sha>
 
-The command deploys only origin/admin-editorial at the exact expected commit.
+The command deploys only an exact, previously prepared release from
+origin/admin-editorial at the expected commit. It never rebuilds locally.
 EOF
 }
 
@@ -39,6 +42,10 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     --confirm)
       CONFIRM="${2:-}"
+      shift 2
+      ;;
+    --prepared-release)
+      PREPARED_RELEASE="${2:-}"
       shift 2
       ;;
     --help|-h)
@@ -64,21 +71,26 @@ if [[ "$CONFIRM" != "$EXPECTED_CONFIRM" ]]; then
   exit 2
 fi
 
+if [[ -z "$PREPARED_RELEASE" ]]; then
+  echo "A prepared release directory is required." >&2
+  exit 2
+fi
+
 STAMP="$(date -u +%Y%m%d-%H%M%S)"
 LOCAL_TMP="$(mktemp -d "${TMPDIR:-/tmp}/revelations-production-deploy.XXXXXX")"
-PACKAGE_DIR="$LOCAL_TMP/release"
-ARCHIVE="$LOCAL_TMP/revelations-production-$STAMP.tar.gz"
 REMOTE_TMP="/tmp/revelations-production-deploy-$STAMP-$$"
 REMOTE_LOG="$LOCAL_TMP/remote-deploy.log"
-TAXONOMY_AUDIT_DIR="$LOCAL_TMP/taxonomy-audit"
+REMOTE_TMP_CREATED=0
 
 cleanup() {
   status=$?
   trap - EXIT
-  ssh "${SSH_OPTIONS[@]}" \
-    "$REMOTE" \
-    "rm -rf '$REMOTE_TMP'" \
-    >/dev/null 2>&1 || true
+  if [[ "$REMOTE_TMP_CREATED" -eq 1 ]]; then
+    ssh "${SSH_OPTIONS[@]}" \
+      "$REMOTE" \
+      "rm -rf '$REMOTE_TMP'" \
+      >/dev/null 2>&1 || true
+  fi
   rm -rf "$LOCAL_TMP"
   exit "$status"
 }
@@ -104,98 +116,66 @@ echo "working_tree=clean"
 echo "ahead_behind=0 0"
 
 echo
-echo "===== LOCAL VALIDATION ====="
-npm test
-npm run lint
-npm run audit:taxonomy -- \
-  --output-dir "$TAXONOMY_AUDIT_DIR"
+echo "===== PREPARED RELEASE VALIDATION ====="
+PREPARED_RELEASE="$(cd "$PREPARED_RELEASE" && pwd)"
+MANIFEST="$PREPARED_RELEASE/manifest.json"
+test -f "$MANIFEST"
 
-python3 - "$TAXONOMY_AUDIT_DIR/seo-2c-taxonomy-audit.json" <<'PY'
+readarray -t MANIFEST_VALUES < <(
+  python3 - "$MANIFEST" "$EXPECTED_COMMIT" "$BRANCH" "$SITE_URL" "$CMS_API_URL" <<'PY'
 import json
 import sys
 from pathlib import Path
 
-summary = json.loads(
-    Path(sys.argv[1]).read_text(encoding="utf-8")
-)["summary"]
-
-assert summary["critical"] == 0
-assert summary["drift_total"] == 0
-
-print("taxonomy_governance=passed")
+path, expected_commit, branch, site_url, cms_api_url = sys.argv[1:]
+data = json.loads(Path(path).read_text(encoding="utf-8"))
+checks = data.get("checks", {})
+assert data.get("schema_version") == 1
+assert data.get("expected_commit") == expected_commit
+assert data.get("branch") == branch
+assert data.get("site_url") == site_url
+assert data.get("cms_api_url") == cms_api_url
+assert isinstance(data.get("build_id"), str) and data["build_id"]
+assert isinstance(data.get("archive"), str) and data["archive"]
+assert Path(data["archive"]).name == data["archive"]
+assert isinstance(data.get("archive_sha256"), str) and len(data["archive_sha256"]) == 64
+for key in ("npm_test", "lint", "taxonomy_governance", "verifier_self_test", "standalone"):
+    assert checks.get(key) == "passed"
+assert checks.get("runtime_secret_files") == "absent"
+assert checks.get("staging_domain") == "absent"
+print(data["archive"])
+print(data["archive_sha256"])
+print(data["build_id"])
 PY
+)
 
-python3 "$VERIFY_SOURCE" self-test
-bash -n scripts/deploy-production.sh
+ARCHIVE="$PREPARED_RELEASE/${MANIFEST_VALUES[0]}"
+ARCHIVE_SHA="${MANIFEST_VALUES[1]}"
+BUILD_ID="${MANIFEST_VALUES[2]}"
+test -f "$ARCHIVE"
+test "$(shasum -a 256 "$ARCHIVE" | awk '{print $1}')" = "$ARCHIVE_SHA"
 
-echo
-echo "===== BUILD AND PACKAGE ====="
-npm run build:production
+ARTIFACT_CHECK_DIR="$LOCAL_TMP/artifact-check"
+mkdir -m 700 "$ARTIFACT_CHECK_DIR"
+tar -xzf "$ARCHIVE" -C "$ARTIFACT_CHECK_DIR"
+test -f "$ARTIFACT_CHECK_DIR/server.js"
+test -f "$ARTIFACT_CHECK_DIR/.next/BUILD_ID"
+test -f "$ARTIFACT_CHECK_DIR/RELEASE_COMMIT"
+test "$(cat "$ARTIFACT_CHECK_DIR/.next/BUILD_ID")" = "$BUILD_ID"
+test "$(cat "$ARTIFACT_CHECK_DIR/RELEASE_COMMIT")" = "$EXPECTED_COMMIT"
 
-test -d .next/standalone
-test -d .next/static
-test -f .next/BUILD_ID
-test -f .next/standalone/server.js
-
-BUILD_ID="$(cat .next/BUILD_ID)"
-test -n "$BUILD_ID"
-
-rm -rf "$PACKAGE_DIR"
-mkdir -p "$PACKAGE_DIR"
-cp -a .next/standalone/. "$PACKAGE_DIR/"
-mkdir -p "$PACKAGE_DIR/.next"
-rm -rf "$PACKAGE_DIR/.next/static"
-cp -a .next/static "$PACKAGE_DIR/.next/static"
-cp .next/BUILD_ID "$PACKAGE_DIR/.next/BUILD_ID"
-
-if [[ -d public ]]; then
-  rm -rf "$PACKAGE_DIR/public"
-  cp -a public "$PACKAGE_DIR/public"
-fi
-
-printf '%s\n' "$EXPECTED_COMMIT" > "$PACKAGE_DIR/RELEASE_COMMIT"
-
-find "$PACKAGE_DIR" \
-  -type f \
-  \( \
-    -name '.env' \
-    -o -name '.env.*' \
-    -o -name '*.pem' \
-    -o -name '*.key' \
-  \) \
-  -delete
-
-if find "$PACKAGE_DIR" \
-  -type f \
-  \( \
-    -name '.env' \
-    -o -name '.env.*' \
-    -o -name '*.pem' \
-    -o -name '*.key' \
-  \) \
+if find "$ARTIFACT_CHECK_DIR" -type f \
+  \( -name '.env' -o -name '.env.*' -o -name '*.pem' -o -name '*.key' \) \
   -print -quit | grep -q .
 then
-  echo "Artifact contains environment or key files." >&2
+  echo "Prepared artifact contains environment or key files." >&2
   exit 1
 fi
 
-if grep -R -a -F -q \
-  'https://staging.revelations.me' \
-  "$PACKAGE_DIR"
-then
-  echo "Artifact contains the staging domain." >&2
+if grep -R -a -F -q 'https://staging.revelations.me' "$ARTIFACT_CHECK_DIR"; then
+  echo "Prepared artifact contains the staging domain." >&2
   exit 1
 fi
-
-COPYFILE_DISABLE=1 tar \
-  --no-xattrs \
-  -C "$PACKAGE_DIR" \
-  -czf "$ARCHIVE" \
-  .
-
-ARCHIVE_SHA="$(
-  shasum -a 256 "$ARCHIVE" | awk '{print $1}'
-)"
 
 test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
@@ -211,6 +191,7 @@ echo "UPLOAD_START"
 ssh "${SSH_OPTIONS[@]}" \
   "$REMOTE" \
   "mkdir -m 700 -p '$REMOTE_TMP'"
+REMOTE_TMP_CREATED=1
 scp \
   "${SSH_OPTIONS[@]}" \
   "$ARCHIVE" \

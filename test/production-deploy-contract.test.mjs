@@ -7,6 +7,10 @@ const deployPath = new URL(
   '../scripts/deploy-production.sh',
   import.meta.url
 );
+const preparePath = new URL(
+  '../scripts/prepare-production-release.sh',
+  import.meta.url
+);
 const verifierPath = new URL(
   '../scripts/verify-production-release.py',
   import.meta.url
@@ -26,6 +30,7 @@ test('production deploy is fail-closed and transfers runtime environment only af
     '-o LogLevel=ERROR',
     '--expected-commit',
     '--confirm',
+    '--prepared-release',
     'deploy-production-${EXPECTED_COMMIT:0:12}',
     'test -z "$(git status --porcelain=v1 --untracked-files=all)"',
     'artifact_runtime_env=absent',
@@ -65,6 +70,11 @@ test('production deploy is fail-closed and transfers runtime environment only af
     'PIPELINE_STATUS=("${PIPESTATUS[@]}")',
     'REMOTE_STATUS="${PIPELINE_STATUS[0]}"',
     'TEE_STATUS="${PIPELINE_STATUS[1]}"',
+    'PREPARED_RELEASE="$(cd "$PREPARED_RELEASE" && pwd)"',
+    'manifest.json',
+    'Prepared artifact contains environment or key files.',
+    'Prepared artifact contains the staging domain.',
+    'REMOTE_TMP_CREATED=1',
   ]) {
     assert.ok(
       source.includes(required),
@@ -122,6 +132,14 @@ test('production deploy is fail-closed and transfers runtime environment only af
     /ssh\s+"\$\{SSH_OPTIONS\[@\]}"\s+"\$REMOTE"\s+"bash -s --/
   );
   assert.doesNotMatch(source, /StrictHostKeyChecking=no/);
+  assert.doesNotMatch(source, /npm run build:production/);
+  assert.doesNotMatch(source, /npm test/);
+  assert.doesNotMatch(source, /npm run lint/);
+  assert.ok(
+    source.indexOf('===== PREPARED RELEASE VALIDATION =====') <
+      source.indexOf('UPLOAD_START'),
+    'prepared artifact validation must complete before upload'
+  );
   const rawIps =
     source.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g) || [];
 
@@ -167,6 +185,37 @@ test('production deploy is fail-closed and transfers runtime environment only af
   assert.ok(publicManifestFailure > loopbackFailure);
   assert.doesNotMatch(source, /service_ports_not_found/);
   assert.doesNotMatch(source, /service_loopback_health_failed/);
+});
+
+test('prepare and deploy scripts keep the commit-bound release contract', async () => {
+  const source = await readFile(preparePath, 'utf8');
+  const deploySource = await readFile(deployPath, 'utf8');
+
+  for (const required of [
+    '.release/production',
+    'test ! -e "$RELEASE_DIR"',
+    'manifest.json',
+    '"schema_version": 1',
+    '"expected_commit": commit',
+    '"archive_sha256": archive_sha',
+    '"staging_domain": "absent"',
+    '"runtime_secret_files": "absent"',
+    'npm test',
+    'npm run lint',
+    'npm run audit:taxonomy',
+    'npm run build:production',
+    'PREPARE_SUCCESS',
+  ]) {
+    assert.ok(source.includes(required), `missing prepare safeguard: ${required}`);
+  }
+
+  assert.doesNotMatch(source, /\bssh\b/);
+  assert.doesNotMatch(source, /\bscp\b/);
+  assert.match(deploySource, /assert data\.get\("expected_commit"\) == expected_commit/);
+  assert.match(deploySource, /shasum -a 256 "\$ARCHIVE"/);
+  assert.match(deploySource, /assert data\.get\("cms_api_url"\) == cms_api_url/);
+  assert.match(deploySource, /assert checks\.get\("staging_domain"\) == "absent"/);
+  assert.match(deploySource, /assert checks\.get\("runtime_secret_files"\) == "absent"/);
 });
 
 test('production release verifier is sitemap-driven and passes its self-test', async () => {

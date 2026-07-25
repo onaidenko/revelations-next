@@ -284,10 +284,15 @@ approval requirement are canonical in
 
 ## Production frontend deployment
 
-- `scripts/deploy-production.sh` is the permanent production frontend
-  orchestrator. It requires an exact full commit SHA, a matching confirmation
-  token, a clean synchronized `admin-editorial` branch, full tests, lint,
-  taxonomy governance, a production build and a secret-free artifact.
+- Production frontend deployment is intentionally split into two permanent
+  commands. `scripts/prepare-production-release.sh` performs branch checks,
+  tests, lint, taxonomy governance, production build and secret-free package
+  creation without SSH or production mutation. It writes an immutable,
+  full-commit-bound artifact and JSON manifest below ignored
+  `.release/production/<full-sha>/`. `scripts/deploy-production.sh` requires
+  that prepared release, independently validates its manifest, checksum,
+  commit marker, build ID, production targets and artifact contents, then
+  performs the remote deployment.
 - The uploaded artifact never contains `.env`, `.env.*`, private keys or the
   staging domain. The isolated candidate receives only a generated non-secret
   environment containing the canonical production site URL and CMS API URL.
