@@ -85,7 +85,7 @@ fi
 
 STAMP="$(date -u +%Y%m%d-%H%M%S)"
 LOCAL_TMP="$(mktemp -d "${TMPDIR:-/tmp}/revelations-production-deploy.XXXXXX")"
-REMOTE_TMP="/tmp/revelations-production-deploy-$STAMP-$$"
+REMOTE_TMP="/var/tmp/revelations-production-deploy-$STAMP-$$"
 REMOTE_LOG="$LOCAL_TMP/remote-deploy.log"
 REMOTE_TMP_CREATED=0
 
