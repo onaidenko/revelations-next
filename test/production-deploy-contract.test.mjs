@@ -52,7 +52,11 @@ test('production deploy is fail-closed and transfers runtime environment only af
     'find_service_ports()',
     'service_loopback_not_ready_after_switch',
     'UPLOAD_START',
+    'run_with_heartbeat "UPLOAD" 10 scp',
+    '${label}_HEARTBEAT',
+    'trap stop_heartbeat TERM INT',
     'UPLOAD_COMPLETE',
+    'UPLOAD_VERIFIED',
     'REMOTE_DEPLOY_START',
     'REMOTE_PREFLIGHT',
     'ARCHIVE_VERIFIED',
@@ -139,10 +143,20 @@ test('production deploy is fail-closed and transfers runtime environment only af
   assert.doesNotMatch(source, /npm run lint/);
   assert.doesNotMatch(source, /\breadarray\b/);
   assert.doesNotMatch(source, /\bmapfile\b/);
+  assert.doesNotMatch(source, /wait -n/);
+  assert.doesNotMatch(source, /declare -A/);
   assert.ok(
     source.indexOf('===== PREPARED RELEASE VALIDATION =====') <
       source.indexOf('UPLOAD_START'),
     'prepared artifact validation must complete before upload'
+  );
+  assert.ok(
+    source.indexOf('UPLOAD_VERIFIED') < source.indexOf('REMOTE_DEPLOY_START'),
+    'remote candidate deployment must wait for upload verification'
+  );
+  assert.match(
+    source,
+    /test -f '\$REMOTE_TMP\/\$\(basename "\$ARCHIVE"\)'[\s\S]*test -f '\$REMOTE_TMP\/\$\(basename "\$VERIFY_SOURCE"\)'[\s\S]*sha256sum/
   );
   const rawIps =
     source.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g) || [];

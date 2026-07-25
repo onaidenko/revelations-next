@@ -1537,6 +1537,17 @@ Base44 и DNS/domain cutover.
   check and exits before SSH/SCP, so this path can be tested without a
   production deployment. Prepared release artifacts are ignored by ESLint.
 
+## Production upload execution-control hardening
+
+- A subsequent guarded deployment reached `UPLOAD_START`, but execution
+  control detached during a silent SCP transfer. Read-only inspection found
+  only the archive in its remote temporary directory; no verifier, candidate,
+  backup or release switch was created.
+- SCP now runs through a Bash 3.2-compatible heartbeat wrapper that preserves
+  the real child exit status. Upload completion is followed by a bounded,
+  read-only remote check for both uploaded files and the archive SHA-256 before
+  the remote candidate phase may begin.
+
 ## SEO 3B-1 topic discovery implementation
 
 - Added an indexable `/topics` route driven exclusively by

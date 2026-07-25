@@ -89,6 +89,52 @@ REMOTE_TMP="/tmp/revelations-production-deploy-$STAMP-$$"
 REMOTE_LOG="$LOCAL_TMP/remote-deploy.log"
 REMOTE_TMP_CREATED=0
 
+run_with_heartbeat() {
+  local label="$1"
+  local interval="$2"
+  local command_pid
+  local command_status
+  local heartbeat_pid
+
+  shift 2
+  "$@" &
+  command_pid=$!
+
+  (
+    heartbeat_sleep_pid=""
+
+    stop_heartbeat() {
+      if [[ -n "$heartbeat_sleep_pid" ]]; then
+        kill "$heartbeat_sleep_pid" >/dev/null 2>&1 || true
+      fi
+      exit 0
+    }
+
+    trap stop_heartbeat TERM INT
+
+    while kill -0 "$command_pid" >/dev/null 2>&1; do
+      sleep "$interval" &
+      heartbeat_sleep_pid=$!
+      wait "$heartbeat_sleep_pid" || true
+      heartbeat_sleep_pid=""
+      if kill -0 "$command_pid" >/dev/null 2>&1; then
+        echo "${label}_HEARTBEAT"
+      fi
+    done
+  ) &
+  heartbeat_pid=$!
+
+  set +e
+  wait "$command_pid"
+  command_status=$?
+  set -e
+
+  kill "$heartbeat_pid" >/dev/null 2>&1 || true
+  wait "$heartbeat_pid" >/dev/null 2>&1 || true
+
+  return "$command_status"
+}
+
 cleanup() {
   status=$?
   trap - EXIT
@@ -209,12 +255,19 @@ ssh "${SSH_OPTIONS[@]}" \
   "$REMOTE" \
   "mkdir -m 700 -p '$REMOTE_TMP'"
 REMOTE_TMP_CREATED=1
-scp \
+run_with_heartbeat "UPLOAD" 10 scp \
   "${SSH_OPTIONS[@]}" \
   "$ARCHIVE" \
   "$VERIFY_SOURCE" \
   "$REMOTE:$REMOTE_TMP/"
 echo "UPLOAD_COMPLETE"
+
+ssh "${SSH_OPTIONS[@]}" \
+  "$REMOTE" \
+  "test -f '$REMOTE_TMP/$(basename "$ARCHIVE")' && \
+   test -f '$REMOTE_TMP/$(basename "$VERIFY_SOURCE")' && \
+   test \"\$(sha256sum '$REMOTE_TMP/$(basename "$ARCHIVE")' | awk '{print \$1}')\" = '$ARCHIVE_SHA'"
+echo "UPLOAD_VERIFIED"
 
 echo
 echo "===== REMOTE CANDIDATE AND ATOMIC SWITCH ====="
