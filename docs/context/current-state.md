@@ -1495,6 +1495,24 @@ Base44 и DNS/domain cutover.
   frontend deploy, production runtime mutation, CMS/DB write, signed
   revalidation POST, OpenAI request, scanner run or publication occurred.
 
+## Production deploy non-interactive execution hardening
+
+- The guarded production deploy previously wrote all remote candidate and
+  atomic-switch output only to a local file. In a non-interactive execution
+  controller, that could make a healthy long-running remote phase appear
+  stalled even while its retries continued.
+- Remote output now streams to the controlling process and is retained in the
+  local remote log at the same time. The deploy preserves the remote SSH exit
+  status independently from `tee`, so a log-write failure cannot mask a remote
+  deployment failure.
+- SSH and SCP use the same batch-mode, bounded-connect and liveness options;
+  host-key verification remains enabled. Major remote phases and verification
+  retry attempts now emit concise progress markers.
+- This execution-hardening change preserves all existing candidate, backup,
+  atomic-switch, rollback and post-switch production safety semantics. No
+  production deployment or CMS, database, staging, content or runtime change
+  was performed.
+
 ## SEO 3B-1 topic discovery implementation
 
 - Added an indexable `/topics` route driven exclusively by

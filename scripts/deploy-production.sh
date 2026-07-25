@@ -9,6 +9,13 @@ LIVE_ROOT="/var/www/revelations-production"
 SITE_URL="https://revelations.me"
 CMS_API_URL="https://cms.revelations.me/wp-json/revelations/v1"
 VERIFY_SOURCE="$ROOT/scripts/verify-production-release.py"
+SSH_OPTIONS=(
+  -o BatchMode=yes
+  -o ConnectTimeout=15
+  -o ServerAliveInterval=15
+  -o ServerAliveCountMax=4
+  -o LogLevel=ERROR
+)
 
 EXPECTED_COMMIT=""
 CONFIRM=""
@@ -68,7 +75,10 @@ TAXONOMY_AUDIT_DIR="$LOCAL_TMP/taxonomy-audit"
 cleanup() {
   status=$?
   trap - EXIT
-  ssh "$REMOTE" "rm -rf '$REMOTE_TMP'" >/dev/null 2>&1 || true
+  ssh "${SSH_OPTIONS[@]}" \
+    "$REMOTE" \
+    "rm -rf '$REMOTE_TMP'" \
+    >/dev/null 2>&1 || true
   rm -rf "$LOCAL_TMP"
   exit "$status"
 }
@@ -197,17 +207,23 @@ echo "artifact_staging_domain=none"
 
 echo
 echo "===== UPLOAD ISOLATED RELEASE ====="
-ssh "$REMOTE" "mkdir -m 700 -p '$REMOTE_TMP'"
+echo "UPLOAD_START"
+ssh "${SSH_OPTIONS[@]}" \
+  "$REMOTE" \
+  "mkdir -m 700 -p '$REMOTE_TMP'"
 scp \
+  "${SSH_OPTIONS[@]}" \
   "$ARCHIVE" \
   "$VERIFY_SOURCE" \
   "$REMOTE:$REMOTE_TMP/"
+echo "UPLOAD_COMPLETE"
 
 echo
 echo "===== REMOTE CANDIDATE AND ATOMIC SWITCH ====="
+echo "REMOTE_DEPLOY_START"
 
 set +e
-ssh "$REMOTE" "bash -s -- \
+ssh "${SSH_OPTIONS[@]}" "$REMOTE" "bash -s -- \
   '$REMOTE_TMP' \
   '$(basename "$ARCHIVE")' \
   '$ARCHIVE_SHA' \
@@ -217,7 +233,7 @@ ssh "$REMOTE" "bash -s -- \
   '$SERVICE' \
   '$LIVE_ROOT' \
   '$SITE_URL' \
-  '$CMS_API_URL'" >"$REMOTE_LOG" 2>&1 <<'REMOTE_SCRIPT'
+  '$CMS_API_URL'" 2>&1 <<'REMOTE_SCRIPT' | tee "$REMOTE_LOG"
 set -euo pipefail
 
 REMOTE_TMP="$1"
@@ -268,10 +284,12 @@ verify_with_retries() {
   local index
 
   for index in $(seq 1 "$attempts"); do
+    echo "VERIFY_ATTEMPT=$index/$attempts base=$base"
     if python3 "$VERIFY" verify \
       --base "$base" \
       --manifest "$manifest"
     then
+      echo "VERIFY_SUCCESS=$index/$attempts base=$base"
       return 0
     fi
     sleep 5
@@ -322,6 +340,7 @@ on_exit() {
 }
 trap on_exit EXIT
 
+echo "REMOTE_PREFLIGHT"
 test "$(id -u)" -eq 0
 test -f "$ARCHIVE"
 test -f "$VERIFY"
@@ -335,6 +354,7 @@ if [[ "$(
 )" != "$EXPECTED_ARCHIVE_SHA" ]]; then
   fail "archive_sha_mismatch"
 fi
+echo "ARCHIVE_VERIFIED"
 
 if ! grep -Fqx \
   "NEXT_PUBLIC_SITE_URL=$SITE_URL" \
@@ -373,6 +393,7 @@ mkdir -m 700 -p "$BACKUP"
 cp -a "$LIVE_ROOT" "$BACKUP/live-release"
 systemctl cat "$SERVICE" > "$BACKUP/service-unit.txt"
 nginx -T > "$BACKUP/nginx-before.txt" 2>&1
+echo "BACKUP_CREATED"
 
 if ! python3 "$VERIFY" snapshot \
   --base "$SITE_URL" \
@@ -416,6 +437,7 @@ if find "$CANDIDATE" \
 then
   fail "candidate_artifact_contains_runtime_files"
 fi
+echo "CANDIDATE_CREATED"
 
 cat > "$CANDIDATE/.env.production" <<EOF
 NEXT_PUBLIC_SITE_URL=$SITE_URL
@@ -451,6 +473,7 @@ else
     >"$CANDIDATE_LOG" 2>&1 &
 fi
 CANDIDATE_PID=$!
+echo "CANDIDATE_STARTED"
 
 CANDIDATE_READY=0
 for _ in $(seq 1 40); do
@@ -486,6 +509,7 @@ if ! python3 "$VERIFY" snapshot \
 then
   fail "candidate_snapshot_failed"
 fi
+echo "CANDIDATE_VERIFIED"
 
 stop_candidate
 
@@ -502,6 +526,7 @@ fi
 nginx -t >/dev/null 2>&1 \
   || fail "nginx_invalid_before_switch"
 
+echo "ATOMIC_SWITCH_START"
 systemctl stop "$SERVICE" \
   || fail "service_stop_failed"
 
@@ -583,6 +608,7 @@ PY
 
 systemctl start "$SERVICE" \
   || fail "service_start_failed"
+echo "SERVICE_STARTED"
 
 SERVICE_READY=0
 LOOPBACK_PORT=""
@@ -635,6 +661,7 @@ fi
 nginx -t >/dev/null 2>&1 \
   || fail "nginx_invalid_after_switch"
 
+echo "PUBLIC_VERIFICATION_START"
 if ! verify_with_retries \
   "$SITE_URL" \
   "$CANDIDATE_MANIFEST" \
@@ -642,6 +669,7 @@ if ! verify_with_retries \
 then
   fail "public_candidate_match_failed"
 fi
+echo "PUBLIC_VERIFICATION_COMPLETE"
 
 if [[ "$(
   cat "$LIVE_ROOT/.next/BUILD_ID"
@@ -777,6 +805,7 @@ fi
 
 SUCCESS=1
 
+echo "DEPLOY_SUCCESS"
 echo "DEPLOY_RESULT=success"
 echo "FRONTEND_COMMIT=$EXPECTED_COMMIT"
 echo "BUILD_ID=$EXPECTED_BUILD_ID"
@@ -798,13 +827,18 @@ echo "ABOUT_REDIRECT_COUNT=$ABOUT_REDIRECT_COUNT"
 echo "ABOUT_REDIRECT=passed"
 echo "STAGING_STATUS=$STAGING_STATUS"
 REMOTE_SCRIPT
-REMOTE_STATUS=$?
+PIPELINE_STATUS=("${PIPESTATUS[@]}")
+REMOTE_STATUS="${PIPELINE_STATUS[0]}"
+TEE_STATUS="${PIPELINE_STATUS[1]}"
 set -e
-
-cat "$REMOTE_LOG"
 
 if [[ "$REMOTE_STATUS" -ne 0 ]]; then
   exit "$REMOTE_STATUS"
+fi
+
+if [[ "$TEE_STATUS" -ne 0 ]]; then
+  echo "Remote deployment log could not be written." >&2
+  exit "$TEE_STATUS"
 fi
 
 grep -Fqx 'DEPLOY_RESULT=success' "$REMOTE_LOG"

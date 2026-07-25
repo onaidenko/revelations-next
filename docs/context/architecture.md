@@ -304,9 +304,12 @@ approval requirement are canonical in
   revalidation-GET or staging-noindex check exits explicitly through `fail`.
   The EXIT trap restores the timestamped previous release and checks it against
   a pre-deploy public manifest.
-- Remote deploy output is captured without an SSH-to-`tee` pipeline. Success is
-  emitted only after runtime transfer, public verification and all surrounding
-  checks have passed.
+- Remote deployment output is streamed live to the controlling process while
+  being retained in the local deploy log. The SSH status and the log writer
+  status are checked separately, with an SSH failure taking precedence.
+  Shared SSH/SCP options enforce batch mode, bounded connection and liveness
+  checks without weakening host-key verification. Success is emitted only after
+  runtime transfer, public verification and all surrounding checks have passed.
 
 
 ## Public brand identity graph

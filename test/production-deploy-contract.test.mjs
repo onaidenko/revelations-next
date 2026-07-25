@@ -18,6 +18,12 @@ test('production deploy is fail-closed and transfers runtime environment only af
   for (const required of [
     'set -euo pipefail',
     'REMOTE="revelations-prod"',
+    'SSH_OPTIONS=(',
+    '-o BatchMode=yes',
+    '-o ConnectTimeout=15',
+    '-o ServerAliveInterval=15',
+    '-o ServerAliveCountMax=4',
+    '-o LogLevel=ERROR',
     '--expected-commit',
     '--confirm',
     'deploy-production-${EXPECTED_COMMIT:0:12}',
@@ -39,6 +45,26 @@ test('production deploy is fail-closed and transfers runtime environment only af
     'cgroup.procs',
     'find_service_ports()',
     'service_loopback_not_ready_after_switch',
+    'UPLOAD_START',
+    'UPLOAD_COMPLETE',
+    'REMOTE_DEPLOY_START',
+    'REMOTE_PREFLIGHT',
+    'ARCHIVE_VERIFIED',
+    'CANDIDATE_CREATED',
+    'CANDIDATE_STARTED',
+    'CANDIDATE_VERIFIED',
+    'BACKUP_CREATED',
+    'ATOMIC_SWITCH_START',
+    'SERVICE_STARTED',
+    'PUBLIC_VERIFICATION_START',
+    'PUBLIC_VERIFICATION_COMPLETE',
+    'DEPLOY_SUCCESS',
+    'VERIFY_ATTEMPT=$index/$attempts base=$base',
+    'VERIFY_SUCCESS=$index/$attempts base=$base',
+    '| tee "$REMOTE_LOG"',
+    'PIPELINE_STATUS=("${PIPESTATUS[@]}")',
+    'REMOTE_STATUS="${PIPELINE_STATUS[0]}"',
+    'TEE_STATUS="${PIPELINE_STATUS[1]}"',
   ]) {
     assert.ok(
       source.includes(required),
@@ -73,10 +99,29 @@ test('production deploy is fail-closed and transfers runtime environment only af
   assert.ok(publicFailure > switchRelease);
   assert.ok(successMarker > publicFailure);
 
-  assert.doesNotMatch(
+  assert.match(
     source,
-    /ssh\s+[^;\n]*\|\s*tee/
+    /ssh[\s\S]*?2>&1\s+<<'REMOTE_SCRIPT'\s*\|\s*tee\s+"\$REMOTE_LOG"/
   );
+  assert.ok(
+    source.indexOf('if [[ "$REMOTE_STATUS" -ne 0 ]]') <
+      source.indexOf('if [[ "$TEE_STATUS" -ne 0 ]]'),
+    'remote SSH failure must take precedence over a tee failure'
+  );
+  assert.match(
+    source,
+    /ssh\s+"\$\{SSH_OPTIONS\[@\]\}"\s+\\\n\s*"\$REMOTE"\s+\\\n\s*"rm -rf '\$REMOTE_TMP'"/
+  );
+  assert.match(
+    source,
+    /ssh\s+"\$\{SSH_OPTIONS\[@\]\}"\s+\\\n\s*"\$REMOTE"\s+\\\n\s*"mkdir -m 700 -p '\$REMOTE_TMP'"/
+  );
+  assert.match(source, /scp\s+\\\n\s*"\$\{SSH_OPTIONS\[@\]\}"/);
+  assert.match(
+    source,
+    /ssh\s+"\$\{SSH_OPTIONS\[@\]}"\s+"\$REMOTE"\s+"bash -s --/
+  );
+  assert.doesNotMatch(source, /StrictHostKeyChecking=no/);
   const rawIps =
     source.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g) || [];
 
