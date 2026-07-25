@@ -10,6 +10,7 @@ export default defineConfig([
     'coverage/**',
     'deploy-package/**',
     'deploy-production/**',
+    '.release/**',
   ]),
   {
     rules: {

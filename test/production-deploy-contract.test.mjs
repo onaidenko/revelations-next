@@ -31,6 +31,7 @@ test('production deploy is fail-closed and transfers runtime environment only af
     '--expected-commit',
     '--confirm',
     '--prepared-release',
+    '--validate-prepared-release',
     'deploy-production-${EXPECTED_COMMIT:0:12}',
     'test -z "$(git status --porcelain=v1 --untracked-files=all)"',
     'artifact_runtime_env=absent',
@@ -75,6 +76,7 @@ test('production deploy is fail-closed and transfers runtime environment only af
     'Prepared artifact contains environment or key files.',
     'Prepared artifact contains the staging domain.',
     'REMOTE_TMP_CREATED=1',
+    'PREPARED_RELEASE_VALIDATION_SUCCESS',
   ]) {
     assert.ok(
       source.includes(required),
@@ -135,6 +137,8 @@ test('production deploy is fail-closed and transfers runtime environment only af
   assert.doesNotMatch(source, /npm run build:production/);
   assert.doesNotMatch(source, /npm test/);
   assert.doesNotMatch(source, /npm run lint/);
+  assert.doesNotMatch(source, /\breadarray\b/);
+  assert.doesNotMatch(source, /\bmapfile\b/);
   assert.ok(
     source.indexOf('===== PREPARED RELEASE VALIDATION =====') <
       source.indexOf('UPLOAD_START'),
@@ -211,6 +215,8 @@ test('prepare and deploy scripts keep the commit-bound release contract', async 
 
   assert.doesNotMatch(source, /\bssh\b/);
   assert.doesNotMatch(source, /\bscp\b/);
+  assert.doesNotMatch(source, /\breadarray\b/);
+  assert.doesNotMatch(source, /\bmapfile\b/);
   assert.match(deploySource, /assert data\.get\("expected_commit"\) == expected_commit/);
   assert.match(deploySource, /shasum -a 256 "\$ARCHIVE"/);
   assert.match(deploySource, /assert data\.get\("cms_api_url"\) == cms_api_url/);

@@ -20,6 +20,7 @@ SSH_OPTIONS=(
 EXPECTED_COMMIT=""
 CONFIRM=""
 PREPARED_RELEASE=""
+VALIDATE_PREPARED_RELEASE=0
 
 usage() {
   cat <<'EOF'
@@ -28,9 +29,11 @@ Usage:
     --expected-commit <full-sha> \
     --prepared-release .release/production/<full-sha> \
     --confirm deploy-production-<first-12-sha>
+    [--validate-prepared-release]
 
 The command deploys only an exact, previously prepared release from
 origin/admin-editorial at the expected commit. It never rebuilds locally.
+The optional validation mode exits before any SSH or SCP operation.
 EOF
 }
 
@@ -47,6 +50,10 @@ while [[ "$#" -gt 0 ]]; do
     --prepared-release)
       PREPARED_RELEASE="${2:-}"
       shift 2
+      ;;
+    --validate-prepared-release)
+      VALIDATE_PREPARED_RELEASE=1
+      shift
       ;;
     --help|-h)
       usage
@@ -121,7 +128,10 @@ PREPARED_RELEASE="$(cd "$PREPARED_RELEASE" && pwd)"
 MANIFEST="$PREPARED_RELEASE/manifest.json"
 test -f "$MANIFEST"
 
-readarray -t MANIFEST_VALUES < <(
+MANIFEST_VALUES=()
+while IFS= read -r manifest_value; do
+  MANIFEST_VALUES+=("$manifest_value")
+done < <(
   python3 - "$MANIFEST" "$EXPECTED_COMMIT" "$BRANCH" "$SITE_URL" "$CMS_API_URL" <<'PY'
 import json
 import sys
@@ -148,6 +158,8 @@ print(data["archive_sha256"])
 print(data["build_id"])
 PY
 )
+
+test "${#MANIFEST_VALUES[@]}" -eq 3
 
 ARCHIVE="$PREPARED_RELEASE/${MANIFEST_VALUES[0]}"
 ARCHIVE_SHA="${MANIFEST_VALUES[1]}"
@@ -184,6 +196,11 @@ echo "artifact_sha=$ARCHIVE_SHA"
 echo "artifact_runtime_env=absent"
 echo "artifact_secret_files=none"
 echo "artifact_staging_domain=none"
+
+if [[ "$VALIDATE_PREPARED_RELEASE" -eq 1 ]]; then
+  echo "PREPARED_RELEASE_VALIDATION_SUCCESS"
+  exit 0
+fi
 
 echo
 echo "===== UPLOAD ISOLATED RELEASE ====="

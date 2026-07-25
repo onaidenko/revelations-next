@@ -1527,6 +1527,16 @@ Base44 и DNS/domain cutover.
 - Existing bounded SSH transport, streamed remote logging, candidate checks,
   backup, atomic switch, rollback and public verification remain unchanged.
 
+## Production deploy macOS Bash compatibility
+
+- The deployment Mac uses GNU Bash 3.2.57. The prepared-release deploy path
+  originally used Bash 4 `readarray`, which failed locally before upload and
+  therefore made no production mutation.
+- Manifest values now use a Bash 3.2-compatible `while IFS= read -r` loop.
+  A guarded `--validate-prepared-release` mode runs every local pre-upload
+  check and exits before SSH/SCP, so this path can be tested without a
+  production deployment. Prepared release artifacts are ignored by ESLint.
+
 ## SEO 3B-1 topic discovery implementation
 
 - Added an indexable `/topics` route driven exclusively by
