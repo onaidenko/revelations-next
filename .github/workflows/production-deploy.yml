@@ -1,0 +1,73 @@
+name: Production frontend deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Full commit SHA from admin-editorial approved for production
+        required: true
+        type: string
+
+concurrency:
+  group: revelations-production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Guarded production deploy
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Verify approved branch commit
+        run: |
+          test "${{ inputs.commit }}" = "$(git rev-parse HEAD)"
+          git fetch origin admin-editorial
+          git merge-base --is-ancestor HEAD origin/admin-editorial
+      - name: Configure production SSH
+        env:
+          SSH_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.PRODUCTION_SSH_HOST }}
+          SSH_USER: ${{ secrets.PRODUCTION_SSH_USER }}
+          KNOWN_HOSTS: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$SSH_KEY"; test -n "$SSH_HOST"; test -n "$SSH_USER"; test -n "$KNOWN_HOSTS"
+          mkdir -p ~/.ssh; chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519; chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts; chmod 600 ~/.ssh/known_hosts
+          printf 'Host revelations-prod\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/id_ed25519\n  IdentitiesOnly yes\n' "$SSH_HOST" "$SSH_USER" > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+      - name: Install dependencies once
+        run: npm ci
+      - name: Prepare immutable release once
+        run: npm run prepare:production-release -- --expected-commit "${{ inputs.commit }}"
+      - name: Deploy guarded release
+        run: |
+          COMMIT="${{ inputs.commit }}"
+          npm run deploy:production -- \
+            --expected-commit "$COMMIT" \
+            --prepared-release ".release/production/$COMMIT" \
+            --confirm "deploy-production-${COMMIT:0:12}"
+      - name: Report release
+        if: always()
+        run: |
+          MANIFEST=".release/production/${{ inputs.commit }}/manifest.json"
+          if test -f "$MANIFEST"; then
+            python3 - "$MANIFEST" <<'PY'
+          import json, sys
+          data=json.load(open(sys.argv[1]))
+          print(f"COMMIT={data['expected_commit']}")
+          print(f"BUILD_ID={data['build_id']}")
+          PY
+          fi

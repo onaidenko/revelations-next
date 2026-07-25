@@ -1548,6 +1548,17 @@ Base44 и DNS/domain cutover.
   read-only remote check for both uploaded files and the archive SHA-256 before
   the remote candidate phase may begin.
 
+## GitHub Actions production deployment
+
+- Codex execution control can terminate SCP even while heartbeats are emitted,
+  so the canonical production path is now manual GitHub Actions deployment:
+  code push -> staging -> product-owner approval -> protected `production`
+  environment workflow dispatch for an exact `admin-editorial` commit.
+- The workflow installs dependencies once, prepares the immutable release once,
+  and reuses the existing guarded candidate, backup, atomic-switch, rollback
+  and public-verification script. SSH material exists only in GitHub Actions
+  production environment secrets; the CMS is not part of the workflow.
+
 ## SEO 3B-1 topic discovery implementation
 
 - Added an indexable `/topics` route driven exclusively by

@@ -52,9 +52,6 @@ test('production deploy is fail-closed and transfers runtime environment only af
     'find_service_ports()',
     'service_loopback_not_ready_after_switch',
     'UPLOAD_START',
-    'run_with_heartbeat "UPLOAD" 10 scp',
-    '${label}_HEARTBEAT',
-    'trap stop_heartbeat TERM INT',
     'UPLOAD_COMPLETE',
     'UPLOAD_VERIFIED',
     'REMOTE_DEPLOY_START',
@@ -143,8 +140,6 @@ test('production deploy is fail-closed and transfers runtime environment only af
   assert.doesNotMatch(source, /npm run lint/);
   assert.doesNotMatch(source, /\breadarray\b/);
   assert.doesNotMatch(source, /\bmapfile\b/);
-  assert.doesNotMatch(source, /wait -n/);
-  assert.doesNotMatch(source, /declare -A/);
   assert.ok(
     source.indexOf('===== PREPARED RELEASE VALIDATION =====') <
       source.indexOf('UPLOAD_START'),
