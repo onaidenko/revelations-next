@@ -46,6 +46,7 @@ for i in $(seq 1 20); do curl -fsS --max-time 3 http://127.0.0.1:3103/ >"$tmp/ho
 grep -o -E '(href|src)="/_next/static/[^"]+"' "$tmp/home.html" | sed -E 's/^[^"]+"//; s/"$//' | sort -u >"$tmp/assets"
 test -s "$tmp/assets"; while IFS= read -r asset; do test "$(curl -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1:3103$asset")" = 200; done <"$tmp/assets"
 kill "$pid"; wait "$pid" 2>/dev/null || true; trap - EXIT
+test -f "$live/.env.production"; cp -a "$live/.env.production" "$candidate/.env.production"
 chown -R deploy:deploy "$candidate"; mv "$candidate" "$next"; mv "$live" "$backup"; mv "$next" "$live"; systemctl restart "$service"
 for i in $(seq 1 20); do systemctl is-active --quiet "$service" && curl -fsS --max-time 3 http://127.0.0.1:3001/ >/dev/null && break; sleep 1; done
 test "$(cat "$live/RELEASE_COMMIT")" = "$commit"; test "$(cat "$live/.next/BUILD_ID")" = "$build"
