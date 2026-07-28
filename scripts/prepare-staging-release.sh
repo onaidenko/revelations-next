@@ -15,7 +15,11 @@ fi
 test -z "$(git status --porcelain=v1 --untracked-files=all)"
 git fetch origin "$BRANCH"
 test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
-test "$(git rev-parse "origin/$BRANCH")" = "$EXPECTED_COMMIT"
+if [[ "${REVELATIONS_ALLOW_DETACHED_RELEASE:-0}" = 1 ]]; then
+  git merge-base --is-ancestor "$EXPECTED_COMMIT" "origin/$BRANCH"
+else
+  test "$(git rev-parse "origin/$BRANCH")" = "$EXPECTED_COMMIT"
+fi
 
 RELEASE_DIR="$ROOT/.release/staging/$EXPECTED_COMMIT"
 STAGE_DIR="$ROOT/.release/staging/.${EXPECTED_COMMIT}.prepare-$$"
