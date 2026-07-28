@@ -3,7 +3,6 @@ import SiteFooter from '@/components/site-footer';
 import { buildPageMetadata } from '@/lib/seo';
 import {
   CONTACT_EMAIL,
-  DEFAULT_DESCRIPTION,
   PUBLISHER_BRAND_NAME,
   SITE_URL,
   SOCIAL_PROFILES,
@@ -12,7 +11,8 @@ import {
 export const metadata = buildPageMetadata({
   title:
     'About - Future-Facing Media from Dubai',
-  description: DEFAULT_DESCRIPTION,
+  description:
+    'Learn how REVELATIONS, a Dubai-based future-facing media platform, covers technology, founders, culture, places and the ideas shaping what comes next.',
   pathname: '/about',
   siteUrl: SITE_URL,
 });

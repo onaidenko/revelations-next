@@ -58,3 +58,16 @@ test('every public sitemap page delegates its metadata to the shared helper', as
     }
   }
 });
+
+test('About uses its approved unique metadata description', async () => {
+  const about = await readFile(
+    new URL('../app/about/page.jsx', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(
+    about,
+    /Learn how REVELATIONS, a Dubai-based future-facing media platform, covers technology, founders, culture, places and the ideas shaping what comes next\./
+  );
+  assert.doesNotMatch(about, /description: DEFAULT_DESCRIPTION/);
+});
