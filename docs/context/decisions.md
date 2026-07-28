@@ -159,6 +159,12 @@ cannot override that Constitution without explicit product-owner approval.
 
 ## Public frontend
 
+- **Решение:** staging artifact обязан включать standalone, `.next/static`,
+  `.next/BUILD_ID` и `public`; candidate до switch проверяет checksum, build
+  identity и HTTP 200 для всех CSS/JS, referenced homepage.
+- **Причина:** standalone output сам по себе не содержит `.next/static` и
+  может отдать current HTML без стилей и client bundles.
+
 - **Решение:** legacy article URLs обслуживаются App Router route handler
   `app/article/[legacy]/route.js`, а не Proxy или generic redirect в
   `next.config.mjs`. Он редиректит только проверенные Base44 IDs и canonical

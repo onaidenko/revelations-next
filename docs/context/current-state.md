@@ -1,5 +1,15 @@
 # Текущее состояние
 
+## Staging release packaging
+
+- Staging releases are prepared and deployed through dedicated staging-only
+  scripts. Their artifact includes standalone runtime files, `.next/static`,
+  `.next/BUILD_ID` and `public`; checksum, commit and build ID are verified
+  before switch. Candidate validation requires every CSS/JS asset referenced
+  by its homepage to return 200.
+- This closes the prior failure where a standalone-only staging artifact served
+  current HTML but lacked all Next static assets.
+
 ## Legacy article URL handling
 
 - Legacy `/article/{value}` handling now lives in the App Router route handler

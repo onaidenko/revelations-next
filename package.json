@@ -7,6 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "build:production": "bash scripts/build-production.sh",
+    "prepare:staging-release": "bash scripts/prepare-staging-release.sh",
+    "deploy:staging": "bash scripts/deploy-staging.sh",
     "prepare:production-release": "bash scripts/prepare-production-release.sh",
     "start": "next start",
     "lint": "eslint .",

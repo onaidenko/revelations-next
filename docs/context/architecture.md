@@ -219,6 +219,11 @@ approval requirement are canonical in
 
 ## SEO foundation
 
+- Staging deployment artifacts package the standalone runtime together with
+  `.next/static`, `.next/BUILD_ID` and `public`. The staging candidate checks
+  archive checksum/build identity and verifies its homepage-referenced CSS/JS
+  assets before an atomic switch.
+
 - Legacy article requests use `app/article/[legacy]/route.js`. It maps only
   verified Base44 IDs and canonical fallback slugs from `data/articles.json`
   to their canonical article path with a single 308 redirect; every unknown
