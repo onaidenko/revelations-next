@@ -330,6 +330,16 @@ approval requirement are canonical in
 
 ## Public brand identity graph
 
+## Podcast structured data
+
+- `app/podcast/page.jsx` renders the page-specific `PodcastSeries` JSON-LD;
+  its stable ID is `${SITE_URL}/podcast#podcast-series` and its publisher is
+  the existing NewsMediaOrganization ID.
+- `app/[slug]/page.jsx` selects `PodcastEpisode` JSON-LD only through the pure
+  `buildPodcastEpisodeJsonLd` eligibility gate in `lib/seo.js`; all other
+  pages retain the existing Article or NewsArticle entity. Article breadcrumb
+  behavior is unchanged.
+
 - `REVELATIONS` is the canonical publication and site name.
 - `Revelations Media` and `revelations.me` are alternative names.
 - The root graph identifies REVELATIONS as a `NewsMediaOrganization`

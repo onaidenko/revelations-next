@@ -71,3 +71,33 @@ test('About uses its approved unique metadata description', async () => {
   );
   assert.doesNotMatch(about, /description: DEFAULT_DESCRIPTION/);
 });
+
+test('Podcast uses its approved page-specific metadata and visible introduction', async () => {
+  const podcast = await readFile(
+    new URL('../app/podcast/page.jsx', import.meta.url),
+    'utf8'
+  );
+  const sectionPage = await readFile(
+    new URL('../components/section-page.jsx', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(
+    podcast,
+    /REVELATIONS Podcast - Dubai Tech & Founder Conversations/
+  );
+  assert.match(
+    podcast,
+    /A Dubai-based podcast featuring founders, investors and builders across AI, fintech, Web3 and culture\. Watch REVELATIONS episodes and explore the stories behind the future\./
+  );
+  assert.match(
+    podcast,
+    /title:\s*\{\s*absolute: PODCAST_TITLE/
+  );
+  assert.match(podcast, /buildPodcastSeriesJsonLd/);
+  assert.match(
+    podcast,
+    /Based in Dubai, REVELATIONS brings together conversations with founders, investors and builders across AI, fintech, Web3, technology and culture/
+  );
+  assert.match(sectionPage, /\{introduction\}/);
+});

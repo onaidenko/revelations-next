@@ -19,7 +19,10 @@ const STICKY_RIGHT = new Set([
   'unspoken',
 ]);
 
-export default async function SectionPage({ sectionId }) {
+export default async function SectionPage({
+  sectionId,
+  introduction,
+}) {
   const section = SECTIONS[sectionId];
 
   if (!section) {
@@ -75,6 +78,12 @@ export default async function SectionPage({ sectionId }) {
           <p className="max-w-xl font-body text-base leading-relaxed text-muted-foreground">
             {section.description}
           </p>
+
+          {introduction && (
+            <p className="mt-4 max-w-xl font-body text-base leading-relaxed text-muted-foreground">
+              {introduction}
+            </p>
+          )}
 
           <div className="mt-10 h-px bg-gradient-to-r from-rose/40 via-border/30 to-transparent" />
         </section>

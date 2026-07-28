@@ -332,6 +332,18 @@ cannot override that Constitution without explicit product-owner approval.
 
 ## Brand identity
 
+## Podcast SEO
+
+- **Решение:** `/podcast` uses one `PodcastSeries` entity with only the
+  existing publisher relationship, canonical URL and approved page metadata.
+  No host, RSS, platform listing, duration or episode count is asserted.
+- **Решение:** an episode page substitutes the generic Article JSON-LD with a
+  single `PodcastEpisode` only when its existing title, SEO description or
+  excerpt, publication date, cover image and YouTube URL are present. This
+  prevents schema duplication and unsupported episode claims.
+- **Решение:** thin episode bodies are identified for reporting only; this SEO
+  stage never rewrites them or changes CMS records.
+
 - **Решение:** canonical entity — REVELATIONS, a Dubai-based
   future-facing media publication.
 - **Решение:** JULS указывается как publishing brand and parent

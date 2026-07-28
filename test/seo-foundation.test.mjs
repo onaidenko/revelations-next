@@ -9,6 +9,8 @@ import {
   buildArticleBreadcrumbJsonLd,
   buildArticleJsonLd,
   buildArticleMetadata,
+  buildPodcastEpisodeJsonLd,
+  buildPodcastSeriesJsonLd,
   buildMainSitemapEntries,
   buildNewsSitemapXml,
   buildOrganizationJsonLd,
@@ -371,5 +373,45 @@ test('article, site graph and breadcrumbs keep images and authors truthful', () 
   assert.equal(
     website.publisher['@id'],
     organizationId
+  );
+});
+
+test('podcast schema only uses complete existing episode data', () => {
+  const series = buildPodcastSeriesJsonLd({
+    siteUrl: 'https://revelations.me',
+    organizationId,
+    name: 'REVELATIONS Podcast',
+    description: 'Conversations grounded in experience.',
+  });
+  const episode = buildPodcastEpisodeJsonLd(
+    {
+      ...article,
+      section: 'podcast',
+      seo_description: 'An existing podcast episode description.',
+      youtube_url: 'https://www.youtube.com/watch?v=example',
+    },
+    {
+      siteUrl: 'https://revelations.me',
+      seriesId: series['@id'],
+    }
+  );
+
+  assert.equal(series['@type'], 'PodcastSeries');
+  assert.equal(series.url, 'https://revelations.me/podcast');
+  assert.equal(episode['@type'], 'PodcastEpisode');
+  assert.equal(episode.partOfSeries['@id'], series['@id']);
+  assert.equal(
+    episode.associatedMedia.contentUrl,
+    'https://www.youtube.com/watch?v=example'
+  );
+  assert.equal(
+    buildPodcastEpisodeJsonLd(
+      { ...article, section: 'podcast', youtube_url: '' },
+      {
+        siteUrl: 'https://revelations.me',
+        seriesId: series['@id'],
+      }
+    ),
+    null
   );
 });

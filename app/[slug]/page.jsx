@@ -34,6 +34,7 @@ import {
   buildArticleBreadcrumbJsonLd,
   buildArticleJsonLd,
   buildArticleMetadata,
+  buildPodcastEpisodeJsonLd,
   serializeJsonLd,
 } from '@/lib/seo';
 
@@ -84,12 +85,20 @@ export default async function ArticlePage({
   const publicationDate =
     article.publication_date ||
     article.created_date;
-  const jsonLd = buildArticleJsonLd(article, {
+  const articleJsonLd = buildArticleJsonLd(article, {
     siteUrl: SITE_URL,
     siteName: SITE_NAME,
     logoUrl: BRAND_LOGO_URL,
     organizationId: ORGANIZATION_ID,
   });
+  const podcastEpisodeJsonLd = buildPodcastEpisodeJsonLd(
+    article,
+    {
+      siteUrl: SITE_URL,
+      seriesId: `${SITE_URL}/podcast#podcast-series`,
+    }
+  );
+  const jsonLd = podcastEpisodeJsonLd || articleJsonLd;
   const breadcrumbs =
     buildArticleBreadcrumbJsonLd(
       article,

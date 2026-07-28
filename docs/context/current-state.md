@@ -1,5 +1,19 @@
 # Текущее состояние
 
+## Podcast SEO (staging-first)
+
+- `/podcast` has the approved page-specific title and description, retains the
+  exact H1 and canonical tagline, and adds a concise Dubai-based introduction.
+- The page emits one `PodcastSeries` JSON-LD entity linked to the existing
+  publisher. Published podcast pages emit one `PodcastEpisode` entity only
+  when their existing title, description, publication date, cover and YouTube
+  URL are all present; otherwise the existing Article schema remains.
+- The implementation does not add hosts, duration, episode numbers, feeds,
+  transcripts, biographies or CMS data. Thin episode bodies are reported for
+  editorial follow-up and are not rewritten.
+
+Дата фиксации: 2026-07-28.
+
 ## Staging release packaging
 
 - Staging releases are prepared and deployed through dedicated staging-only
