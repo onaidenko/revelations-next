@@ -5,11 +5,15 @@ import test from 'node:test';
 const read = (path) => readFile(new URL(path, import.meta.url), 'utf8');
 
 test('legacy Access route redirects directly to its lowercase canonical URL', async () => {
-  const config = await read('../next.config.mjs');
+  const proxy = await read('../proxy.js');
 
   assert.match(
-    config,
-    /source: '\/Access', destination: '\/access', permanent: true/
+    proxy,
+    /request\.nextUrl\.pathname === '\/Access'/
+  );
+  assert.match(
+    proxy,
+    /url\.pathname = '\/access'/
   );
 });
 
