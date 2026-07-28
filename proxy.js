@@ -50,5 +50,5 @@ export function proxy(request) {
 }
 
 export const config = {
-  matcher: '/Access',
+  matcher: ['/Access', '/article/:path*'],
 };
