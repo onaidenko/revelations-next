@@ -26,3 +26,16 @@ test('section and author templates emit their dedicated breadcrumbs', async () =
   assert.match(authorPage, /title: author\.name/);
   assert.doesNotMatch(authorPage, /title: `\$\{author\.name\} - REVELATIONS`/);
 });
+
+test('legacy Base44 article IDs have unique canonical article mappings', async () => {
+  const articles = JSON.parse(await read('../data/articles.json'));
+  const ids = articles.map((article) => String(article.id));
+  const slugs = articles.map((article) => article.slug);
+  const proxy = await read('../proxy.js');
+
+  assert.equal(new Set(ids).size, ids.length);
+  assert.ok(slugs.every(Boolean));
+  assert.match(proxy, /LEGACY_ARTICLE_ROUTES/);
+  assert.match(proxy, /\^\\d\+\$/);
+  assert.match(proxy, /\^\[a-f0-9\]\{24\}/);
+});
