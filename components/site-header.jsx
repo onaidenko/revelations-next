@@ -40,7 +40,7 @@ export default function SiteHeader() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+      className={`site-header fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
         scrolled
           ? 'border-b border-border/20 bg-background/95 backdrop-blur-md'
           : 'bg-transparent'
@@ -104,49 +104,55 @@ export default function SiteHeader() {
           </nav>
         </div>
 
-        <div className="flex h-20 items-center justify-between md:hidden">
-          <Link href="/" aria-label="REVELATIONS home">
-            <img
-              src={LOGO_URL}
-              alt="REVELATIONS"
-              className="h-10 w-auto dark:invert"
-            />
-          </Link>
+        <div className="md:hidden">
+          <div className="flex h-20 items-center justify-between">
+            <Link href="/" aria-label="REVELATIONS home">
+              <img
+                src={LOGO_URL}
+                alt="REVELATIONS"
+                className="h-10 w-auto dark:invert"
+              />
+            </Link>
 
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
 
-            <button
-              type="button"
-              onClick={() =>
-                setMenuState({
-                  pathname,
-                  open: !menuOpen,
-                })
-              }
-              aria-label="Toggle menu"
-              aria-expanded={menuOpen}
-              className="flex h-10 w-10 items-center justify-center"
-            >
-              <span className="relative flex h-5 w-5 flex-col items-center justify-center gap-1.5">
-                <span
-                  className={`block h-px w-5 bg-foreground transition-all duration-300 ${
-                    menuOpen ? 'absolute rotate-45' : ''
-                  }`}
-                />
-                <span
-                  className={`block h-px w-5 bg-foreground transition-all duration-300 ${
-                    menuOpen ? 'opacity-0' : ''
-                  }`}
-                />
-                <span
-                  className={`block h-px w-5 bg-foreground transition-all duration-300 ${
-                    menuOpen ? 'absolute -rotate-45' : ''
-                  }`}
-                />
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setMenuState({
+                    pathname,
+                    open: !menuOpen,
+                  })
+                }
+                aria-label="Toggle menu"
+                aria-expanded={menuOpen}
+                className="flex h-10 w-10 items-center justify-center"
+              >
+                <span className="relative flex h-5 w-5 flex-col items-center justify-center gap-1.5">
+                  <span
+                    className={`block h-px w-5 bg-foreground transition-all duration-300 ${
+                      menuOpen ? 'absolute rotate-45' : ''
+                    }`}
+                  />
+                  <span
+                    className={`block h-px w-5 bg-foreground transition-all duration-300 ${
+                      menuOpen ? 'opacity-0' : ''
+                    }`}
+                  />
+                  <span
+                    className={`block h-px w-5 bg-foreground transition-all duration-300 ${
+                      menuOpen ? 'absolute -rotate-45' : ''
+                    }`}
+                  />
+                </span>
+              </button>
+            </div>
           </div>
+
+          <p className="mx-auto max-w-[22rem] pb-4 text-center font-mono text-[8px] uppercase leading-3 tracking-[0.18em] text-muted-foreground/60">
+            {BRAND_TAGLINE}
+          </p>
         </div>
       </div>
 

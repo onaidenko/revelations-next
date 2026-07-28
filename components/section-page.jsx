@@ -7,7 +7,7 @@ import SectionArticleCard from '@/components/section-article-card';
 
 import { getArticlesBySection } from '@/lib/cms-articles';
 import { SECTIONS } from '@/lib/sections';
-import { BRAND_NAME, BRAND_TAGLINE, SITE_URL } from '@/lib/site';
+import { BRAND_NAME, SITE_URL } from '@/lib/site';
 import {
   buildSectionBreadcrumbJsonLd,
   serializeJsonLd,
@@ -68,12 +68,6 @@ export default async function SectionPage({
           <h1 className="mb-4 font-display text-5xl tracking-tight text-foreground md:text-7xl lg:text-8xl">
             {isPodcast ? `${BRAND_NAME} Podcast` : section.title}
           </h1>
-
-          {isPodcast && (
-            <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.16em] text-foreground">
-              {BRAND_TAGLINE}
-            </p>
-          )}
 
           <p className="max-w-xl font-body text-base leading-relaxed text-muted-foreground">
             {section.description}
