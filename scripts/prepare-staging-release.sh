@@ -30,6 +30,9 @@ test ! -e "$RELEASE_DIR"
 mkdir -m 700 "$STAGE_DIR"
 trap 'rm -rf "$STAGE_DIR"' EXIT
 
+if [[ ! -d node_modules/he ]]; then
+  npm ci
+fi
 npm test
 npm run lint
 rm -rf .next
