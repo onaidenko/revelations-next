@@ -27,15 +27,19 @@ test('section and author templates emit their dedicated breadcrumbs', async () =
   assert.doesNotMatch(authorPage, /title: `\$\{author\.name\} - REVELATIONS`/);
 });
 
-test('legacy Base44 article IDs have unique canonical article mappings', async () => {
+test('legacy article route has unique mappings and fails closed for unknown values', async () => {
   const articles = JSON.parse(await read('../data/articles.json'));
   const ids = articles.map((article) => String(article.id));
   const slugs = articles.map((article) => article.slug);
-  const proxy = await read('../proxy.js');
+  const route = await read('../app/article/[legacy]/route.js');
+  const config = await read('../next.config.mjs');
 
   assert.equal(new Set(ids).size, ids.length);
   assert.ok(slugs.every(Boolean));
-  assert.match(proxy, /LEGACY_ARTICLE_ROUTES/);
-  assert.match(proxy, /\^\\d\+\$/);
-  assert.match(proxy, /\^\[a-f0-9\]\{24\}/);
+  assert.match(route, /legacyIdToSlug/);
+  assert.match(route, /canonicalSlugs/);
+  assert.match(route, /export async function GET/);
+  assert.match(route, /export async function HEAD/);
+  assert.match(route, /new NextResponse\(null, \{ status: 404 \}\)/);
+  assert.doesNotMatch(config, /source: '\/article\/:slug'/);
 });

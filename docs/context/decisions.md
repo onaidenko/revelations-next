@@ -159,6 +159,15 @@ cannot override that Constitution without explicit product-owner approval.
 
 ## Public frontend
 
+- **Решение:** legacy article URLs обслуживаются App Router route handler
+  `app/article/[legacy]/route.js`, а не Proxy или generic redirect в
+  `next.config.mjs`. Он редиректит только проверенные Base44 IDs и canonical
+  fallback slugs из `data/articles.json`; любые неизвестные значения получают
+  404.
+- **Причина:** generic redirect срабатывает раньше Proxy и не позволяет
+  сохранить fail-closed distinction между известными legacy IDs и неизвестными
+  путями.
+
 - **Решение:** главная страница показывает в общей хронологии последние
   опубликованные материалы разделов News, People, Tech, Places, Unspoken и
   Podcast.

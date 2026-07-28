@@ -219,6 +219,12 @@ approval requirement are canonical in
 
 ## SEO foundation
 
+- Legacy article requests use `app/article/[legacy]/route.js`. It maps only
+  verified Base44 IDs and canonical fallback slugs from `data/articles.json`
+  to their canonical article path with a single 308 redirect; every unknown
+  value fails closed with 404. This route handler owns `/article/*` because a
+  generic Next.js redirect would run before Proxy and cannot distinguish known
+  IDs from unknown values.
 - Public CMS `/articles` endpoint принимает `page` и `per_page` (до
   100) и возвращает `items` plus `pagination.page`, `per_page`,
   `total` и `total_pages`; backend выбирает только `publish` posts.

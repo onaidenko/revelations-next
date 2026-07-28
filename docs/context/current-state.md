@@ -1,5 +1,20 @@
 # Текущее состояние
 
+## Legacy article URL handling
+
+- Legacy `/article/{value}` handling now lives in the App Router route handler
+  `app/article/[legacy]/route.js`, rather than in Proxy or a generic Next.js
+  redirect. It redirects only verified Base44 IDs and canonical fallback
+  slugs from `data/articles.json` with one permanent hop; numeric, 24-hex and
+  other unknown values return 404.
+- The separate Proxy retains only the existing `/Access` to `/access` redirect.
+  `/Home` and `/section/{sectionId}` redirects remain in `next.config.mjs`.
+- The route is included as dynamic `/article/[legacy]` in the production build
+  manifest. Focused runtime checks confirm GET and HEAD behavior and the
+  sitemap remains at 95 URLs.
+
+Дата фиксации: 2026-07-28.
+
 ## REVELATIONS Article Template — Stage 1
 
 - Shared frontend article template in `app/[slug]/page.jsx` now presents the
