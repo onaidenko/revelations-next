@@ -7,7 +7,11 @@ import SectionArticleCard from '@/components/section-article-card';
 
 import { getArticlesBySection } from '@/lib/cms-articles';
 import { SECTIONS } from '@/lib/sections';
-import { BRAND_NAME, BRAND_TAGLINE } from '@/lib/site';
+import { BRAND_NAME, BRAND_TAGLINE, SITE_URL } from '@/lib/site';
+import {
+  buildSectionBreadcrumbJsonLd,
+  serializeJsonLd,
+} from '@/lib/seo';
 
 const STICKY_RIGHT = new Set([
   'news',
@@ -23,6 +27,10 @@ export default async function SectionPage({ sectionId }) {
   }
 
   const articles = await getArticlesBySection(sectionId);
+  const breadcrumbs = buildSectionBreadcrumbJsonLd(
+    { ...section, id: sectionId },
+    SITE_URL
+  );
   const isPodcast = sectionId === 'podcast';
   const stickyRight = STICKY_RIGHT.has(sectionId);
 
@@ -38,6 +46,14 @@ export default async function SectionPage({ sectionId }) {
 
   return (
     <div className="min-h-screen bg-background">
+      {breadcrumbs && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: serializeJsonLd(breadcrumbs),
+          }}
+        />
+      )}
       <SiteHeader />
 
       <main>

@@ -31,6 +31,12 @@ test('page metadata keeps canonical and Open Graph URL route-specific', () => {
 
     assert.equal(metadata.alternates.canonical, expected);
     assert.equal(metadata.openGraph.url, expected);
+    assert.equal(metadata.twitter.title, 'Route title');
+    assert.equal(metadata.twitter.description, 'Route description');
+    assert.equal(
+      metadata.twitter.images[0].url,
+      'https://revelations.me/media/brand/revelations-logo.png'
+    );
   }
 });
 

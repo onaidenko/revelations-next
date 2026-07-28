@@ -4,6 +4,8 @@ import test from 'node:test';
 import {
   articleCanonicalUrl,
   buildPageMetadata,
+  buildSectionBreadcrumbJsonLd,
+  buildAuthorBreadcrumbJsonLd,
   buildArticleBreadcrumbJsonLd,
   buildArticleJsonLd,
   buildArticleMetadata,
@@ -208,14 +210,46 @@ test('article metadata keeps Open Graph URL equal to its canonical URL', () => {
   });
 
   assert.equal(metadata.openGraph.url, metadata.alternates.canonical);
-  assert.equal(
-    buildPageMetadata({
+  const pageMetadata = buildPageMetadata({
       title: 'Home',
       description: 'Description',
       pathname: '/',
       siteUrl,
-    }).openGraph.url,
+    });
+
+  assert.equal(
+    pageMetadata.openGraph.url,
     'https://revelations.me/'
+  );
+  assert.equal(pageMetadata.twitter.title, 'Home');
+  assert.equal(pageMetadata.twitter.description, 'Description');
+  assert.equal(
+    pageMetadata.twitter.images[0].url,
+    'https://revelations.me/media/brand/revelations-logo.png'
+  );
+});
+
+test('section and author breadcrumbs use canonical public routes', () => {
+  const section = buildSectionBreadcrumbJsonLd(
+    { id: 'news', title: 'News' },
+    siteUrl
+  );
+  const author = buildAuthorBreadcrumbJsonLd(
+    { slug: 'julia-upiterskaya', name: 'Julia Upiterskaya' },
+    siteUrl
+  );
+
+  assert.deepEqual(
+    section.itemListElement.map(({ item }) => item),
+    ['https://revelations.me/', 'https://revelations.me/news']
+  );
+  assert.deepEqual(
+    author.itemListElement.map(({ item }) => item),
+    [
+      'https://revelations.me/',
+      'https://revelations.me/people',
+      'https://revelations.me/authors/julia-upiterskaya',
+    ]
   );
 });
 
