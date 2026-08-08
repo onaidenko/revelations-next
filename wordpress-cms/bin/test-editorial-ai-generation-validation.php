@@ -149,6 +149,93 @@ function revelations_validation_with_claim(
     return $article;
 }
 
+$dash_article = revelations_validation_article();
+$dash_article['recommended_title'] =
+    'Founder—investor relationships are changing.';
+$dash_article['alternative_titles'] = array(
+    'AI–powered tools - and future-facing media.',
+    'Future-facing media remains unchanged.',
+);
+$dash_article['blocks'][0]['text'] =
+    'Founder—investor relationships are changing.';
+$dash_article['blocks'][] = array(
+    'type' => 'unordered_list',
+    'text' => '',
+    'heading_level' => 0,
+    'items' => array(
+        'AI–powered tools - and future-facing media.',
+        'Read—this https://example.com/some—page then use AI-powered tools.',
+        '<a href="https://example.com/a—b">Read—this</a>',
+        '<img src="https://cdn.example/a–b.jpg" alt="AI—image"> Follow—up.',
+        '<pre>GET /v1/items—archive</pre> Explain—this.',
+        '<code>asset—identifier</code> Explain–this.',
+    ),
+);
+$dash_article['direct_quotes'] = array(
+    array(
+        'quote_text' => 'An exact source—quote.',
+        'evidence_id' => 'p001',
+    ),
+);
+
+$normalized_dash_article =
+    revelations_editorial_ai_normalize_generated_editorial_text(
+        $dash_article
+    );
+
+revelations_validation_test(
+    'Founder - investor relationships are changing.' ===
+        $normalized_dash_article['recommended_title'] &&
+    'AI - powered tools - and future-facing media.' ===
+        $normalized_dash_article['alternative_titles'][0] &&
+    'Future-facing media remains unchanged.' ===
+        $normalized_dash_article['alternative_titles'][1] &&
+    'Read - this https://example.com/some—page then use AI-powered tools.' ===
+        $normalized_dash_article['blocks'][1]['items'][1] &&
+    '<a href="https://example.com/a—b">Read - this</a>' ===
+        $normalized_dash_article['blocks'][1]['items'][2] &&
+    '<img src="https://cdn.example/a–b.jpg" alt="AI—image"> Follow - up.' ===
+        $normalized_dash_article['blocks'][1]['items'][3] &&
+    '<pre>GET /v1/items—archive</pre> Explain - this.' ===
+        $normalized_dash_article['blocks'][1]['items'][4] &&
+    '<code>asset—identifier</code> Explain - this.' ===
+        $normalized_dash_article['blocks'][1]['items'][5],
+    'generated editorial normalization preserves technical spans while normalizing surrounding public prose'
+);
+
+revelations_validation_test(
+    'https://example.com/some—page' ===
+        substr(
+            $normalized_dash_article['blocks'][1]['items'][1],
+            strlen( 'Read - this ' ),
+            strlen( 'https://example.com/some—page' )
+        ) &&
+    '<a href="https://example.com/a—b">' ===
+        substr(
+            $normalized_dash_article['blocks'][1]['items'][2],
+            0,
+            strlen( '<a href="https://example.com/a—b">' )
+        ) &&
+    '<img src="https://cdn.example/a–b.jpg" alt="AI—image">' ===
+        substr(
+            $normalized_dash_article['blocks'][1]['items'][3],
+            0,
+            strlen( '<img src="https://cdn.example/a–b.jpg" alt="AI—image">' )
+        ),
+    'generated editorial normalization preserves URL and href/src markup bytes exactly'
+);
+
+revelations_validation_test(
+    'An exact source - quote.' ===
+        revelations_editorial_normalize_text(
+            'An exact source—quote.'
+        ) &&
+    array() === revelations_editorial_ai_generated_dash_violations(
+        $normalized_dash_article
+    ),
+    'generated editorial dash validation normalizes public quotations while private quote evidence remains exact'
+);
+
 /**
  * Return one valid fact-check flag.
  *

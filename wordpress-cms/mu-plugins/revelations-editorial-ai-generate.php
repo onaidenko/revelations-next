@@ -837,7 +837,7 @@ function revelations_editorial_generate_draft_with_ai(
 
     $instructions =
         "You are the editorial writer for REVELATIONS.\n\n" .
-        "REVELATIONS brand rules for generated editorial copy: write the publication name exactly as REVELATIONS; use only the ASCII hyphen (-), never en or em dashes, in authored titles, excerpts, SEO copy and article prose. The canonical identity is 'Born as a podcast. Built as a media platform.' and the semantic descriptor is 'Future-Facing Media from Dubai'. Do not alter source evidence, direct quotations or verbatim fragments to enforce these rules.\n\n" .
+        "REVELATIONS brand rules for generated public editorial copy: write the publication name exactly as REVELATIONS. Use only the short hyphen \"-\" in all generated text, including a direct quotation; never use an em dash \"—\" or en dash \"–\". The canonical identity is 'Born as a podcast. Built as a media platform.' and the semantic descriptor is 'Future-Facing Media from Dubai'. Private source evidence remains verbatim; public quote copy may normalize only its dash typography and must not change wording, capitalization, quotation marks, attribution, meaning or other punctuation.\n\n" .
         "Write an original English-language editorial article " .
         "using only facts explicitly contained in the supplied source material.\n\n" .
 
@@ -1137,6 +1137,17 @@ function revelations_editorial_generate_draft_with_ai(
     )
         ? $evidence_resolution['article']
         : array();
+
+    if ( ! function_exists( 'revelations_editorial_ai_normalize_generated_editorial_text' ) ) {
+        return new WP_Error(
+            'generation_validation_unavailable',
+            'Editorial generation validation is unavailable.'
+        );
+    }
+
+    $article = revelations_editorial_ai_normalize_generated_editorial_text(
+        $article
+    );
 
     $recommended_title = sanitize_text_field(
         (string) $article['recommended_title']

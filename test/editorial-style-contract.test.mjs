@@ -42,9 +42,11 @@ test('owned identity and metadata templates use uppercase brand names and ASCII 
   }
 });
 
-test('AI generation separates owned brand typography from exact source evidence', () => {
+test('AI generation normalizes public copy while preserving private source evidence', () => {
   const generation = read('wordpress-cms/mu-plugins/revelations-editorial-ai-generate.php');
   assert.match(generation, /write the publication name exactly as REVELATIONS/);
-  assert.match(generation, /never en or em dashes/);
-  assert.match(generation, /Do not alter source evidence, direct quotations or verbatim fragments/);
+  assert.match(generation, /Use only the short hyphen/);
+  assert.match(generation, /never use an em dash/);
+  assert.match(generation, /Private source evidence remains verbatim/);
+  assert.match(generation, /generated public editorial copy:.*including a direct quotation/);
 });

@@ -661,7 +661,30 @@ function revelations_editorial_ai_restore_version(
             delete_post_meta( $draft_id, $draft_key );
         }
     }
-    if ( metadata_exists( 'post', $version_id, '_rev_ai_author_profile_ids' ) ) update_post_meta( $draft_id, '_revelations_author_profile_ids', function_exists('revelations_author_relation_json') ? revelations_author_relation_json(get_post_meta($version_id,'_rev_ai_author_profile_ids',true)) : '[]' );
+    if ( metadata_exists( 'post', $version_id, '_rev_ai_author_profile_ids' ) ) {
+        $saved_author_profile_ids = get_post_meta(
+            $version_id,
+            '_rev_ai_author_profile_ids',
+            true
+        );
+
+        if ( '' === $saved_author_profile_ids ) {
+            delete_post_meta(
+                $draft_id,
+                '_revelations_author_profile_ids'
+            );
+        } else {
+            update_post_meta(
+                $draft_id,
+                '_revelations_author_profile_ids',
+                function_exists( 'revelations_author_relation_json' )
+                    ? revelations_author_relation_json(
+                        $saved_author_profile_ids
+                    )
+                    : $saved_author_profile_ids
+            );
+        }
+    }
 
     /*
      * Stage 5 generation metadata is optional so private versions

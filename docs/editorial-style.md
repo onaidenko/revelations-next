@@ -17,12 +17,17 @@ contain `revelations`.
 
 ## Typography
 
-Use the ASCII hyphen-minus (`-`) for REVELATIONS-authored user-facing copy.
-Do not introduce en dashes or em dashes in titles, descriptions, navigation,
-metadata, schema descriptions, prompts or system-owned UI copy.
+All public editorial copy published by REVELATIONS uses the ASCII hyphen-minus
+(`-`), never en or em dashes. This includes direct quotations, blockquotes,
+interviews, attributed speech, press-release copy, historical imported public
+editorial content, existing CMS articles and generated editorial content.
+Normalize only the dash and its immediately surrounding spaces; do not change
+wording, capitalization, quotation marks, attribution, meaning or other
+punctuation. Preserve ASCII compound-word hyphens such as `future-facing`.
 
-Preserve punctuation in verbatim quotations, source evidence and historical
-article content. Never bulk-normalize imported article bodies.
+Private source evidence, snapshots, provenance and fact-check data remain
+verbatim. URLs, href/src values, slugs, IDs, UUIDs, filenames, API endpoints,
+code and other machine-readable technical values are excluded.
 
 ## Identity hierarchy
 
@@ -53,11 +58,11 @@ below it or mechanically repeat the descriptor.
 
 ## AI editorial generation
 
-Generated titles, excerpts, SEO fields, article prose and suggestions follow
-the brand spelling and ASCII-hyphen rule. Source evidence, direct quotes and
-verbatim fragments are exempt and must remain exact. Prefer validation or an
-explicit editorial correction over any normalization that could alter a quote,
-proper noun or evidence fragment.
+Generated titles, excerpts, SEO fields, article prose, direct quotations and
+suggestions follow the brand spelling and ASCII-hyphen rule. Private source
+evidence remains exact; its public editorial rendering may normalize only
+en/em dash typography. Never normalize a URL, identifier or other technical
+value, and never alter a quote beyond its dash typography.
 
 ## Examples
 

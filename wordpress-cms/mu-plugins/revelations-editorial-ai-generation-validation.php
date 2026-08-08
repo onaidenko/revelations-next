@@ -72,6 +72,7 @@ function revelations_editorial_ai_is_validation_error_code(
             'invalid_direct_quote',
             'missing_quote_fact_check_flag',
             'direct_quote_usage_mismatch',
+            'editorial_dash_violation',
         ),
         true
     );
@@ -176,6 +177,191 @@ function revelations_editorial_ai_normalize_description(
     );
 
     return trim( $value );
+}
+
+/**
+ * Normalize public editorial punctuation without changing any non-dash text.
+ */
+function revelations_editorial_normalize_text(
+    string $value
+): string {
+    $protected_pattern =
+        '~(?:' .
+        '<!--.*?-->' .
+        '|<(?P<technical_element>pre|code|script|style)\\b[^>]*>' .
+            '.*?</\\s*(?P=technical_element)\\s*>' .
+        '|<[^>]*>' .
+        '|\\b(?:href|src)\\s*=\\s*"[^"]*"' .
+        "|\\b(?:href|src)\\s*=\\s*'[^']*'" .
+        '|\\b(?:href|src)\\s*=\\s*[^\\s>]+' .
+        '|https?://[^\\s<>"\']+' .
+        '|```.*?```' .
+        '|`[^`\\r\\n]*`' .
+        ')~isu';
+
+    $normalize_prose = static function ( string $prose ): string {
+        return (string) preg_replace(
+            '/[ \\t]*[\\x{2013}\\x{2014}][ \\t]*/u',
+            ' - ',
+            $prose
+        );
+    };
+
+    if ( ! preg_match_all(
+        $protected_pattern,
+        $value,
+        $matches,
+        PREG_OFFSET_CAPTURE
+    ) ) {
+        return $normalize_prose( $value );
+    }
+
+    $normalized = '';
+    $cursor = 0;
+
+    foreach ( $matches[0] as $match ) {
+        $protected = (string) $match[0];
+        $offset = (int) $match[1];
+
+        $normalized .= $normalize_prose(
+            substr(
+                $value,
+                $cursor,
+                $offset - $cursor
+            )
+        );
+        $normalized .= $protected;
+        $cursor = $offset + strlen( $protected );
+    }
+
+    $normalized .= $normalize_prose(
+        substr( $value, $cursor )
+    );
+
+    return $normalized;
+}
+
+/**
+ * Normalize only generated editorial fields before they are persisted.
+ *
+ * Public quotations and quote blocks are normalized too. Private source
+ * evidence remains untouched and is compared with dash-only normalization.
+ *
+ * @param array<string, mixed> $article Parsed structured model output.
+ * @return array<string, mixed>
+ */
+function revelations_editorial_ai_normalize_generated_editorial_text(
+    array $article
+): array {
+    foreach (
+        array(
+            'recommended_title',
+            'excerpt',
+            'seo_title',
+            'seo_description',
+            'section_mismatch_reason',
+        ) as $field
+    ) {
+        if ( is_string( $article[ $field ] ?? null ) ) {
+            $article[ $field ] = revelations_editorial_normalize_text(
+                $article[ $field ]
+            );
+        }
+    }
+
+    if ( is_array( $article['alternative_titles'] ?? null ) ) {
+        foreach ( $article['alternative_titles'] as $index => $title ) {
+            if ( is_string( $title ) ) {
+                $article['alternative_titles'][ $index ] =
+                    revelations_editorial_normalize_text(
+                        $title
+                    );
+            }
+        }
+    }
+
+    if ( ! is_array( $article['blocks'] ?? null ) ) {
+        return $article;
+    }
+
+    foreach ( $article['blocks'] as $index => $block ) {
+        if ( ! is_array( $block ) ) {
+            continue;
+        }
+
+        if ( is_string( $block['text'] ?? null ) ) {
+            $article['blocks'][ $index ]['text'] =
+                revelations_editorial_normalize_text(
+                    $block['text']
+                );
+        }
+
+        if ( is_array( $block['items'] ?? null ) ) {
+            foreach ( $block['items'] as $item_index => $item ) {
+                if ( is_string( $item ) ) {
+                    $article['blocks'][ $index ]['items'][ $item_index ] =
+                        revelations_editorial_normalize_text(
+                        $item
+                        );
+                }
+            }
+        }
+    }
+
+    return $article;
+}
+
+/**
+ * Return generated authored fields that still contain an en or em dash.
+ *
+ * @param array<string, mixed> $article Parsed structured model output.
+ * @return string[] Stable field identifiers.
+ */
+function revelations_editorial_ai_generated_dash_violations(
+    array $article
+): array {
+    $violations = array();
+    $contains_violation = static function ( string $text ): bool {
+        return revelations_editorial_normalize_text( $text ) !== $text;
+    };
+
+    foreach (
+        array(
+            'recommended_title',
+            'excerpt',
+            'seo_title',
+            'seo_description',
+            'section_mismatch_reason',
+        ) as $field
+    ) {
+        if ( is_string( $article[ $field ] ?? null ) && $contains_violation( $article[ $field ] ) ) {
+            $violations[] = $field;
+        }
+    }
+
+    foreach ( $article['alternative_titles'] ?? array() as $index => $title ) {
+        if ( is_string( $title ) && $contains_violation( $title ) ) {
+            $violations[] = 'alternative_titles.' . $index;
+        }
+    }
+
+    foreach ( $article['blocks'] ?? array() as $index => $block ) {
+        if ( ! is_array( $block ) ) {
+            continue;
+        }
+
+        if ( is_string( $block['text'] ?? null ) && $contains_violation( $block['text'] ) ) {
+            $violations[] = 'blocks.' . $index . '.text';
+        }
+
+        foreach ( $block['items'] ?? array() as $item_index => $item ) {
+            if ( is_string( $item ) && $contains_violation( $item ) ) {
+                $violations[] = 'blocks.' . $index . '.items.' . $item_index;
+            }
+        }
+    }
+
+    return $violations;
 }
 
 /**
@@ -1404,6 +1590,13 @@ function revelations_editorial_ai_validate_generated_article(
         );
     }
 
+    if ( array() !== revelations_editorial_ai_generated_dash_violations( $article ) ) {
+        return revelations_editorial_ai_validation_failure(
+            'editorial_dash_violation',
+            'Generated editorial fields must not contain en or em dashes.'
+        );
+    }
+
     $section_mismatch =
         true === (
             $article['section_mismatch']
@@ -1926,6 +2119,13 @@ function revelations_editorial_ai_validate_generated_article(
             );
         }
 
+        // The private quote/evidence record remains exact. Public article copy
+        // uses the Constitution's dash typography, so compare its dash-only
+        // public representation without modifying the private evidence.
+        $public_quote_text = revelations_editorial_normalize_text(
+            $quote_text
+        );
+
         $quote_usage_unit_ids =
             array();
 
@@ -1936,7 +2136,7 @@ function revelations_editorial_ai_validate_generated_article(
             if (
                 str_contains(
                     $quote_usage_unit['text'],
-                    $quote_text
+                    $public_quote_text
                 )
             ) {
                 $quote_usage_unit_ids[] =
@@ -1991,7 +2191,7 @@ function revelations_editorial_ai_validate_generated_article(
                         $flag_unit_id &&
                         str_contains(
                             $normalized_flag_claim,
-                            $quote_text
+                            $public_quote_text
                         )
                     )
                 )
@@ -2008,7 +2208,7 @@ function revelations_editorial_ai_validate_generated_article(
             );
         }
 
-        $quote_item_texts[] = $quote_text;
+        $quote_item_texts[] = $public_quote_text;
 
         $validated_quotes[] = array(
             'quote_text' =>

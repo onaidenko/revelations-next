@@ -17,9 +17,18 @@ product-owner approval may amend a constitutional rule.
 
 `ASCII_HYPHEN_ONLY`
 
-- REVELATIONS-authored public copy uses ASCII hyphen-minus (`-`), never en or
-  em dashes. Preserve punctuation in verbatim quotations, evidence and
-  historical imported content.
+- All public editorial copy published by REVELATIONS uses ASCII hyphen-minus
+  (`-`), never en or em dashes. This typography rule also applies to verbatim
+  quotations, blockquotes, interviews and guest answers, attributed speech,
+  press-release copy, historical imported public editorial content, existing
+  CMS articles and generated editorial content. Applying this normalization in
+  a quotation is REVELATIONS typography normalization, not semantic editing.
+- Dash normalization must not alter wording, capitalization, quotation marks,
+  attribution, meaning or other punctuation. Do not normalize technical values
+  where that could change behavior or meaning: URLs, href/src values, slugs,
+  IDs, UUIDs, filenames, API endpoints, code, technical identifiers and other
+  machine-readable values. Existing ASCII compound-word hyphens (for example,
+  `future-facing`, `AI-powered`, `high-stakes`) remain unchanged.
 
 `CANONICAL_BRAND_TAGLINE_REQUIRED`
 
@@ -60,7 +69,11 @@ product-owner approval may amend a constitutional rule.
   never public fallback content. Public sources come only from explicitly
   approved public fields.
 - Do not rewrite legacy CMS data merely for cosmetic normalization when public
-  canonical resolution already gives correct behavior.
+  canonical resolution already gives correct behavior. A project-wide editorial
+  typography rule explicitly defined here, including `ASCII_HYPHEN_ONLY`, may
+  be applied to legacy public CMS editorial text when explicitly authorized by
+  the product owner, provided it does not alter factual meaning, wording, URLs,
+  identifiers, source relationships or structural data.
 
 ## Staging-first visual policy
 
