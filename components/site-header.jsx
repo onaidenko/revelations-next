@@ -62,46 +62,53 @@ export default function SiteHeader() {
         </div>
 
         <div className="hidden items-center justify-center pb-6 md:flex">
-          <nav className="flex items-center gap-10">
-            {NAV_LINKS.map((link) => {
-              const active = pathname === link.href;
-
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={
-                    link.accent
-                      ? `rounded-full border px-4 py-1 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors duration-300 ${
-                          active
-                            ? 'border-rose/50 bg-rose/10 text-foreground'
-                            : 'border-rose/30 text-foreground/80 hover:border-rose/50 hover:bg-rose/10 hover:text-foreground'
-                        }`
-                      : `font-mono text-[11px] uppercase tracking-[0.2em] transition-colors duration-300 ${
-                          active
-                            ? 'text-foreground'
-                            : 'text-muted-foreground hover:text-foreground'
-                        }`
-                  }
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-
-            <Link
-              href="/access"
-              className={`font-mono text-[11px] uppercase tracking-[0.2em] transition-colors duration-300 ${
-                pathname === '/access'
-                  ? 'text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
+          <div className="flex items-center gap-10">
+            <nav
+              aria-label="Primary editorial"
+              className="flex items-center gap-10"
             >
-              Access
-            </Link>
+              {NAV_LINKS.map((link) => {
+                const active = pathname === link.href;
 
-            <ThemeToggle />
-          </nav>
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={
+                      link.accent
+                        ? `rounded-full border px-4 py-1 font-mono text-[11px] uppercase tracking-[0.2em] transition-colors duration-300 ${
+                            active
+                              ? 'border-rose/50 bg-rose/10 text-foreground'
+                              : 'border-rose/30 text-foreground/80 hover:border-rose/50 hover:bg-rose/10 hover:text-foreground'
+                          }`
+                        : `font-mono text-[11px] uppercase tracking-[0.2em] transition-colors duration-300 ${
+                            active
+                              ? 'text-foreground'
+                              : 'text-muted-foreground hover:text-foreground'
+                          }`
+                    }
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="flex items-center gap-10">
+              <Link
+                href="/access"
+                className={`font-mono text-[11px] uppercase tracking-[0.2em] transition-colors duration-300 ${
+                  pathname === '/access'
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Access
+              </Link>
+
+              <ThemeToggle />
+            </div>
+          </div>
         </div>
 
         <div className="md:hidden">
@@ -158,20 +165,25 @@ export default function SiteHeader() {
 
       {menuOpen && (
         <div className="border-b border-border/20 bg-background/98 px-6 py-8 backdrop-blur-xl md:hidden">
-          <nav className="flex flex-col gap-6">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`font-mono text-sm uppercase tracking-[0.18em] transition-colors ${
-                  pathname === link.href
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div className="flex flex-col gap-6">
+            <nav
+              aria-label="Primary editorial"
+              className="flex flex-col gap-6"
+            >
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`font-mono text-sm uppercase tracking-[0.18em] transition-colors ${
+                    pathname === link.href
+                      ? 'text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
 
             <Link
               href="/access"
@@ -183,7 +195,7 @@ export default function SiteHeader() {
             >
               Access
             </Link>
-          </nav>
+          </div>
         </div>
       )}
     </header>

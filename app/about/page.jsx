@@ -8,14 +8,18 @@ import {
   SOCIAL_PROFILES,
 } from '@/lib/site';
 
-export const metadata = buildPageMetadata({
-  title:
-    'About - Future-Facing Media from Dubai',
-  description:
-    'Learn how REVELATIONS, a Dubai-based future-facing media platform, covers technology, founders, culture, places and the ideas shaping what comes next.',
-  pathname: '/about',
-  siteUrl: SITE_URL,
-});
+const ABOUT_TITLE = 'About REVELATIONS';
+
+export const metadata = {
+  ...buildPageMetadata({
+    title: ABOUT_TITLE,
+    description:
+      'Learn how REVELATIONS, a Dubai-based future-facing media platform, covers technology, founders, culture, places and the ideas shaping what comes next.',
+    pathname: '/about',
+    siteUrl: SITE_URL,
+  }),
+  title: { absolute: ABOUT_TITLE },
+};
 
 const EDITORIAL_SECTIONS = [
   [

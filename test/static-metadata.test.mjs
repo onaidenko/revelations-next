@@ -70,6 +70,8 @@ test('About uses its approved unique metadata description', async () => {
     /Learn how REVELATIONS, a Dubai-based future-facing media platform, covers technology, founders, culture, places and the ideas shaping what comes next\./
   );
   assert.doesNotMatch(about, /description: DEFAULT_DESCRIPTION/);
+  assert.match(about, /const ABOUT_TITLE = 'About REVELATIONS'/);
+  assert.match(about, /title: \{ absolute: ABOUT_TITLE \}/);
 });
 
 test('Podcast uses its approved page-specific metadata and visible introduction', async () => {
@@ -84,7 +86,7 @@ test('Podcast uses its approved page-specific metadata and visible introduction'
 
   assert.match(
     podcast,
-    /REVELATIONS Podcast - Dubai Tech & Founder Conversations/
+    /const PODCAST_TITLE = 'Podcast - REVELATIONS'/
   );
   assert.match(
     podcast,

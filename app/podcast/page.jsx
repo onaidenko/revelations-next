@@ -10,8 +10,7 @@ import {
 } from '@/lib/site';
 
 const SECTION = 'podcast';
-const PODCAST_TITLE =
-  'REVELATIONS Podcast - Dubai Tech & Founder Conversations';
+const PODCAST_TITLE = 'Podcast - REVELATIONS';
 const PODCAST_DESCRIPTION =
   'A Dubai-based podcast featuring founders, investors and builders across AI, fintech, Web3 and culture. Watch REVELATIONS episodes and explore the stories behind the future.';
 const PODCAST_INTRODUCTION =

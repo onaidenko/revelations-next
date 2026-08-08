@@ -69,6 +69,8 @@ fi
 
 mv "$ENV_REPLACEMENT" "$ENV_FILE"
 
+rm -rf .next
+
 npm run build
 
 if [[ ! -d .next ]]; then

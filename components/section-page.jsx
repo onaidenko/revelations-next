@@ -102,52 +102,28 @@ export default async function SectionPage({
                 >
                   {featured.cover_image ? (
                     <>
-                      <div className="relative hidden h-[55vh] min-h-[380px] overflow-hidden md:block">
-                        <img
-                          src={featured.cover_image}
-                          alt={featured.cover_image_alt}
-                          className="h-full w-full object-contain grayscale transition-all duration-1000 group-hover:grayscale-0"
-                        />
-
-                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-
-                        <div className="absolute inset-x-0 bottom-0 p-8 md:p-12">
-                          <span className="mb-3 block font-mono text-[10px] uppercase tracking-[0.2em] text-rose">
-                            Latest Episode
-                          </span>
-
-                          <h2 className="mb-3 max-w-3xl font-display text-3xl leading-tight text-foreground md:text-5xl">
-                            {featured.title}
-                          </h2>
-
-                          {featured.excerpt && (
-                            <p className="max-w-xl font-body text-sm leading-relaxed text-muted-foreground">
-                              {featured.excerpt}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="md:hidden">
-                        <div className="mb-4 overflow-hidden">
+                      <div className="relative overflow-hidden">
+                        <div className="mb-4 overflow-hidden md:mb-0 md:h-[55vh] md:min-h-[380px]">
                           <img
                             src={featured.cover_image}
                             alt={featured.cover_image_alt}
-                            className="w-full object-contain grayscale transition-all duration-1000 group-hover:grayscale-0"
+                            className="w-full object-contain grayscale transition-all duration-1000 group-hover:grayscale-0 md:h-full"
                           />
                         </div>
 
-                        <div className="px-1 pb-4">
-                          <span className="mb-2 block font-mono text-[10px] uppercase tracking-[0.2em] text-rose">
+                        <div className="absolute inset-0 hidden bg-gradient-to-t from-background via-background/30 to-transparent md:block" />
+
+                        <div className="px-1 pb-4 md:absolute md:inset-x-0 md:bottom-0 md:p-12">
+                          <span className="mb-2 block font-mono text-[10px] uppercase tracking-[0.2em] text-rose md:mb-3">
                             Latest Episode
                           </span>
 
-                          <h2 className="mb-2 font-display text-2xl leading-tight text-foreground">
+                          <h2 className="mb-2 font-display text-2xl leading-tight text-foreground md:mb-3 md:max-w-3xl md:text-5xl">
                             {featured.title}
                           </h2>
 
                           {featured.excerpt && (
-                            <p className="line-clamp-2 font-body text-sm leading-relaxed text-muted-foreground">
+                            <p className="line-clamp-2 font-body text-sm leading-relaxed text-muted-foreground md:max-w-xl md:line-clamp-none">
                               {featured.excerpt}
                             </p>
                           )}

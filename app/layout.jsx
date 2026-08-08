@@ -8,12 +8,10 @@ import {
   DEFAULT_TITLE,
   ORGANIZATION_ID,
   ORGANIZATION_LOCATION_NAME,
-  ORGANIZATION_ALTERNATE_NAMES,
   PUBLISHER_BRAND_NAME,
   SITE_NAME,
   SITE_URL,
   SOCIAL_PROFILE_URLS,
-  WEBSITE_ALTERNATE_NAMES,
   WEBSITE_ID,
 } from '@/lib/site';
 import {
@@ -53,8 +51,6 @@ export default function RootLayout({ children }) {
       buildWebsiteJsonLd({
         siteUrl: SITE_URL,
         siteName: SITE_NAME,
-        alternateNames:
-          WEBSITE_ALTERNATE_NAMES,
         description:
           DEFAULT_DESCRIPTION,
         websiteId: WEBSITE_ID,
@@ -63,8 +59,6 @@ export default function RootLayout({ children }) {
       buildOrganizationJsonLd({
         siteUrl: SITE_URL,
         siteName: SITE_NAME,
-        alternateNames:
-          ORGANIZATION_ALTERNATE_NAMES,
         description:
           DEFAULT_DESCRIPTION,
         slogan: BRAND_TAGLINE,
