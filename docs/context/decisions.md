@@ -354,18 +354,36 @@ cannot override that Constitution without explicit product-owner approval.
   metadata, About, Contact, footer and structured data.
 
 - **Решение:** REVELATIONS is always uppercase in publication-owned UI, SEO,
-  metadata, schema, publisher and generated editorial copy. `REVELATIONS
-  Media` is the secondary brand alias; `revelations.me` remains a WebSite
-  alias and technical domain, not a display-brand variant.
-- **Решение:** publication-authored copy uses only ASCII hyphen-minus (`-`),
-  never en/em dashes. Verbatim quotations, source evidence, historical article
-  bodies, URLs and technical identifiers are excluded from automatic changes.
+  metadata, schema, publisher and generated editorial copy. REVELATIONS is the
+  sole public brand name; the former `REVELATIONS Media` public alias is
+  superseded. `revelations.me` remains only the technical domain, not a
+  display-brand variant.
+- **Решение:** all public editorial copy uses only ASCII hyphen-minus (`-`),
+  never en/em dashes. This includes public quotations and historical public CMS
+  copy. Private source evidence remains verbatim; URLs, href/src values, slugs,
+  IDs, UUIDs, filenames, API endpoints, code and other machine-readable values
+  remain excluded from normalization.
 - **Решение:** `Born as a podcast. Built as a media platform.` is the exact
   canonical tagline. `Future-Facing Media from Dubai` is the separate semantic
   descriptor. The root NewsMediaOrganization exposes the tagline via Schema.org
   `slogan`; WebSite/Organization names, stable IDs, URLs and publisher
   relationships remain unchanged.
 
+
+## Byte-preserving historical dash migration
+
+- **Решение:** the approved normalization of historical raw CMS fields used one
+  controlled storage-level transaction with exact raw SHA-256 guards for every
+  affected field in the record. WordPress API writes under altered
+  capabilities are rejected because capability changes do not prove that KSES,
+  save filters or plugins preserve unrelated historical bytes.
+- **Решение:** a field-specific API/storage hybrid is not used for this bounded
+  migration. Its hooks and external side effects cannot share the rollback
+  semantics of the storage transaction. Exact mode-0600 backup data replaces
+  automatic WordPress revisions as the authoritative recovery source.
+- **Решение:** markup, Gutenberg comments, href/src and other tag attributes,
+  URLs and code-like elements are protected regions. A forbidden dash in such a
+  region blocks that field from automatic migration instead of normalizing it.
 
 ## Manual social distribution
 

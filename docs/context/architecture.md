@@ -362,3 +362,22 @@ approval requirement are canonical in
 - X draft generation uses only the saved WordPress article.
 - The public canonical article URL is appended server-side.
 - No X API integration or automatic social publication is active.
+
+## Historical editorial dash migration
+
+- `wordpress-cms/bin/revelations-dash-migration-lib.php` performs pure
+  raw-string planning. It rebuilds the planned value from untouched byte slices
+  and explicit dash/adjacent-horizontal-space replacements and verifies an
+  untouched-byte SHA-256 invariant.
+- `wordpress-cms/bin/build-dash-migration-plan.php` is read-only with respect to
+  WordPress. It reads published post columns and the fixed public meta registry
+  directly from database rows, emits a mode-0600 plan, and blocks protected
+  technical regions or duplicate meta rows.
+- The completed production migration used prepared storage-level updates in one
+  transaction after record-wide optimistic concurrency checks. It verified all
+  planned hashes before commit, then invalidated only affected WordPress caches
+  and invoked existing signed frontend revalidation after commit. WordPress save
+  APIs, KSES and API/storage hybrid semantics were intentionally excluded. The
+  retained repository tooling performs read-only planning and byte-invariant
+  diagnostics for future audit/maintenance; it contains no production apply
+  path.

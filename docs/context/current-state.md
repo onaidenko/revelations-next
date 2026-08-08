@@ -1,5 +1,124 @@
 # Текущее состояние
 
+## Pre-commit blocker resolution
+
+- Generated public-copy dash normalization now protects deterministic technical
+  spans byte-for-byte: absolute URLs, href/src values and other HTML markup,
+  code/pre/script/style elements, HTML comments and inline/fenced code. Public
+  prose around those spans is still normalized, while existing ASCII compound
+  hyphens remain unchanged. Focused validation passes 55/55.
+- The restore review-hash failure was reproduced on clean `HEAD` and traced to
+  an absent `_revelations_author_profile_ids` value being restored as the
+  different serialized value `[]`. Restore now preserves absence as absence and
+  preserves a saved relation value; the existing deterministic hash/freshness
+  assertion passes. AI generation integration passes 81/81 and the complete PHP
+  diagnostic runner passes all suites.
+- Current policy documentation now records REVELATIONS as the sole public brand
+  name, includes public quotations and historical public CMS copy in the ASCII
+  hyphen rule, preserves private evidence verbatim and excludes technical
+  values. Migration documentation describes the completed operation and the
+  retained read-only audit tooling; no ephemeral local artifact path remains.
+- Final safe verification: Node 113/113, ESLint, PHP lint, all PHP diagnostic
+  suites, migration round trip 3/3, production build 104/104 pages, standalone
+  artifact checks, no staging-domain runtime reference and `git diff --check`
+  pass. No production CMS/database/content write, migration rerun, OpenAI
+  request, deploy, commit or push was performed.
+
+Дата проверки: 2026-08-08.
+
+## Byte-preserving dash migration v2 and publication recovery
+
+- A raw-byte normalizer, read-only plan builder, representative round-trip
+  fixtures and an apply-safety design were added. The approved production work
+  used one guarded storage-level transaction; historical HTML was not passed
+  through `wp_update_post` or KSES. The repository tooling remains read-only and
+  reusable for future audit/maintenance.
+- Product-owner review established that records 214, 222 and 293 were intended
+  to remain public and that their incident-time `draft` status was erroneous.
+  Their current raw editorial fields matched the exact recovery backup. A new
+  mode-0600 backup was created at
+  `/var/backups/revelations-cms/revelations-status-recovery-20260808-HZ7m1N.json`.
+- One guarded database transaction changed only `wp_posts.post_status` from
+  `draft` to `publish` for IDs 214, 222 and 293. The transaction locked the full
+  post rows, all postmeta and taxonomy relationships; in-transaction and
+  post-commit comparisons proved every protected value unchanged. It did not
+  call `wp_update_post`, alter timestamps or inspect/change other drafts.
+- Object caches were cleaned only for those three IDs. The first CLI sender
+  call omitted the required event timestamp and was rejected; corrected signed
+  `publish` events using the protected runtime environment succeeded 3/3.
+  Public verification returned 200 for all detail pages and cover images,
+  exact canonicals and article markup, 53 CMS API records, all three sitemap
+  entries, News cards for 214/222, the Tech AGIBOT card and all homepage links.
+- The final direct raw scan covers all 53 published records and produces the
+  expected current plan: 25 records, 34 fields, 147 em dashes and 9 en dashes
+  (156 replacements), with zero blocked or failed fields. All 34 current hashes
+  exactly matched the post-recovery raw plan.
+- Product-owner-approved production apply used plan SHA-256
+  `60b871c809462e383dbf3753634c0e422da5df73971aadd7ce210139c1d7492d`.
+  The immediate mode-0600 backup is
+  `/var/backups/revelations-cms/revelations-dash-byte-preserving-20260808-LpRAD0.json`
+  with SHA-256
+  `9dd6d4e77d1ebc8cd49848c1a759ef349f31b594c2b79ec9090ca0bfc136bf6e`.
+- One storage-level InnoDB transaction applied the approved 156 replacements
+  across 34 fields and 25 records. Preflight matched 34/34 before hashes;
+  in-transaction and post-commit verification matched 34/34 after hashes.
+  Protected post columns, unrelated postmeta and taxonomy relationships were
+  unchanged; `wp_update_post`, KSES and WordPress save hooks were not used.
+- The post-commit direct raw scan covered 53 published records and found zero
+  public editorial em dashes, zero en dashes and zero blocked fields. Object
+  caches were cleaned only for the 25 affected IDs and signed frontend
+  revalidation succeeded 25/25. CMS API, homepage, News, People, Tech, Places,
+  Unspoken and representative IDs 70, 71, 79, 214, 222 and 293 passed public
+  checks for HTTP, title, excerpt, body, image, links, canonical and metadata.
+- Final regression results: dash round trip 3/3; AI generation validation
+  54/54; focused Constitution/style/migration/SEO tests 16/16; `git diff
+  --check` passed. The previously successful production build was not repeated
+  because no code changed afterward. No frontend deploy, OpenAI request,
+  commit or push was performed.
+
+Дата проверки: 2026-08-08.
+
+## SEO and generated-editorial dash consistency
+
+- `/podcast` now emits the exact metadata title `Podcast - REVELATIONS` while
+  retaining its visible `REVELATIONS Podcast` H1 and existing description.
+  `/about` now emits `About REVELATIONS` without changing its visible H1 or
+  description.
+- Root WebSite and NewsMediaOrganization JSON-LD retain `REVELATIONS` as the
+  sole public brand name; the former `REVELATIONS Media` alternate names are
+  no longer emitted. Header primary editorial navigation is semantically
+  distinct from the Access and theme utility controls without a visual change.
+- The Podcast featured card uses one responsive semantic H2 instead of
+  duplicate desktop/mobile headings. Footer, Access, canonical URLs, robots,
+  sitemap, breadcrumbs and hub-detail links remain unchanged.
+- `build:production` now removes local `.next` before compiling. This is safe
+  because the production release package contains only standalone runtime,
+  `.next/static`, `BUILD_ID` and `public`; it prevents a stale non-deployable
+  `.next/cache/fetch-cache` response from failing the staging-domain guard.
+- Product-owner constitutional amendment extends ASCII-hyphen normalization to
+  all public editorial copy, including public quotations and historical CMS
+  content, while private source evidence remains verbatim. The AI pipeline
+  normalizes public quote blocks too and compares them against exact private
+  evidence using dash-only public representation; URLs, slugs, IDs and other
+  technical fields are never normalized. Focused PHP diagnostics pass in
+  isolation (54/54); focused Constitution/style Node tests pass (5/5).
+- The first production dash migration changed the approved 34 fields, but
+  three historical `post_content` values diverged because the CLI
+  `wp_update_post` save path applied KSES to legacy HTML. A subsequent guarded
+  rollback restored 31/34 fields exactly; for IDs 70, 71 and 79 it removed
+  existing preload links or canonicalized void tags. Revisions proved those
+  third-state values came from the recovery operation and not a later editor.
+- Product-owner-authorized direct DB recovery then restored only
+  `wp_posts.post_content` for IDs 70, 71 and 79 inside one transaction, using
+  frozen current-hash guards and exact pre-mutation backup values. In-transaction
+  and post-commit checks passed, protected columns/taxonomy/meta were unchanged,
+  and the complete scope is now 34/34 exact pre-mutation hashes. Object caches
+  were cleaned only for those IDs and existing signed frontend revalidation was
+  sent. This recovery established the exact before-state later used by the
+  approved byte-preserving storage-level dash migration documented above.
+
+Дата проверки: 2026-08-08.
+
 ## Podcast SEO (staging-first)
 
 - `/podcast` has the approved page-specific title and description, retains the
@@ -155,7 +274,11 @@
   lookup fixes expose numeric JSON relations correctly. Audit remains 53/53:
   Julia 15, Alina 31 and Editorial Team 7, with zero pending writes or conflicts.
 
-## REVELATIONS brand and editorial style contract
+## REVELATIONS brand and editorial style contract (superseded historical state)
+
+This dated 2026-07-21 snapshot is retained as history. Its quotation exclusions
+and public alternate-name policy were superseded by the current Constitution and
+the pre-commit state recorded above.
 
 - Canonical source-controlled brand assets are `BRAND_NAME` (`REVELATIONS`),
   `BRAND_TAGLINE` (`Born as a podcast. Built as a media platform.`) and
