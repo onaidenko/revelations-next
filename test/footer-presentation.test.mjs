@@ -32,3 +32,15 @@ test('footer social controls retain official URLs and accessible outline treatme
   assert.match(footer, /focus-visible:ring-1 focus-visible:ring-rose/);
   assert.doesNotMatch(footer, /rounded-full/);
 });
+
+test('footer keeps editorial verticals in Media and collections in Explore', () => {
+  assert.match(
+    footer,
+    /const MEDIA_LINKS = \[\s*\['News', '\/news'\],\s*\['People', '\/people'\],\s*\['Tech', '\/tech'\],\s*\['Places', '\/places'\],\s*\['Unspoken', '\/unspoken'\],\s*\['Podcast', '\/podcast'\],\s*\];/
+  );
+  assert.match(
+    footer,
+    /const EXPLORE_LINKS = \[\s*\['Topics', '\/topics'\],\s*\['Series', '\/series'\],\s*\['Locations', '\/locations'\],\s*\['Entities', '\/tags'\],\s*\];/
+  );
+  assert.match(footer, /<Link\s+[\s\S]*?href=\{href\}/);
+});

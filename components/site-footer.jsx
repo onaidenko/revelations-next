@@ -11,6 +11,8 @@ const MEDIA_LINKS = [
   ['People', '/people'],
   ['Tech', '/tech'],
   ['Places', '/places'],
+  ['Unspoken', '/unspoken'],
+  ['Podcast', '/podcast'],
 ];
 
 const EXPLORE_LINKS = [
@@ -18,8 +20,6 @@ const EXPLORE_LINKS = [
   ['Series', '/series'],
   ['Locations', '/locations'],
   ['Entities', '/tags'],
-  ['Unspoken', '/unspoken'],
-  ['Podcast', '/podcast'],
 ];
 
 const PLATFORM_LINKS = [
