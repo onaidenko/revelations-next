@@ -266,6 +266,66 @@ function revelations_editorial_unspoken_track(
 }
 
 /**
+ * Detect the overlooked consequence that makes a story Unspoken.
+ *
+ * @return array{category:string,signals:string[]}
+ */
+function revelations_editorial_unspoken_angle( string $text ): array {
+    $angles = array(
+        'hidden_labor' => array(
+            'hidden labor', 'manual labor', 'remote operator',
+            'remote operators', 'human operator', 'human operators',
+            'content moderation', 'labeling', 'supervision',
+        ),
+        'limitation' => array(
+            'limitation', 'limitations', 'requires human intervention',
+            'requires human supervision', 'manual intervention',
+            'works worse', 'scaling problem', 'safety failure',
+            'abandoned', 'failed deployment',
+        ),
+        'human_effect' => array(
+            'emotional relationship', 'emotional relationships',
+            'ai companion', 'ai companions', 'loneliness', 'dependency',
+            'loss of skills', 'behavior change', 'behaviour change',
+            'relationships',
+        ),
+        'trust_identity' => array(
+            'synthetic media', 'deepfake', 'deepfakes', 'authenticity',
+            'visual evidence', 'digital identity', 'no longer trust',
+        ),
+        'infrastructure_cost' => array(
+            'energy demand', 'water use', 'water demand',
+            'datacenter constraint', 'datacenter constraints',
+            'data center constraint', 'data center constraints',
+            'chip bottleneck', 'chip bottlenecks', 'physical infrastructure',
+        ),
+        'autonomy_gap' => array(
+            'edge case', 'edge cases', 'unclear responsibility',
+            'human supervision', 'remote operator', 'unexpected city behavior',
+            'unexpected city behaviour',
+        ),
+        'second_order_effect' => array(
+            'unintended use', 'unintended social use', 'unexpected behavior',
+            'unexpected behaviour', 'second-order effect',
+            'creates additional manual work', 'new dependency',
+            'social adaptation',
+        ),
+    );
+
+    foreach ( $angles as $category => $signals ) {
+        $matches = revelations_editorial_unspoken_keyword_matches(
+            $text,
+            $signals
+        );
+        if ( array() !== $matches ) {
+            return array( 'category' => $category, 'signals' => $matches );
+        }
+    }
+
+    return array( 'category' => '', 'signals' => array() );
+}
+
+/**
  * Detect attribution/evidence suitable for preview qualification.
  *
  * Presence means the source snapshot names evidence; it does not
@@ -548,8 +608,8 @@ function revelations_editorial_unspoken_freshness(
 /**
  * Score one Unspoken story after the shared global AI gate.
  *
- * High aggregate scores cannot compensate for missing harm, event,
- * attribution or track gates.
+ * High aggregate scores cannot compensate for a missing Unspoken angle,
+ * substantive evidence or freshness gate.
  *
  * @param array<string, mixed> $story Story.
  * @return array<string, mixed>|null
@@ -624,6 +684,12 @@ function revelations_editorial_score_unspoken_story(
             $keywords['impact']
         );
 
+    $angle = revelations_editorial_unspoken_angle( $text );
+    $track = revelations_editorial_unspoken_track( $text );
+    $legacy_substantive =
+        count( $harm_matches ) >= 2 ||
+        count( $event_matches ) >= 2;
+
     $explicit_no_event =
         1 === preg_match(
             '/\b(?:no|without)\b.{0,60}\b' .
@@ -642,31 +708,15 @@ function revelations_editorial_score_unspoken_story(
         );
     }
 
-    if ( array() === $harm_matches ) {
+    if (
+        '' === $angle['category'] &&
+        ( null === $track || ! $legacy_substantive )
+    ) {
         return revelations_editorial_scanner_rejection(
-            'harm_not_central',
-            'No central harm, failure or conflict signal was found.'
-        );
-    }
-
-    if ( array() === $event_matches ) {
-        return revelations_editorial_scanner_rejection(
-            array() !== $speculative_matches
-                ? 'speculation_or_prediction'
-                : 'insufficient_event_signal',
-            'No confirmed negative event signal was found.'
-        );
-    }
-
-    $track =
-        revelations_editorial_unspoken_track(
-            $text
-        );
-
-    if ( null === $track ) {
-        return revelations_editorial_scanner_rejection(
-            'insufficient_section_signal',
-            'No approved Unspoken editorial track was resolved.'
+            array() !== $harm_matches
+                ? 'generic_negative_news'
+                : 'insufficient_unspoken_angle',
+            'No hidden, overlooked or second-order technology angle was found.'
         );
     }
 
@@ -724,11 +774,8 @@ function revelations_editorial_score_unspoken_story(
 
     $relevance_score = min(
         10,
-        4 +
-        max(
-            0,
-            count( $harm_matches ) - 1
-        ) * 2
+        4 + count( $angle['signals'] ) * 2 +
+        max( 0, count( $harm_matches ) - 1 )
     );
 
     $implementation_score = min(
@@ -803,9 +850,11 @@ function revelations_editorial_score_unspoken_story(
         $significance_qualified;
 
     $reasons = array(
-        'Track: ' .
-            str_replace( '_', ' ', $track ),
-        'Harm/failure signals: ' .
+        'Unspoken angle: ' .
+            str_replace( '_', ' ', $angle['category'] ?: (string) $track ),
+        'Angle signals: ' .
+            implode( ', ', array_slice( $angle['signals'], 0, 4 ) ),
+        'Legacy harm/failure signals: ' .
             implode(
                 ', ',
                 array_slice(
@@ -872,7 +921,7 @@ function revelations_editorial_score_unspoken_story(
                 ),
         'editorial_track' =>
             $qualified
-                ? $track
+                ? ( $track ?? $angle['category'] )
                 : null,
         'secondary_section' =>
             $qualified
@@ -890,6 +939,16 @@ function revelations_editorial_score_unspoken_story(
             $evidence['signals'],
         'scoring_reason' =>
             implode( '. ', $reasons ),
+
+        'section_signals' => array_values(
+            array_unique(
+                array_merge(
+                    $angle['signals'],
+                    $harm_matches,
+                    $event_matches
+                )
+            )
+        ),
     );
 }
 

@@ -533,6 +533,62 @@ revelations_unspoken_test(
     'global AI gate and strict Unspoken scorer both qualify a valid story'
 );
 
+$unspoken_future_cases = array(
+    'hidden human operators' => revelations_unspoken_story(
+        'Humanoid robots marketed as autonomous still depend on remote human operators',
+        'Published research found that the robots require continuous human supervision from remote operators.'
+    ),
+    'hidden manual labor' => revelations_unspoken_story(
+        'AI automation creates a new layer of hidden manual labor',
+        'Researchers found content moderation and labeling workers supervise the automated system.'
+    ),
+    'human-machine relationship' => revelations_unspoken_story(
+        'Research shows people forming emotional relationships with AI agents',
+        'A peer-reviewed study found that users form emotional relationships with AI companions.'
+    ),
+    'autonomy gap' => revelations_unspoken_story(
+        'Robotaxis create unexpected changes in city behavior',
+        'Published research found an unexpected city behavior and new human supervision needs.'
+    ),
+);
+
+foreach ( $unspoken_future_cases as $label => $story ) {
+    $gate = revelations_editorial_scanner_ai_gate( $story, 'unspoken' );
+    $score = ! empty( $gate['qualified'] )
+        ? revelations_editorial_score_unspoken_story( $story )
+        : null;
+
+    revelations_unspoken_test(
+        in_array(
+            $gate['gate_branch'] ?? '',
+            array( 'ai', 'future_tech' ),
+            true
+        ) &&
+        true === ( $score['qualified'] ?? false ),
+        'future-tech Unspoken qualifies ' . $label
+    );
+}
+
+$generic_negative_story = revelations_unspoken_story(
+    'AI startup loses money',
+    'A company statement reported losses after a difficult quarter.'
+);
+$generic_negative_gate = revelations_editorial_scanner_ai_gate(
+    $generic_negative_story,
+    'unspoken'
+);
+$generic_negative = revelations_editorial_score_unspoken_story(
+    $generic_negative_story
+);
+
+revelations_unspoken_test(
+    empty( $generic_negative_gate['qualified'] ) ||
+    'generic_negative_news' === (
+        $generic_negative['rejection_code'] ?? ''
+    ),
+    'ordinary negative business news without an Unspoken angle is rejected'
+);
+
 $gate_position = strpos(
     $engine_source,
     'revelations_editorial_scanner_ai_gate('

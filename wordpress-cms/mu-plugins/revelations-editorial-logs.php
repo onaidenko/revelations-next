@@ -26,6 +26,71 @@ function revelations_editorial_run_statuses(): array {
 }
 
 /**
+ * Persist only bounded scan diagnostics, never RSS summaries or payloads.
+ *
+ * @param array<string, mixed> $data Run data.
+ * @return array<string, mixed>
+ */
+function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
+    $source_results = array();
+    foreach ( array_slice( is_array( $data['source_results'] ?? null ) ? $data['source_results'] : array(), 0, 20 ) as $source ) {
+        if ( ! is_array( $source ) ) {
+            continue;
+        }
+        $source_results[] = array(
+            'source' => sanitize_text_field( (string) ( $source['source'] ?? '' ) ),
+            'success' => ! empty( $source['success'] ),
+            'items' => absint( $source['items'] ?? 0 ),
+            'duration_ms' => absint( $source['duration_ms'] ?? 0 ),
+            'error' => sanitize_text_field( (string) ( $source['error'] ?? '' ) ),
+        );
+    }
+
+    $rejection_counts = array();
+    foreach ( is_array( $data['rejection_counts'] ?? null ) ? $data['rejection_counts'] : array() as $scope => $counts ) {
+        if ( ! is_array( $counts ) ) {
+            continue;
+        }
+        foreach ( $counts as $code => $count ) {
+            $rejection_counts[ sanitize_key( (string) $scope ) ][ sanitize_key( (string) $code ) ] = absint( $count );
+        }
+    }
+
+    $closest_rejected = array();
+    foreach ( array_slice( is_array( $data['closest_rejected'] ?? null ) ? $data['closest_rejected'] : array(), 0, 10 ) as $story ) {
+        if ( ! is_array( $story ) ) {
+            continue;
+        }
+        $signals = static fn( mixed $values ): array => array_values( array_filter( array_map( 'sanitize_text_field', is_array( $values ) ? $values : array() ) ) );
+        $scores = is_array( $story['scores'] ?? null ) ? $story['scores'] : array();
+        $closest_rejected[] = array(
+            'title' => sanitize_text_field( (string) ( $story['title'] ?? '' ) ),
+            'source' => sanitize_text_field( (string) ( $story['source'] ?? '' ) ),
+            'url' => esc_url_raw( (string) ( $story['url'] ?? '' ) ),
+            'published_at' => sanitize_text_field( (string) ( $story['published_at'] ?? '' ) ),
+            'age_hours' => isset( $story['age_hours'] ) ? (float) $story['age_hours'] : null,
+            'matched_ai_signals' => $signals( $story['matched_ai_signals'] ?? array() ),
+            'matched_future_tech_families' => $signals( $story['matched_future_tech_families'] ?? array() ),
+            'action_signals' => $signals( $story['action_signals'] ?? array() ),
+            'technical_signals' => $signals( $story['technical_signals'] ?? array() ),
+            'section_signals' => $signals( $story['section_signals'] ?? array() ),
+            'scores' => array(
+                'total' => (float) ( $scores['total'] ?? 0 ),
+                'freshness' => (float) ( $scores['freshness'] ?? 0 ),
+                'implementation' => (float) ( $scores['implementation'] ?? 0 ),
+                'relevance' => (float) ( $scores['relevance'] ?? 0 ),
+                'impact' => (float) ( $scores['impact'] ?? 0 ),
+                'fit' => (float) ( $scores['fit'] ?? 0 ),
+            ),
+            'rejection_code' => sanitize_key( (string) ( $story['rejection_code'] ?? '' ) ),
+            'reason' => sanitize_text_field( (string) ( $story['reason'] ?? '' ) ),
+        );
+    }
+
+    return compact( 'source_results', 'rejection_counts', 'closest_rejected' );
+}
+
+/**
  * Create a private editorial run log.
  *
  * @param array<string, mixed> $data Run data.
@@ -57,9 +122,13 @@ function revelations_editorial_create_run_log(
         'ai_generation'      => 0,
         'ai_regenerated'     => false,
         'error_code'         => '',
+        'source_results'     => array(),
+        'rejection_counts'   => array(),
+        'closest_rejected'   => array(),
     );
 
     $data = wp_parse_args( $data, $defaults );
+    $scan_diagnostics = revelations_editorial_sanitize_scan_diagnostics( $data );
 
     $section = function_exists(
         'revelations_editorial_sanitize_section'
@@ -241,6 +310,10 @@ function revelations_editorial_create_run_log(
             sanitize_key(
                 (string) $data['error_code']
             ),
+
+        '_rev_source_results' => wp_json_encode( $scan_diagnostics['source_results'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+        '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+        '_rev_closest_rejected' => wp_json_encode( $scan_diagnostics['closest_rejected'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
     );
 
     foreach ( $meta as $key => $value ) {

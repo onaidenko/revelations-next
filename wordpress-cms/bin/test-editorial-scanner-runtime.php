@@ -166,6 +166,8 @@ require_once $plugin_dir .
     '/revelations-editorial-places-scanner.php';
 require_once $plugin_dir .
     '/revelations-editorial-unspoken-scanner.php';
+require_once $plugin_dir .
+    '/revelations-editorial-logs.php';
 
 $GLOBALS['wpdb'] =
     new RevelationsScannerTestWpdb();
@@ -430,6 +432,36 @@ $people_news =
         )
     );
 
+$people_future_tech = revelations_scanner_runtime_story(
+    'Ada Lovelace, leading humanoid robotics researcher, joins a major lab',
+    'The researcher led embodied systems research and built a robotics breakthrough.'
+);
+$people_future_gate = revelations_editorial_scanner_ai_gate(
+    $people_future_tech,
+    'people'
+);
+$people_future_score = ! empty( $people_future_gate['qualified'] )
+    ? revelations_editorial_score_people_story( $people_future_tech )
+    : null;
+
+revelations_scanner_runtime_test(
+    'future_tech' === ( $people_future_gate['gate_branch'] ?? '' ) &&
+    true === ( $people_future_score['qualified'] ?? false ),
+    'People qualifies a central future-tech researcher without deployment action'
+);
+
+$people_noise = revelations_editorial_score_people_story(
+    revelations_scanner_runtime_story(
+        'Taylor Smith, hotel CEO, talks about innovation',
+        'The executive discusses a luxury hospitality brand.'
+    )
+);
+
+revelations_scanner_runtime_test(
+    empty( $people_noise['qualified'] ),
+    'People rejects a generic executive profile without technological significance'
+);
+
 revelations_scanner_runtime_test(
     is_array( $people_news ) &&
     empty( $people_news['hard_rejected'] ),
@@ -494,7 +526,7 @@ $expected_section_codes = array(
     'people centrality' => 'person_not_central',
     'tech section signal' => 'insufficient_section_signal',
     'places centrality' => 'place_not_central',
-    'unspoken harm' => 'harm_not_central',
+    'unspoken harm' => 'insufficient_unspoken_angle',
     'unspoken evidence' => 'insufficient_evidence',
 );
 
@@ -637,6 +669,48 @@ revelations_scanner_runtime_test(
     'rejection diagnostics never include full RSS summary text'
 );
 
+$persisted_diagnostics =
+    revelations_editorial_sanitize_scan_diagnostics(
+        array(
+            'source_results' => array(
+                array(
+                    'source' => 'Synthetic Source',
+                    'success' => true,
+                    'items' => 3,
+                ),
+            ),
+            'rejection_counts' =>
+                $aggregate['rejection_counts'] ?? array(),
+            'closest_rejected' => array(
+                array(
+                    'title' => 'Near-miss story',
+                    'source' => 'Synthetic Source',
+                    'summary' => 'FULL_SOURCE_TEXT_SENTINEL',
+                    'matched_future_tech_families' =>
+                        array( 'autonomous_mobility' ),
+                    'scores' => array( 'total' => 3.0 ),
+                ),
+            ),
+        )
+    );
+
+revelations_scanner_runtime_test(
+    3 === (int) (
+        $persisted_diagnostics['source_results'][0]['items']
+        ?? 0
+    ) &&
+    'autonomous_mobility' === (
+        $persisted_diagnostics['closest_rejected'][0][
+            'matched_future_tech_families'
+        ][0] ?? ''
+    ) &&
+    ! str_contains(
+        wp_json_encode( $persisted_diagnostics ) ?: '',
+        'FULL_SOURCE_TEXT_SENTINEL'
+    ),
+    'permanent diagnostics retain bounded signals and exclude RSS summaries'
+);
+
 $preview_engine_source = file_get_contents(
     $plugin_dir .
     '/revelations-editorial-preview-engine.php'
@@ -644,15 +718,19 @@ $preview_engine_source = file_get_contents(
 
 revelations_scanner_runtime_test(
     is_string( $preview_engine_source ) &&
-    ! str_contains(
+    str_contains(
         $preview_engine_source,
-        "'rejection_samples' =>"
+        "'source_results' =>"
     ) &&
-    ! str_contains(
+    str_contains(
         $preview_engine_source,
-        "'below_threshold_scores' =>"
+        "'rejection_counts' =>"
+    ) &&
+    str_contains(
+        $preview_engine_source,
+        "'closest_rejected' =>"
     ),
-    'persistent run-log mapping does not store rejection samples or source text'
+    'persistent run-log mapping stores bounded source and rejection diagnostics'
 );
 
 echo "\nScanner runtime diagnostics: " .

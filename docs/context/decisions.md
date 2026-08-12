@@ -42,17 +42,29 @@ cannot override that Constitution without explicit product-owner approval.
 
 ## Общая AI-направленность
 
-- **Решение:** AI должен быть центральной темой материала во всех
-  разделах. Фонового упоминания недостаточно: материал должен
-  содержательно относиться к AI-индустрии, её участникам, технологиям,
-  внедрениям или последствиям.
+- **Решение:** все editorial sections принимают material через strict
+  `AI OR meaningful future-tech` global relevance. Existing AI branch
+  сохраняется без изменений. News/Places/Tech future-tech branch требует
+  family signal, действие и независимое technical/implementation
+  corroboration; People/Unspoken используют common future-tech families без
+  deployment requirement, но только после собственных строгих section gates.
+- **Причина:** REVELATIONS освещает AI и доказуемые future-facing
+  technological transformations, не превращая scanner в общий фильтр
+  по словам technology, smart или futuristic.
 - **Причина:** разделы меняют редакционный угол, но не общую
   AI-направленность REVELATIONS.
 
-- **Решение:** global AI relevance gate остаётся обязательным этапом
-  автоматического отбора и выполняется до section-specific scoring.
+- **Решение:** global relevance gate остаётся обязательным этапом до
+  section-specific scoring. Generic hospitality, architecture, real estate,
+  concepts, renders, plans и opinion pieces не получают обхода через
+  future-tech branch.
 - **Причина:** неподходящий материал не должен получать section score
   или становиться qualified candidate.
+- **Решение:** People требует named central person и substantive technical
+  significance (например, founder, inventor, researcher или technical leader).
+  Unspoken требует evidence-backed hidden, limitation, human-effect,
+  trust/identity, infrastructure-cost, autonomy-gap или second-order angle;
+  ordinary negative business news не является достаточным.
 
 ## Раздел и классификация
 

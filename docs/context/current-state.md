@@ -1,5 +1,21 @@
 # Текущее состояние
 
+## Future-tech editorial gate and scan diagnostics
+
+- All editorial sections now use strict `AI OR meaningful future-tech`
+  relevance. News, Places and Tech retain their deployment-focused future-tech
+  branch. People requires a named, central technical figure; Unspoken requires
+  a substantive, evidence-backed hidden or second-order angle. Generic
+  "futuristic" coverage remains rejected before qualification.
+- Private RSS run logs now retain bounded source fetch results, rejection
+  counts and up to ten closest rejected records with safe signal/score
+  diagnostics. RSS summaries and full payloads are excluded.
+- Focused diagnostic cases cover future-tech positives/noise, unchanged AI
+  branch, People centrality/significance, Unspoken hidden-angle cases and safe
+  permanent-diagnostic shaping.
+
+Дата изменения: 2026-08-12.
+
 ## Pre-commit blocker resolution
 
 - Generated public-copy dash normalization now protects deterministic technical

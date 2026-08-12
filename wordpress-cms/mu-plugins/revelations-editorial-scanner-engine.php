@@ -602,18 +602,203 @@ function revelations_editorial_scanner_signal_matches(
 }
 
 /**
- * Require AI to be the dominant subject of every scanned story.
- *
- * A direct AI subject must be paired with both a meaningful action
- * and technical context, unless a second independent direct signal
- * supplies that context. Ambiguous product names require at least
- * two independent technical signals.
+ * Return strict future-tech signals for the target editorial sections.
  *
  * @param array<string, mixed> $story Story.
  * @return array<string, mixed>
  */
-function revelations_editorial_scanner_ai_gate(
+function revelations_editorial_scanner_future_tech_signals(): array {
+    return array(
+        'robotics_embodied' => array(
+            'humanoid robot', 'humanoid robots', 'service robot',
+            'service robots', 'industrial robot', 'industrial robots',
+            'embodied system', 'embodied systems', 'robotic', 'robotics',
+            'robots', 'robot', 'humanoid',
+        ),
+        'autonomous_mobility' => array(
+            'autonomous shuttle', 'autonomous transport',
+            'autonomous delivery', 'autonomous vehicle',
+            'autonomous vehicles', 'autonomous system',
+            'autonomous systems', 'self-driving', 'driverless', 'robotaxi',
+            'robotaxis', 'unmanned system', 'unmanned systems', 'autonomous',
+        ),
+        'smart_physical_infrastructure' => array(
+            'intelligent transport system', 'intelligent infrastructure',
+            'connected infrastructure', 'automated infrastructure',
+            'smart building', 'smart airport', 'smart transport',
+            'smart city', 'digital twin',
+        ),
+        'advanced_construction' => array(
+            'additive construction', 'robotic construction',
+            'construction robot', 'construction robots',
+            'automated construction', 'autonomous construction',
+            '3d-printed', '3d printed', '3d printing',
+        ),
+        'future_mobility' => array(
+            'next-generation transport system', 'autonomous transit',
+            'autonomous mobility', 'air taxi', 'evtol',
+        ),
+        'human_machine_environment' => array(
+            'robot-operated hotel', 'robot-operated restaurant',
+            'robot-operated facility', 'automated physical environment',
+            'robotic service environment', 'autonomous facility',
+            'intelligent physical environment',
+        ),
+    );
+}
+function revelations_editorial_scanner_future_tech_corroboration(): array {
+    return array(
+        'sensing_or_control' => array(
+            'sensor', 'sensors', 'lidar', 'computer-controlled',
+            'control system', 'control systems',
+        ),
+        'implementation' => array(
+            'deployment', 'deployed', 'production', 'fleet',
+            'infrastructure system',
+        ),
+    );
+}
+
+/**
+ * Additional future-tech domains relevant to people and consequences.
+ * They do not broaden the deployment-focused News, Places or Tech branch.
+ *
+ * @return array<string, string[]>
+ */
+function revelations_editorial_scanner_future_tech_context_extensions(): array {
+    return array(
+        'advanced_computing' => array(
+            'advanced computing', 'semiconductor', 'semiconductors',
+            'chip architecture', 'chip architectures',
+        ),
+        'space_technology' => array(
+            'space technology', 'space technologies', 'satellite system',
+            'satellite systems', 'orbital system', 'orbital systems',
+        ),
+        'neurotechnology' => array(
+            'brain-computer interface', 'brain computer interface', 'bci',
+            'neurotechnology', 'neural implant', 'neural implants',
+        ),
+        'advanced_biotech' => array(
+            'synthetic biology', 'gene editing', 'genome engineering',
+            'biotech platform', 'biotechnology platform',
+        ),
+    );
+}
+function revelations_editorial_scanner_future_tech_gate( array $story ): array {
+    $text = mb_strtolower(
+        (string) ( $story['title'] ?? '' ) . ' ' .
+        (string) ( $story['summary'] ?? '' ),
+        'UTF-8'
+    );
+    $families = revelations_editorial_scanner_signal_matches(
+        $text,
+        array( 'future_tech' => revelations_editorial_scanner_future_tech_signals() )
+    );
+    if (
+        preg_match( '~(?<![\\p{L}\\p{N}])additive manufacturing(?![\\p{L}\\p{N}])~iu', $text ) === 1 &&
+        preg_match( '~(?<![\\p{L}\\p{N}])(building|buildings|construction|housing|homes|built environment)(?![\\p{L}\\p{N}])~iu', $text ) === 1
+    ) {
+        $families['future_tech'][] = 'advanced_construction';
+    }
+    $technical = revelations_editorial_scanner_signal_matches(
+        $text,
+        array( 'corroboration' => revelations_editorial_scanner_future_tech_corroboration() )
+    );
+    $actions = revelations_editorial_scanner_signal_matches(
+        $text,
+        array(
+            'action' => revelations_editorial_scanner_ai_signals()['action'] + array(
+                'open' => array( 'opens', 'opened' ),
+                'install' => array( 'installs', 'installed' ),
+                'operate' => array( 'begins operation', 'begin operation', 'operational', 'begins operating', 'begin operating' ),
+                'service' => array( 'starts service', 'begin passenger service', 'begins passenger service' ),
+                'complete' => array( 'completes', 'completed' ),
+                'rollout' => array( 'rolls out', 'rolled out' ),
+                'pilot' => array( 'begins testing', 'begin testing', 'begins pilot', 'pilot begins' ),
+            ),
+        )
+    );
+    $family_matches = array_values( array_unique( $families['future_tech'] ?? array() ) );
+    $corroboration_matches = $technical['corroboration'] ?? array();
+    $action_matches = $actions['action'] ?? array();
+    $generic = preg_match(
+        '~(?<![\p{L}\p{N}])(future|futuristic|smart|next-generation|technology|innovation)(?![\p{L}\p{N}])~iu',
+        $text
+    ) === 1;
+    $qualified = array() !== $family_matches &&
+        array() !== $action_matches &&
+        array() !== $corroboration_matches;
+    $code = $qualified ? '' : (
+        array() === $family_matches
+            ? ( $generic ? 'generic_futurism_only' : 'no_ai_or_future_tech_signal' )
+            : ( array() === $action_matches ? 'future_tech_without_action' : 'future_tech_without_corroboration' )
+    );
+
+    return array(
+        'qualified' => $qualified,
+        'future_tech_families' => $family_matches,
+        'future_tech_corroboration' => $corroboration_matches,
+        'future_tech_action_matches' => $action_matches,
+        'rejection_code' => $code,
+        'reason' => $qualified
+            ? 'Future-tech subject has action and corroboration.'
+            : $code,
+    );
+}
+
+/**
+ * People and Unspoken require future-tech context, not a deployment event.
+ * Their scorers apply the required person-significance or Unspoken-angle gate.
+ *
+ * @param array<string, mixed> $story Story.
+ * @return array<string, mixed>
+ */
+function revelations_editorial_scanner_future_tech_context_gate(
     array $story
+): array {
+    $text = mb_strtolower(
+        (string) ( $story['title'] ?? '' ) . ' ' .
+        (string) ( $story['summary'] ?? '' ),
+        'UTF-8'
+    );
+    $matches = revelations_editorial_scanner_signal_matches(
+        $text,
+        array(
+            'future_tech' => array_merge(
+                revelations_editorial_scanner_future_tech_signals(),
+                revelations_editorial_scanner_future_tech_context_extensions()
+            ),
+        )
+    );
+    if (
+        preg_match( '~(?<![\\p{L}\\p{N}])additive manufacturing(?![\\p{L}\\p{N}])~iu', $text ) === 1 &&
+        preg_match( '~(?<![\\p{L}\\p{N}])(building|buildings|construction|housing|homes|built environment)(?![\\p{L}\\p{N}])~iu', $text ) === 1
+    ) {
+        $matches['future_tech'][] = 'advanced_construction';
+    }
+
+    $families = array_values(
+        array_unique( $matches['future_tech'] ?? array() )
+    );
+
+    return array(
+        'qualified' => array() !== $families,
+        'future_tech_families' => $families,
+        'future_tech_corroboration' => array(),
+        'future_tech_action_matches' => array(),
+        'rejection_code' => array() === $families
+            ? 'no_ai_or_future_tech_signal'
+            : '',
+        'reason' => array() !== $families
+            ? 'Future-tech context is present; section criteria remain required.'
+            : 'no_ai_or_future_tech_signal',
+    );
+}
+
+function revelations_editorial_scanner_ai_gate(
+    array $story,
+    string $section = ''
 ): array {
     $signals =
         revelations_editorial_scanner_ai_signals();
@@ -790,7 +975,7 @@ function revelations_editorial_scanner_ai_gate(
             . 'to be the dominant subject.';
     }
 
-    return array(
+    $ai_result = array(
         'qualified' =>
             $qualified,
 
@@ -822,6 +1007,29 @@ function revelations_editorial_scanner_ai_gate(
         'rejection_code' =>
             $rejection_code,
     );
+
+    $section = mb_strtolower( trim( $section ), 'UTF-8' );
+    if ( ! in_array( $section, array( 'news', 'places', 'tech', 'people', 'unspoken' ), true ) || ! empty( $ai_result['qualified'] ) ) {
+        $ai_result['gate_branch'] = ! empty( $ai_result['qualified'] ) ? 'ai' : '';
+        return $ai_result;
+    }
+
+    $future_result = in_array( $section, array( 'people', 'unspoken' ), true )
+        ? revelations_editorial_scanner_future_tech_context_gate( $story )
+        : revelations_editorial_scanner_future_tech_gate( $story );
+    if ( ! empty( $future_result['qualified'] ) ) {
+        return array_merge( $ai_result, $future_result, array( 'qualified' => true, 'gate_branch' => 'future_tech', 'rejection_code' => '', 'reason' => $future_result['reason'] ) );
+    }
+
+    $ai_result['future_tech_families'] = $future_result['future_tech_families'];
+    $ai_result['future_tech_corroboration'] = $future_result['future_tech_corroboration'];
+    $ai_result['future_tech_action_matches'] = $future_result['future_tech_action_matches'];
+    $ai_result['gate_branch'] = '';
+    if ( array() === $ai_result['direct_matches'] && array() === $ai_result['contextual_matches'] ) {
+        $ai_result['rejection_code'] = $future_result['rejection_code'];
+        $ai_result['reason'] = $future_result['reason'];
+    }
+    return $ai_result;
 }
 
 /**
@@ -837,6 +1045,10 @@ function revelations_editorial_scanner_rejection_codes(): array {
             'ambiguous_product_without_ai_context',
             'broad_signal_without_technical_context',
             'no_meaningful_ai_action',
+            'no_ai_or_future_tech_signal',
+            'future_tech_without_action',
+            'future_tech_without_corroboration',
+            'generic_futurism_only',
         ),
         'section' => array(
             'opinion_or_advice',
@@ -846,6 +1058,10 @@ function revelations_editorial_scanner_rejection_codes(): array {
             'insufficient_event_signal',
             'insufficient_evidence',
             'insufficient_significance',
+            'insufficient_person_significance',
+            'insufficient_future_tech_significance',
+            'insufficient_unspoken_angle',
+            'generic_negative_news',
             'planned_not_implemented',
             'person_not_central',
             'place_not_central',
@@ -1023,7 +1239,7 @@ function revelations_editorial_scanner_add_rejection_sample(
 
     foreach (
         array(
-            'rejection_reason',
+            'rejection_reason', 'direct_matches', 'contextual_matches', 'technical_matches', 'action_matches', 'future_tech_families', 'future_tech_corroboration', 'future_tech_action_matches', 'gate_branch',
             'total_score',
             'freshness_score',
             'implementation_score',
@@ -1127,6 +1343,18 @@ function revelations_editorial_scanner_format_story(
             (string) (
                 $story['title'] ?? ''
             ),
+
+        'gate_branch' => sanitize_key( (string) ( $story['gate_branch'] ?? '' ) ),
+        'matched_ai_signals' => array_values( array_unique( array_merge( $story['direct_matches'] ?? array(), $story['contextual_matches'] ?? array() ) ) ),
+        'matched_future_tech_families' => array_values( $story['future_tech_families'] ?? array() ),
+        'action_signals' => array_values( array_unique( array_merge( $story['action_matches'] ?? array(), $story['future_tech_action_matches'] ?? array() ) ) ),
+        'technical_signals' => array_values( array_unique( array_merge( $story['technical_matches'] ?? array(), $story['future_tech_corroboration'] ?? array() ) ) ),
+
+        'section_signals' => array_values(
+            is_array( $story['section_signals'] ?? null )
+                ? $story['section_signals']
+                : array()
+        ),
 
         'source' =>
             (string) (
@@ -1320,6 +1548,7 @@ function revelations_editorial_scanner_run_dry_run(
         'section' => array(),
     );
     $below_threshold_scores = array();
+    $closest_rejected = array();
 
     foreach ( $sources as $source ) {
         if ( ! is_array( $source ) ) {
@@ -1496,6 +1725,15 @@ function revelations_editorial_scanner_run_dry_run(
                 'published_timestamp' =>
                     $published_timestamp,
 
+                'age_hours' =>
+                    $published_timestamp > 0
+                        ? max(
+                            0,
+                            ( time() - $published_timestamp ) /
+                            HOUR_IN_SECONDS
+                        )
+                        : null,
+
                 'summary' =>
                     $summary,
 
@@ -1505,7 +1743,8 @@ function revelations_editorial_scanner_run_dry_run(
 
             $ai_gate =
                 revelations_editorial_scanner_ai_gate(
-                    $story
+                    $story,
+                    $section
                 );
 
             if (
@@ -1538,8 +1777,30 @@ function revelations_editorial_scanner_run_dry_run(
                             (string) (
                                 $ai_gate['reason'] ?? ''
                             ),
+                        'direct_matches' => $ai_gate['direct_matches'] ?? array(),
+                        'contextual_matches' => $ai_gate['contextual_matches'] ?? array(),
+                        'technical_matches' => $ai_gate['technical_matches'] ?? array(),
+                        'action_matches' => $ai_gate['action_matches'] ?? array(),
+                        'future_tech_families' => $ai_gate['future_tech_families'] ?? array(),
+                        'future_tech_corroboration' => $ai_gate['future_tech_corroboration'] ?? array(),
+                        'future_tech_action_matches' => $ai_gate['future_tech_action_matches'] ?? array(),
+                        'gate_branch' => $ai_gate['gate_branch'] ?? '',
                     )
                 );
+                $closest = revelations_editorial_scanner_format_story(
+                    array_merge(
+                        $story,
+                        $ai_gate,
+                        array(
+                            'scoring_reason' => (string) (
+                                $ai_gate['reason'] ?? ''
+                            ),
+                        )
+                    )
+                );
+                unset( $closest['summary'], $closest['duplicate_key'] );
+                $closest['_diagnostic_depth'] = 1;
+                $closest_rejected[] = $closest;
 
                 continue;
             }
@@ -1612,6 +1873,22 @@ function revelations_editorial_scanner_run_dry_run(
                     $scores
                 );
 
+                $closest = revelations_editorial_scanner_format_story(
+                    array_merge(
+                        $story,
+                        $ai_gate,
+                        $scores,
+                        array(
+                            'scoring_reason' => (string) (
+                                $scores['rejection_reason'] ?? ''
+                            ),
+                        )
+                    )
+                );
+                unset( $closest['summary'], $closest['duplicate_key'] );
+                $closest['_diagnostic_depth'] = 2;
+                $closest_rejected[] = $closest;
+
                 continue;
             }
 
@@ -1631,6 +1908,14 @@ function revelations_editorial_scanner_run_dry_run(
                         ? '. ' . $existing_reason
                         : ''
                 );
+            $scores['direct_matches'] = $ai_gate['direct_matches'] ?? array();
+            $scores['contextual_matches'] = $ai_gate['contextual_matches'] ?? array();
+            $scores['technical_matches'] = $ai_gate['technical_matches'] ?? array();
+            $scores['action_matches'] = $ai_gate['action_matches'] ?? array();
+            $scores['future_tech_families'] = $ai_gate['future_tech_families'] ?? array();
+            $scores['future_tech_corroboration'] = $ai_gate['future_tech_corroboration'] ?? array();
+            $scores['future_tech_action_matches'] = $ai_gate['future_tech_action_matches'] ?? array();
+            $scores['gate_branch'] = $ai_gate['gate_branch'] ?? '';
 
             if ( empty( $scores['qualified'] ) ) {
                 $rejection_code = sanitize_key(
@@ -1667,6 +1952,8 @@ function revelations_editorial_scanner_run_dry_run(
 
                 $below_threshold_scores[] =
                     $below_threshold_story;
+                $below_threshold_story['_diagnostic_depth'] = 3;
+                $closest_rejected[] = $below_threshold_story;
             }
 
             $stories[] = array_merge(
@@ -1689,6 +1976,19 @@ function revelations_editorial_scanner_run_dry_run(
             (float) (
                 $left['total_score'] ?? 0
             )
+    );
+    usort(
+        $closest_rejected,
+        static function ( array $left, array $right ): int {
+            $depth =
+                (int) ( $right['_diagnostic_depth'] ?? 0 )
+                <=>(int) ( $left['_diagnostic_depth'] ?? 0 );
+
+            return 0 !== $depth
+                ? $depth
+                : (float) ( $right['scores']['total'] ?? 0 )
+                    <=>(float) ( $left['scores']['total'] ?? 0 );
+        }
     );
 
     usort(
@@ -1793,6 +2093,8 @@ function revelations_editorial_scanner_run_dry_run(
                 0,
                 20
             ),
+
+        'closest_rejected' => array_slice( $closest_rejected, 0, 10 ),
 
         'scored_stories' =>
             count( $stories ),

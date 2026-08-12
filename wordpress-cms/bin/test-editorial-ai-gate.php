@@ -179,6 +179,21 @@ $cases = array(
     ),
 );
 
+$future_tech_cases = array(
+    array( 'accept autonomous airport shuttle', 'Autonomous shuttle begins passenger service at airport', 'The operational fleet uses lidar sensors and an autonomous control system.', true ),
+    array( 'accept humanoid hotel service', 'Humanoid robots begin operating a hotel', 'The robotic service fleet is deployed with computer-controlled systems.', true ),
+    array( 'accept printed housing', "World's largest 3D-printed housing project completes first homes", 'Additive construction robots completed production homes with automated control systems.', true ),
+    array( 'accept robotic construction', 'Robotic construction system begins building homes autonomously', 'The construction robot is deployed in an operational automated production pilot.', true ),
+    array( 'accept smart-city transit', 'Smart-city district launches autonomous transport network', 'An operational autonomous fleet uses lidar and an intelligent transport system.', true ),
+    array( 'accept air taxi service', 'eVTOL air taxi begins commercial passenger service', 'The operational fleet begins service with autonomous flight-control systems.', true ),
+    array( 'reject luxury hotel', 'Luxury hotel opens after $200 million renovation', 'The resort adds restaurants and a spa.', false ),
+    array( 'reject concept hotel', 'Architect unveils futuristic hotel concept', 'The design study includes new renderings.', false ),
+    array( 'reject smart-looking interior', 'Inside the smart-looking interiors of a new resort', 'A luxury design project opens this year.', false ),
+    array( 'reject planned city', 'Developer plans futuristic city', 'The concept may transform the district.', false ),
+    array( 'reject speculative architecture', 'The future of architecture could be robotic', 'A commentary imagines possible buildings.', false ),
+    array( 'reject generic technology promise', 'New technology promises to transform hotels', 'The company plans a future platform.', false ),
+);
+
 $failures = 0;
 
 foreach ( $cases as $case ) {
@@ -241,13 +256,40 @@ foreach ( $cases as $case ) {
     );
 }
 
+foreach ( $future_tech_cases as $case ) {
+    $result = revelations_editorial_scanner_ai_gate(
+        array( 'title' => $case[1], 'summary' => $case[2] ),
+        'places'
+    );
+    if ( (bool) $case[3] === ( true === ( $result['qualified'] ?? false ) ) ) {
+        fwrite( STDOUT, 'PASS: ' . $case[0] . "\n" );
+        continue;
+    }
+    $failures++;
+    fwrite( STDERR, 'FAIL: ' . $case[0] . "\n" );
+}
+
+$ai_branch = revelations_editorial_scanner_ai_gate(
+    array(
+        'title' => 'OpenAI launches a new model',
+        'summary' => 'The model adds inference tools and agents.',
+    ),
+    'tech'
+);
+if ( 'ai' === ( $ai_branch['gate_branch'] ?? '' ) ) {
+    fwrite( STDOUT, "PASS: existing AI story retains AI branch\n" );
+} else {
+    $failures++;
+    fwrite( STDERR, "FAIL: existing AI story retains AI branch\n" );
+}
+
 if ( $failures > 0 ) {
     fwrite(
         STDERR,
         sprintf(
             "%d of %d AI gate diagnostics failed.\n",
             $failures,
-            count( $cases )
+            count( $cases ) + count( $future_tech_cases ) + 1
         )
     );
     exit( 1 );
@@ -257,7 +299,7 @@ fwrite(
     STDOUT,
     sprintf(
         "All %d AI gate diagnostics passed.\n",
-        count( $cases )
+        count( $cases ) + count( $future_tech_cases ) + 1
     )
 );
 

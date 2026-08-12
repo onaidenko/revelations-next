@@ -299,6 +299,9 @@ add_action(
             '_rev_drafts_generated'   => 'integer',
             '_rev_drafts_failed'      => 'integer',
             '_rev_duration_ms'        => 'integer',
+            '_rev_source_results'     => 'string',
+            '_rev_rejection_counts'   => 'string',
+            '_rev_closest_rejected'   => 'string',
         );
 
         foreach ( $run_meta as $key => $type ) {

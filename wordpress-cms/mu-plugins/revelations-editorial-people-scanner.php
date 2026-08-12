@@ -305,6 +305,26 @@ function revelations_editorial_people_is_generic_advice(
 }
 
 /**
+ * Require a future-tech People story to establish technical leadership,
+ * rather than merely naming a person at a technology company.
+ *
+ * @return string[]
+ */
+function revelations_editorial_people_future_tech_significance(
+    string $text
+): array {
+    return revelations_editorial_people_keyword_matches(
+        $text,
+        array(
+            'founder', 'co-founder', 'inventor', 'scientist', 'researcher',
+            'engineer', 'chief scientist', 'chief technology officer', 'cto',
+            'technical lead', 'leads research', 'led research',
+            'created', 'built', 'developed', 'breakthrough',
+        )
+    );
+}
+
+/**
  * Calculate story freshness.
  *
  * @return array{score:float,age_hours:float|null}
@@ -439,6 +459,18 @@ function revelations_editorial_score_people_story(
             $title
         );
 
+    $future_tech_context = function_exists(
+        'revelations_editorial_scanner_future_tech_context_gate'
+    )
+        ? revelations_editorial_scanner_future_tech_context_gate(
+            $story
+        )
+        : array( 'qualified' => false );
+    $future_tech_significance =
+        revelations_editorial_people_future_tech_significance(
+            $text
+        );
+
     $has_explicit_people_signal =
         array() !== $relevance_matches;
 
@@ -469,6 +501,21 @@ function revelations_editorial_score_people_story(
         return revelations_editorial_scanner_rejection(
             'person_not_central',
             'No central person or named personal action was found.'
+        );
+    }
+
+    if (
+        ! empty( $future_tech_context['qualified'] ) &&
+        (
+            ! $name_signal ||
+            array() === $future_tech_significance
+        )
+    ) {
+        return revelations_editorial_scanner_rejection(
+            $name_signal
+                ? 'insufficient_future_tech_significance'
+                : 'person_not_central',
+            'Future-tech story lacks a named central technical leader.'
         );
     }
 
@@ -627,6 +674,12 @@ function revelations_editorial_score_people_story(
             );
     }
 
+    if ( array() !== $future_tech_significance ) {
+        $reasons[] =
+            'Future-tech significance: ' .
+            implode( ', ', array_slice( $future_tech_significance, 0, 3 ) );
+    }
+
     if ( array() !== $speculative_matches ) {
         $reasons[] =
             'Speculative signals: ' .
@@ -684,7 +737,7 @@ function revelations_editorial_score_people_story(
                 : (
                     ! $base_qualified
                         ? 'below_threshold'
-                        : 'insufficient_significance'
+                        : 'insufficient_person_significance'
                 ),
 
         'editorial_track' =>
@@ -699,6 +752,15 @@ function revelations_editorial_score_people_story(
                     $reasons
                 )
                 : 'General People relevance.',
+
+        'section_signals' => array_values(
+            array_unique(
+                array_merge(
+                    $relevance_matches,
+                    $future_tech_significance
+                )
+            )
+        ),
     );
 }
 
