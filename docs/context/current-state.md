@@ -18,6 +18,11 @@
   privacy/control angles around neural/brain data and persists available angle
   signals on hard rejection. Run logs also retain bounded qualified-item
   diagnostics after preview-transient expiry.
+- Unspoken preview now uses the same session-transient state boundary and
+  summary/table pattern as the other RSS sections. A stale `scan_ready` query
+  parameter cannot show a completion notice when the user-specific preview
+  payload is absent; the renderer remains presentation-only and continues to
+  display Unspoken-specific evidence and advisory metadata from scanner output.
 
 Дата изменения: 2026-08-12.
 

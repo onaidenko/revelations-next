@@ -127,6 +127,12 @@ function revelations_editorial_render_unspoken_preview(): void {
         is_array( $preview['qualified_candidates'] )
             ? $preview['qualified_candidates']
             : array();
+
+    $active_sources = is_array( $preview ) &&
+        isset( $preview['active_sources'] ) &&
+        is_array( $preview['active_sources'] )
+            ? $preview['active_sources']
+            : array();
     ?>
 
     <section
@@ -189,7 +195,8 @@ function revelations_editorial_render_unspoken_preview(): void {
 
         <?php if (
             'unspoken' === $scan_section &&
-            isset( $_GET['scan_ready'] )
+            isset( $_GET['scan_ready'] ) &&
+            is_array( $preview )
         ) : ?>
             <div class="notice notice-success inline">
                 <p>Unspoken preview completed.</p>
@@ -245,27 +252,56 @@ function revelations_editorial_render_unspoken_preview(): void {
                 No Unspoken preview has been generated in this session.
             </p>
         <?php else : ?>
-            <p>
-                Fetched:
-                <strong>
-                    <?php echo esc_html(
-                        (string) absint(
-                            $preview['total_feed_items'] ?? 0
-                        )
-                    ); ?>
-                </strong>.
+            <div class="revelations-tech-preview__summary">
+                <span>
+                    <strong>
+                        <?php echo esc_html(
+                            (string) absint(
+                                $preview['total_feed_items'] ?? 0
+                            )
+                        ); ?>
+                    </strong>
+                    feed items
+                </span>
+
+                <span>
+                    <strong>
+                        <?php echo esc_html(
+                            (string) absint(
+                                $preview['qualified_stories'] ?? 0
+                            )
+                        ); ?>
+                    </strong>
+                    qualified - showing
+                    <strong>
+                        <?php echo esc_html(
+                            (string) count( $qualified )
+                        ); ?>
+                    </strong>
+                </span>
+
+                <span>
+                    <strong>
+                        <?php echo esc_html(
+                            (string) count( $active_sources )
+                        ); ?>
+                    </strong>
+                    active sources
+                </span>
+
+                <span>
+                    <strong>0</strong>
+                    records created automatically
+                </span>
+            </div>
+
+            <p class="description" style="margin-top:12px">
                 Global relevance filtered:
                 <strong>
                     <?php echo esc_html(
                         (string) absint(
                             $preview['ai_gate_filtered'] ?? 0
                         )
-                    ); ?>
-                </strong>.
-                Qualified:
-                <strong>
-                    <?php echo esc_html(
-                        (string) count( $qualified )
                     ); ?>
                 </strong>.
             </p>
@@ -299,7 +335,7 @@ function revelations_editorial_render_unspoken_preview(): void {
                                         $source_result['success']
                                     )
                                         ? 'available'
-                                        : 'skipped safely — ' .
+                                        : 'skipped safely - ' .
                                             (string) (
                                                 $source_result['error']
                                                 ?? 'feed error'
@@ -316,15 +352,78 @@ function revelations_editorial_render_unspoken_preview(): void {
                     No stories passed the current Unspoken editorial rules.
                 </p>
             <?php else : ?>
-                <div class="revelations-ai-review-metadata__items">
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Source</th>
+                            <th>Editorial track</th>
+                            <th>Scores</th>
+                            <th>Age</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     <?php foreach (
                         $qualified as $candidate_index => $item
                     ) : ?>
-                        <article
-                            class="revelations-ai-review-metadata__item"
-                            style="margin-top:12px"
-                        >
-                            <h3>
+                        <?php
+                        $scores = is_array( $item['scores'] ?? null )
+                            ? $item['scores']
+                            : array();
+                        $track = (string) (
+                            $item['editorial_track'] ?? ''
+                        );
+                        ?>
+                        <tr>
+                            <td>
+                                <strong>
+                                    <?php echo esc_html(
+                                        (string) (
+                                            $item['title'] ?? ''
+                                        )
+                                    ); ?>
+                                </strong>
+                                <div class="revelations-candidate-meta">
+                                    <?php echo esc_html(
+                                        (string) (
+                                            $item['reason'] ?? ''
+                                        )
+                                    ); ?>
+                                </div>
+                                <div class="revelations-candidate-meta">
+                                    Evidence type:
+                                    <?php echo esc_html(
+                                        str_replace(
+                                            '_',
+                                            ' ',
+                                            (string) (
+                                                $item['evidence_type']
+                                                ?? 'unspecified'
+                                            )
+                                        )
+                                    ); ?>
+                                </div>
+                                <?php if ( '' !== ( $item['secondary_section'] ?? '' ) ) : ?>
+                                    <div class="revelations-candidate-meta">
+                                        Secondary section advisory:
+                                        <?php echo esc_html(
+                                            ucfirst(
+                                                (string) $item[
+                                                    'secondary_section'
+                                                ]
+                                            )
+                                        ); ?>.
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ( ! empty( $item['single_source_allegation'] ) ) : ?>
+                                    <div class="revelations-candidate-meta">
+                                        Single-source allegation - requires
+                                        reputational review.
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                            <td>
                                 <a
                                     href="<?php echo esc_url(
                                         (string) (
@@ -332,109 +431,68 @@ function revelations_editorial_render_unspoken_preview(): void {
                                         )
                                     ); ?>"
                                     target="_blank"
-                                    rel="noreferrer noopener"
+                                    rel="noopener noreferrer"
                                 >
                                     <?php echo esc_html(
                                         (string) (
-                                            $item['title'] ?? ''
+                                            $item['source'] ?? ''
                                         )
                                     ); ?>
                                 </a>
-                            </h3>
-
-                            <p>
-                                <strong>Source:</strong>
-                                <?php echo esc_html(
-                                    (string) (
-                                        $item['source'] ?? ''
-                                    )
-                                ); ?>
-                                ·
-                                <strong>Track:</strong>
-                                <?php echo esc_html(
-                                    str_replace(
-                                        '_',
-                                        ' ',
-                                        (string) (
-                                            $item[
-                                                'editorial_track'
-                                            ] ?? ''
-                                        )
-                                    )
-                                ); ?>
-                            </p>
-
-                            <?php if (
-                                '' !== (
-                                    $item['secondary_section']
-                                    ?? ''
-                                )
-                            ) : ?>
-                                <p>
-                                    <strong>Secondary section advisory:</strong>
+                            </td>
+                            <td>
+                                <span class="revelations-preview-track">
                                     <?php echo esc_html(
-                                        ucfirst(
-                                            (string) $item[
-                                                'secondary_section'
-                                            ]
+                                        ucwords(
+                                            str_replace(
+                                                '_',
+                                                ' ',
+                                                $track
+                                            )
                                         )
-                                    ); ?>.
-                                    The saved section remains Unspoken
-                                    unless an operator changes it.
-                                </p>
-                            <?php endif; ?>
-
-                            <?php if (
-                                ! empty(
-                                    $item[
-                                        'single_source_allegation'
-                                    ]
-                                )
-                            ) : ?>
-                                <p>
-                                    <strong>
-                                        Single-source allegation
-                                    </strong>
-                                    ·
-                                    <strong>
-                                        Requires reputational review
-                                    </strong>
-                                </p>
-                            <?php endif; ?>
-
-                            <p>
-                                <strong>Evidence type:</strong>
-                                <?php echo esc_html(
-                                    str_replace(
-                                        '_',
-                                        ' ',
+                                    ); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <strong>
+                                    <?php echo esc_html(
                                         (string) (
-                                            $item['evidence_type']
-                                            ?? 'unspecified'
+                                            $scores['total'] ?? 0
                                         )
-                                    )
-                                ); ?>.
-                                Evidence presence does not establish
-                                the truth of the underlying claim.
-                            </p>
-
-                            <p>
-                                <?php echo esc_html(
-                                    (string) (
-                                        $item['summary'] ?? ''
-                                    )
-                                ); ?>
-                            </p>
-
-                            <p>
-                                <strong>Scoring:</strong>
-                                <?php echo esc_html(
-                                    (string) (
-                                        $item['reason'] ?? ''
-                                    )
-                                ); ?>
-                            </p>
-
+                                    ); ?>
+                                </strong>
+                                <div class="revelations-candidate-meta">
+                                    R <?php echo esc_html(
+                                        (string) (
+                                            $scores['relevance'] ?? 0
+                                        )
+                                    ); ?>
+                                    · I <?php echo esc_html(
+                                        (string) (
+                                            $scores['implementation'] ?? 0
+                                        )
+                                    ); ?>
+                                    · F <?php echo esc_html(
+                                        (string) (
+                                            $scores['freshness'] ?? 0
+                                        )
+                                    ); ?>
+                                </div>
+                            </td>
+                            <td>
+                                <?php
+                                $age_hours = $item['age_hours'] ?? null;
+                                echo esc_html(
+                                    null === $age_hours
+                                        ? '-'
+                                        : number_format(
+                                            (float) $age_hours,
+                                            1
+                                        ) . ' h'
+                                );
+                                ?>
+                            </td>
+                            <td>
                             <?php
                             $duplicate_key =
                                 sanitize_text_field(
@@ -502,16 +560,18 @@ function revelations_editorial_render_unspoken_preview(): void {
                                         false
                                     ); ?>
                                 </form>
-                            <?php endif; ?>
-                        </article>
+                                    <?php endif; ?>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
-                </div>
+                    </tbody>
+                </table>
             <?php endif; ?>
 
             <p class="description" style="margin-top:12px">
-                Preview expires after 15 minutes. The scanner does
-                not verify allegations and does not replace Human
-                Review.
+                Preview expires automatically after 15 minutes.
+                Candidates are saved only when you click
+                “Save candidate”.
             </p>
         <?php endif; ?>
     </section>
