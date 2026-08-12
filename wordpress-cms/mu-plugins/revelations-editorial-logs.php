@@ -56,24 +56,26 @@ function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
         }
     }
 
-    $closest_rejected = array();
-    foreach ( array_slice( is_array( $data['closest_rejected'] ?? null ) ? $data['closest_rejected'] : array(), 0, 10 ) as $story ) {
+    $sanitize_story = static function ( mixed $story ): ?array {
         if ( ! is_array( $story ) ) {
-            continue;
+            return null;
         }
         $signals = static fn( mixed $values ): array => array_values( array_filter( array_map( 'sanitize_text_field', is_array( $values ) ? $values : array() ) ) );
         $scores = is_array( $story['scores'] ?? null ) ? $story['scores'] : array();
-        $closest_rejected[] = array(
+        return array(
             'title' => sanitize_text_field( (string) ( $story['title'] ?? '' ) ),
             'source' => sanitize_text_field( (string) ( $story['source'] ?? '' ) ),
             'url' => esc_url_raw( (string) ( $story['url'] ?? '' ) ),
             'published_at' => sanitize_text_field( (string) ( $story['published_at'] ?? '' ) ),
             'age_hours' => isset( $story['age_hours'] ) ? (float) $story['age_hours'] : null,
+            'gate_branch' => sanitize_key( (string) ( $story['gate_branch'] ?? '' ) ),
             'matched_ai_signals' => $signals( $story['matched_ai_signals'] ?? array() ),
             'matched_future_tech_families' => $signals( $story['matched_future_tech_families'] ?? array() ),
             'action_signals' => $signals( $story['action_signals'] ?? array() ),
             'technical_signals' => $signals( $story['technical_signals'] ?? array() ),
             'section_signals' => $signals( $story['section_signals'] ?? array() ),
+            'section_angle_categories' => $signals( $story['section_angle_categories'] ?? array() ),
+            'editorial_track' => sanitize_key( (string) ( $story['editorial_track'] ?? '' ) ),
             'scores' => array(
                 'total' => (float) ( $scores['total'] ?? 0 ),
                 'freshness' => (float) ( $scores['freshness'] ?? 0 ),
@@ -85,9 +87,30 @@ function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
             'rejection_code' => sanitize_key( (string) ( $story['rejection_code'] ?? '' ) ),
             'reason' => sanitize_text_field( (string) ( $story['reason'] ?? '' ) ),
         );
+    };
+
+    $closest_rejected = array();
+    foreach ( array_slice( is_array( $data['closest_rejected'] ?? null ) ? $data['closest_rejected'] : array(), 0, 10 ) as $story ) {
+        $safe_story = $sanitize_story( $story );
+        if ( null !== $safe_story ) {
+            $closest_rejected[] = $safe_story;
+        }
     }
 
-    return compact( 'source_results', 'rejection_counts', 'closest_rejected' );
+    $qualified_items = array();
+    foreach ( array_slice( is_array( $data['qualified_items'] ?? null ) ? $data['qualified_items'] : array(), 0, 10 ) as $story ) {
+        $safe_story = $sanitize_story( $story );
+        if ( null !== $safe_story ) {
+            $qualified_items[] = $safe_story;
+        }
+    }
+
+    return compact(
+        'source_results',
+        'rejection_counts',
+        'closest_rejected',
+        'qualified_items'
+    );
 }
 
 /**
@@ -125,6 +148,7 @@ function revelations_editorial_create_run_log(
         'source_results'     => array(),
         'rejection_counts'   => array(),
         'closest_rejected'   => array(),
+        'qualified_items'    => array(),
     );
 
     $data = wp_parse_args( $data, $defaults );
@@ -314,6 +338,7 @@ function revelations_editorial_create_run_log(
         '_rev_source_results' => wp_json_encode( $scan_diagnostics['source_results'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_closest_rejected' => wp_json_encode( $scan_diagnostics['closest_rejected'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+        '_rev_qualified_items' => wp_json_encode( $scan_diagnostics['qualified_items'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
     );
 
     foreach ( $meta as $key => $value ) {

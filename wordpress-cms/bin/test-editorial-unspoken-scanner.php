@@ -589,6 +589,61 @@ revelations_unspoken_test(
     'ordinary negative business news without an Unspoken angle is rejected'
 );
 
+$neural_privacy = revelations_editorial_unspoken_angle(
+    'Brain-interface companies seek access to neural data and ownership of thoughts.'
+);
+revelations_unspoken_test(
+    'privacy_control' === ( $neural_privacy['category'] ?? '' ),
+    'neural-data privacy story recognizes a privacy/control angle'
+);
+
+$neural_privacy_hard_reject = revelations_editorial_score_unspoken_story(
+    revelations_unspoken_story(
+        'Brain-interface company seeks access to neural data',
+        'The company discusses neural data and ownership of thoughts without an attributed source.'
+    )
+);
+revelations_unspoken_test(
+    true === ( $neural_privacy_hard_reject['hard_rejected'] ?? false ) &&
+    'insufficient_evidence' === (
+        $neural_privacy_hard_reject['rejection_code'] ?? ''
+    ) &&
+    'privacy_control' === (
+        $neural_privacy_hard_reject['section_angle_categories'][0]
+        ?? ''
+    ),
+    'hard Unspoken rejection retains the recognized angle category'
+);
+
+$hidden_operators = revelations_editorial_unspoken_angle(
+    'Autonomous robots still require remote human operators and continuous supervision.'
+);
+revelations_unspoken_test(
+    'hidden_labor' === ( $hidden_operators['category'] ?? '' ),
+    'hidden human operators recognize an autonomy-related angle'
+);
+
+$synthetic_evidence = revelations_editorial_unspoken_angle(
+    'Synthetic media and deepfakes cause erosion of visual evidence and authenticity.'
+);
+revelations_unspoken_test(
+    'trust_identity' === ( $synthetic_evidence['category'] ?? '' ),
+    'synthetic-media evidence story recognizes a trust/identity angle'
+);
+
+$ordinary_privacy = revelations_editorial_score_unspoken_story(
+    revelations_unspoken_story(
+        'AI company faces a privacy lawsuit',
+        'A court filing concerns a routine privacy dispute without neural data or broader technology consequences.'
+    )
+);
+revelations_unspoken_test(
+    'generic_negative_news' === (
+        $ordinary_privacy['rejection_code'] ?? ''
+    ),
+    'generic privacy lawsuit without a deeper consequence remains rejected'
+);
+
 $gate_position = strpos(
     $engine_source,
     'revelations_editorial_scanner_ai_gate('

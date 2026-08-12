@@ -27,8 +27,8 @@ approval requirement are canonical in
 - Общий engine агрегирует machine-readable rejection counts отдельно
   для global gate и section scorer. Постоянный run log хранит только
   bounded source counts, rejection counts и не более десяти closest
-  rejected items с signal/score diagnostics; RSS summary и source
-  snapshot не сохраняются.
+  rejected items, а также bounded qualified items, с signal/score
+  diagnostics; RSS summary и source snapshot не сохраняются.
 - People scorer до scoring отклоняет generic leadership advice без
   нового события, но сохраняет новости о решении, назначении,
   заявлении или действии конкретного человека.

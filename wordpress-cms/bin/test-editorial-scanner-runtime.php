@@ -436,6 +436,54 @@ $people_future_tech = revelations_scanner_runtime_story(
     'Ada Lovelace, leading humanoid robotics researcher, joins a major lab',
     'The researcher led embodied systems research and built a robotics breakthrough.'
 );
+
+$news_model_release = revelations_editorial_score_news_story(
+    revelations_scanner_runtime_story(
+        'OpenAI launches a major new AI model',
+        'The company launched a new model with updated reasoning capabilities.'
+    )
+);
+
+revelations_scanner_runtime_test(
+    true === ( $news_model_release['qualified'] ?? false ),
+    'major AI model release is recognized as a significant News event'
+);
+
+$news_research_breakthrough = revelations_editorial_score_news_story(
+    revelations_scanner_runtime_story(
+        'Published research reports an AI research breakthrough',
+        'Researchers found a breakthrough result in a new AI system.'
+    )
+);
+
+revelations_scanner_runtime_test(
+    true === ( $news_research_breakthrough['qualified'] ?? false ),
+    'meaningful AI research breakthrough is recognized as News'
+);
+
+$news_minor_feature = revelations_editorial_score_news_story(
+    revelations_scanner_runtime_story(
+        'AI app adds a minor feature',
+        'The company released a small feature update for users.'
+    )
+);
+
+revelations_scanner_runtime_test(
+    empty( $news_minor_feature['qualified'] ),
+    'minor AI feature update does not automatically qualify as News'
+);
+
+$news_generic_funding = revelations_editorial_score_news_story(
+    revelations_scanner_runtime_story(
+        'AI startup announces funding',
+        'The startup announced an investment round.'
+    )
+);
+
+revelations_scanner_runtime_test(
+    empty( $news_generic_funding['qualified'] ),
+    'generic funding news without scale does not automatically qualify'
+);
 $people_future_gate = revelations_editorial_scanner_ai_gate(
     $people_future_tech,
     'people'
@@ -691,6 +739,18 @@ $persisted_diagnostics =
                     'scores' => array( 'total' => 3.0 ),
                 ),
             ),
+            'qualified_items' => array(
+                array(
+                    'title' => 'Qualified AI model release',
+                    'source' => 'Synthetic Source',
+                    'gate_branch' => 'ai',
+                    'matched_ai_signals' => array( 'ai', 'model' ),
+                    'section_signals' => array( 'model release' ),
+                    'editorial_track' => 'news_signal',
+                    'scores' => array( 'total' => 8.0 ),
+                    'summary' => 'FULL_SOURCE_TEXT_SENTINEL',
+                ),
+            ),
         )
     );
 
@@ -711,6 +771,30 @@ revelations_scanner_runtime_test(
     'permanent diagnostics retain bounded signals and exclude RSS summaries'
 );
 
+revelations_scanner_runtime_test(
+    'Qualified AI model release' === (
+        $persisted_diagnostics['qualified_items'][0]['title']
+        ?? ''
+    ) &&
+    'ai' === (
+        $persisted_diagnostics['qualified_items'][0]['gate_branch']
+        ?? ''
+    ) &&
+    'news_signal' === (
+        $persisted_diagnostics['qualified_items'][0]['editorial_track']
+        ?? ''
+    ) &&
+    8.0 === (float) (
+        $persisted_diagnostics['qualified_items'][0]['scores']['total']
+        ?? 0
+    ) &&
+    ! str_contains(
+        wp_json_encode( $persisted_diagnostics ) ?: '',
+        'FULL_SOURCE_TEXT_SENTINEL'
+    ),
+    'permanent diagnostics retain qualified branch and scores without RSS summaries'
+);
+
 $preview_engine_source = file_get_contents(
     $plugin_dir .
     '/revelations-editorial-preview-engine.php'
@@ -729,8 +813,12 @@ revelations_scanner_runtime_test(
     str_contains(
         $preview_engine_source,
         "'closest_rejected' =>"
+    ) &&
+    str_contains(
+        $preview_engine_source,
+        "'qualified_items' =>"
     ),
-    'persistent run-log mapping stores bounded source and rejection diagnostics'
+    'persistent run-log mapping stores bounded source, rejection and qualified diagnostics'
 );
 
 echo "\nScanner runtime diagnostics: " .

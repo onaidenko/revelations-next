@@ -13,6 +13,11 @@
 - Focused diagnostic cases cover future-tech positives/noise, unchanged AI
   branch, People centrality/significance, Unspoken hidden-angle cases and safe
   permanent-diagnostic shaping.
+- News now recognizes concrete model, research and consequential investment
+  events while retaining significance thresholds. Unspoken recognizes
+  privacy/control angles around neural/brain data and persists available angle
+  signals on hard rejection. Run logs also retain bounded qualified-item
+  diagnostics after preview-transient expiry.
 
 Дата изменения: 2026-08-12.
 

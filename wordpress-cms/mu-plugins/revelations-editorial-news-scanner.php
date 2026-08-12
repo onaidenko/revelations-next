@@ -167,6 +167,29 @@ function revelations_editorial_news_keyword_matches(
 }
 
 /**
+ * Detect concrete News events that supplement operator-configured keywords.
+ *
+ * They establish section relevance only. Existing impact/significance gates
+ * still prevent minor updates and routine funding from qualifying.
+ *
+ * @return string[]
+ */
+function revelations_editorial_news_event_matches( string $text ): array {
+    return revelations_editorial_news_keyword_matches(
+        $text,
+        array(
+            'model release', 'model launches', 'model launched',
+            'model releases', 'model released', 'new model',
+            'ai model', 'launches', 'launched', 'releases', 'released',
+            'research breakthrough', 'published research',
+            'researchers found', 'study found', 'funding', 'fund',
+            'investment', 'invests', 'operational change', 'rolls out',
+            'rolled out',
+        )
+    );
+}
+
+/**
  * Score one News story.
  *
  * Returning null means that the story was removed by a hard
@@ -254,12 +277,21 @@ function revelations_editorial_score_news_story(
             $keywords['speculative']
         );
 
+    $event_matches =
+        revelations_editorial_news_event_matches( $text );
+
     $implementation_score = min(
         10,
         max(
             0,
             count(
                 $implementation_matches
+            ) * 2 +
+            count(
+                array_intersect(
+                    $event_matches ?? array(),
+                    array( 'launches', 'launched', 'releases', 'released', 'rolls out', 'rolled out' )
+                )
             ) * 2
             -
             count(
@@ -276,9 +308,8 @@ function revelations_editorial_score_news_story(
 
     $relevance_score = min(
         10,
-        count(
-            $relevance_matches
-        ) * 2
+        count( $relevance_matches ) * 2 +
+        count( $event_matches ) * 2
     );
 
     if ( $relevance_score < 2 ) {
@@ -288,6 +319,17 @@ function revelations_editorial_score_news_story(
             array(
                 'relevance_score' =>
                     round( $relevance_score, 1 ),
+                'implementation_score' =>
+                    round( $implementation_score, 1 ),
+                'section_signals' => array_values(
+                    array_unique(
+                        array_merge(
+                            $relevance_matches,
+                            $event_matches,
+                            $implementation_matches
+                        )
+                    )
+                ),
             )
         );
     }
@@ -302,7 +344,15 @@ function revelations_editorial_score_news_story(
         10,
         count(
             $impact_matches
-        ) * 2.5
+        ) * 2.5 +
+        (
+            1 === preg_match(
+                '~[$€£]\s*\d+(?:\.\d+)?\s*[mb]|\b\d+(?:\.\d+)?\s*(?:billion|million|bn)\b~iu',
+                $text
+            )
+                ? 5.0
+                : 0
+        )
     );
 
     if (
@@ -354,6 +404,14 @@ function revelations_editorial_score_news_story(
             $news_thresholds[
                 'significance_impact_score'
             ] ?? 2.5
+        ) ||
+        array() !== array_intersect(
+            $event_matches,
+            array(
+                'model release', 'model launches', 'model launched',
+                'model releases', 'model released', 'research breakthrough',
+                'published research', 'researchers found', 'study found',
+            )
         );
 
     $qualified =
@@ -381,6 +439,12 @@ function revelations_editorial_score_news_story(
             count(
                 $relevance_matches
             );
+    }
+
+    if ( array() !== $event_matches ) {
+        $reasons[] =
+            'News events: ' .
+            implode( ', ', array_slice( $event_matches, 0, 3 ) );
     }
 
     if ( array() !== $impact_matches ) {
@@ -473,6 +537,17 @@ function revelations_editorial_score_news_story(
                     $reasons
                 )
                 : 'General News relevance.',
+
+        'section_signals' => array_values(
+            array_unique(
+                array_merge(
+                    $relevance_matches,
+                    $event_matches,
+                    $implementation_matches,
+                    $impact_matches
+                )
+            )
+        ),
     );
 }
 

@@ -138,8 +138,9 @@ function revelations_editorial_render_unspoken_preview(): void {
                 <h2>Unspoken RSS scan</h2>
 
                 <p class="revelations-desk__section-description">
-                    Preview documented AI harms, failures, hidden
-                    costs and conflicts. Results are leads for strict
+                    Preview AI and future-tech stories with overlooked
+                    consequences, limitations, hidden layers and
+                    second-order effects. Results are leads for strict
                     human and reputational review, not findings of
                     truth. No candidate is created automatically.
 
@@ -253,7 +254,7 @@ function revelations_editorial_render_unspoken_preview(): void {
                         )
                     ); ?>
                 </strong>.
-                AI gate filtered:
+                Global relevance filtered:
                 <strong>
                     <?php echo esc_html(
                         (string) absint(
@@ -312,8 +313,7 @@ function revelations_editorial_render_unspoken_preview(): void {
 
             <?php if ( array() === $qualified ) : ?>
                 <p>
-                    No stories passed every AI, harm, event,
-                    attribution, freshness and significance gate.
+                    No stories passed the current Unspoken editorial rules.
                 </p>
             <?php else : ?>
                 <div class="revelations-ai-review-metadata__items">

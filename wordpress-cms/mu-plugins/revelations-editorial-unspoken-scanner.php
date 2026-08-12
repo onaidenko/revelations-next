@@ -287,11 +287,27 @@ function revelations_editorial_unspoken_angle( string $text ): array {
             'emotional relationship', 'emotional relationships',
             'ai companion', 'ai companions', 'loneliness', 'dependency',
             'loss of skills', 'behavior change', 'behaviour change',
-            'relationships',
+            'behavioral changes', 'behavioural changes', 'relationships',
+            'emotional dependence', 'ai relationships', 'unexpected usage',
+            'unexpected usage patterns', 'social adaptation',
         ),
         'trust_identity' => array(
             'synthetic media', 'deepfake', 'deepfakes', 'authenticity',
             'visual evidence', 'digital identity', 'no longer trust',
+            'synthetic identity', 'impersonation', 'evidence erosion',
+            'trust erosion', 'identity consequences',
+        ),
+        'privacy_control' => array(
+            'brain data', 'neural data', 'mental privacy',
+            'cognitive privacy', 'neural privacy', 'biometric signals',
+            'neural signals', 'harvest your thoughts', 'harvesting thoughts',
+            'ownership of thoughts', 'ownership of neural data',
+            'control of neural data',
+        ),
+        'power_control' => array(
+            'surveillance', 'monitoring', 'tracking', 'profiling',
+            'behavioral control', 'behavioural control', 'algorithmic control',
+            'manipulation', 'consent', 'ownership of personal data',
         ),
         'infrastructure_cost' => array(
             'energy demand', 'water use', 'water demand',
@@ -716,7 +732,14 @@ function revelations_editorial_score_unspoken_story(
             array() !== $harm_matches
                 ? 'generic_negative_news'
                 : 'insufficient_unspoken_angle',
-            'No hidden, overlooked or second-order technology angle was found.'
+            'No hidden, overlooked or second-order technology angle was found.',
+            array(
+                'section_signals' => array_merge(
+                    $harm_matches,
+                    $event_matches
+                ),
+                'section_angle_categories' => array(),
+            )
         );
     }
 
@@ -728,7 +751,13 @@ function revelations_editorial_score_unspoken_story(
     if ( '' === $evidence['type'] ) {
         return revelations_editorial_scanner_rejection(
             'insufficient_evidence',
-            'No attribution or evidence type was found.'
+            'No attribution or evidence type was found.',
+            array(
+                'section_signals' => $angle['signals'],
+                'section_angle_categories' => array_filter(
+                    array( $angle['category'] )
+                ),
+            )
         );
     }
 
@@ -948,6 +977,10 @@ function revelations_editorial_score_unspoken_story(
                     $event_matches
                 )
             )
+        ),
+
+        'section_angle_categories' => array_filter(
+            array( $angle['category'] )
         ),
     );
 }

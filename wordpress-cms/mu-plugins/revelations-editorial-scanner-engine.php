@@ -1239,7 +1239,7 @@ function revelations_editorial_scanner_add_rejection_sample(
 
     foreach (
         array(
-            'rejection_reason', 'direct_matches', 'contextual_matches', 'technical_matches', 'action_matches', 'future_tech_families', 'future_tech_corroboration', 'future_tech_action_matches', 'gate_branch',
+            'rejection_reason', 'direct_matches', 'contextual_matches', 'technical_matches', 'action_matches', 'future_tech_families', 'future_tech_corroboration', 'future_tech_action_matches', 'gate_branch', 'section_signals', 'section_angle_categories',
             'total_score',
             'freshness_score',
             'implementation_score',
@@ -1353,6 +1353,12 @@ function revelations_editorial_scanner_format_story(
         'section_signals' => array_values(
             is_array( $story['section_signals'] ?? null )
                 ? $story['section_signals']
+                : array()
+        ),
+
+        'section_angle_categories' => array_values(
+            is_array( $story['section_angle_categories'] ?? null )
+                ? $story['section_angle_categories']
                 : array()
         ),
 
@@ -2016,6 +2022,15 @@ function revelations_editorial_scanner_run_dry_run(
         )
     );
 
+    $qualified_items = array_map(
+        static function ( array $story ): array {
+            $item = revelations_editorial_scanner_format_story( $story );
+            unset( $item['summary'], $item['duplicate_key'] );
+            return $item;
+        },
+        array_slice( $qualified, 0, $qualified_limit )
+    );
+
     return array(
         'mode' =>
             'dry-run',
@@ -2121,6 +2136,8 @@ function revelations_editorial_scanner_run_dry_run(
                     $qualified_limit
                 )
             ),
+
+        'qualified_items' => $qualified_items,
 
         'candidates_created' =>
             0,

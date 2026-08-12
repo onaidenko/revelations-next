@@ -302,6 +302,7 @@ add_action(
             '_rev_source_results'     => 'string',
             '_rev_rejection_counts'   => 'string',
             '_rev_closest_rejected'   => 'string',
+            '_rev_qualified_items'    => 'string',
         );
 
         foreach ( $run_meta as $key => $type ) {

@@ -65,6 +65,11 @@ cannot override that Constitution without explicit product-owner approval.
   Unspoken требует evidence-backed hidden, limitation, human-effect,
   trust/identity, infrastructure-cost, autonomy-gap или second-order angle;
   ordinary negative business news не является достаточным.
+- **Решение:** News понимает concrete model/research/investment events как
+  section signals, но сохраняет existing thresholds: routine feature updates
+  и funding без масштаба не получают significance. Unspoken privacy/control
+  включает neural/brain data, mental privacy и ownership/control of intimate
+  data только как evidence-backed angle, а не generic negative sentiment.
 
 ## Раздел и классификация
 

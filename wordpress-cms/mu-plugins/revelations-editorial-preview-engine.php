@@ -379,6 +379,7 @@ function revelations_editorial_log_preview_scan(
             'source_results' => $result['source_results'] ?? array(),
             'rejection_counts' => $result['rejection_counts'] ?? array(),
             'closest_rejected' => $result['closest_rejected'] ?? array(),
+            'qualified_items' => $result['qualified_items'] ?? array(),
         )
     );
 }
