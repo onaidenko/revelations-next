@@ -21,6 +21,9 @@ function revelations_author_relation( mixed $value ): array {
     return $result;
 }
 function revelations_author_relation_json( mixed $value ): string { return (string) wp_json_encode( revelations_author_relation( $value ) ); }
+function revelations_author_relation_can_edit( mixed $allowed, string $meta_key, int $post_id, int $user_id ): bool {
+    return REVELATIONS_AUTHOR_RELATION === $meta_key && user_can( $user_id, 'edit_post', $post_id );
+}
 function revelations_author_is_public_ready( WP_Post $author, int $published_count = 0 ): bool {
     return 'publish' === $author->post_status && '1' === get_post_meta( $author->ID, 'revelations_author_active', true ) && '' !== trim( $author->post_title ) && '' !== trim( $author->post_excerpt ) && $published_count > 0;
 }
@@ -43,7 +46,7 @@ function revelations_author_article_data( WP_Post $author, int $published_count 
 add_action( 'init', static function (): void {
     register_post_type( 'rev_author', array( 'labels' => array( 'name' => 'Editorial Authors', 'singular_name' => 'Editorial Author' ), 'public' => false, 'show_ui' => true, 'show_in_menu' => true, 'show_in_rest' => true, 'supports' => array( 'title', 'excerpt', 'thumbnail', 'custom-fields' ), 'rewrite' => false, 'has_archive' => false ) );
     foreach ( array( 'revelations_author_schema_type' => array( 'sanitize_callback' => 'revelations_author_schema_type', 'default' => 'person' ), 'revelations_author_role' => array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '' ), 'revelations_author_same_as' => array( 'sanitize_callback' => 'revelations_author_urls', 'default' => '[]' ), 'revelations_author_active' => array( 'sanitize_callback' => 'rest_sanitize_boolean', 'default' => false ) ) as $key => $field ) register_post_meta( 'rev_author', $key, array( 'single' => true, 'type' => 'string', 'default' => $field['default'], 'sanitize_callback' => $field['sanitize_callback'], 'show_in_rest' => true ) );
-    register_post_meta( 'post', REVELATIONS_AUTHOR_RELATION, array( 'single' => true, 'type' => 'string', 'default' => '[]', 'sanitize_callback' => 'revelations_author_relation_json', 'show_in_rest' => true ) );
+    register_post_meta( 'post', REVELATIONS_AUTHOR_RELATION, array( 'single' => true, 'type' => 'string', 'default' => '[]', 'sanitize_callback' => 'revelations_author_relation_json', 'auth_callback' => 'revelations_author_relation_can_edit', 'show_in_rest' => true ) );
 } );
 
 function revelations_author_migration_map(): array { return array( 'Julia U.' => 'julia-upiterskaya', 'Julia Yupiterskaya' => 'julia-upiterskaya', 'Julia Upiterskaya' => 'julia-upiterskaya', 'Alina B.' => 'alina-b', 'Alina K.' => 'alina-b', '' => 'alina-b', 'Anonymous' => 'editorial-team', 'Editorial Team' => 'editorial-team' ); }

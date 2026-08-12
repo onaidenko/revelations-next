@@ -171,6 +171,9 @@
     }
 
     function RevelationsArticlePanel() {
+        const authorPicker = wp.element.useState(false);
+        const authorPickerOpen = authorPicker[0];
+        const setAuthorPickerOpen = authorPicker[1];
         const state = data.useSelect(
             function (select) {
                 const editor =
@@ -224,6 +227,8 @@
             );
 
         const meta = state.meta;
+        const authorProfileIds = authorIds(meta._revelations_author_profile_ids);
+        const authorProfiles = editorData.authorProfiles || [];
         const snapshot =
             editorData.reviewedSnapshot;
 
@@ -491,8 +496,52 @@
                 el('div', { style: { margin: '20px 0' } },
                     el('h3', { style: { margin: '0 0 6px', fontSize: '13px' } }, 'AUTHOR(S)'),
                     el('p', { style: { margin: '0 0 8px', color: '#646970', fontSize: '12px' } }, 'Canonical ordered profiles. Legacy displayed author remains unchanged.'),
-                    authorIds(meta._revelations_author_profile_ids).map(function (id, index) { const ids=authorIds(meta._revelations_author_profile_ids); return el('div',{key:id,style:{display:'flex',gap:'6px',alignItems:'center',marginBottom:'6px'}},el(components.SelectControl,{value:String(id),options:(editorData.authorProfiles||[]).map(function(author){return {label:author.name,value:String(author.id)};}),onChange:function(value){const next=ids.slice();next[index]=Number(value);updateMeta('_revelations_author_profile_ids',JSON.stringify([...new Set(next)]));}}),el(components.Button,{isSecondary:true,isSmall:true,disabled:index===0,onClick:function(){const next=ids.slice();[next[index-1],next[index]]=[next[index],next[index-1]];updateMeta('_revelations_author_profile_ids',JSON.stringify(next));}},'Move up'),el(components.Button,{isDestructive:true,isSmall:true,onClick:function(){updateMeta('_revelations_author_profile_ids',JSON.stringify(ids.filter(function(_,i){return i!==index;})));}},'Remove')); }),
-                    el(components.Button,{isSecondary:true,isSmall:true,onClick:function(){const first=(editorData.authorProfiles||[])[0];if(first)updateMeta('_revelations_author_profile_ids',JSON.stringify(authorIds(meta._revelations_author_profile_ids).concat(first.id)));}},'Add author')
+                    authorProfileIds.map(function (id, index) {
+                        const options = authorProfiles.map(function (author) {
+                            return { label: author.name, value: String(author.id) };
+                        });
+                        if (!options.some(function (option) { return option.value === String(id); })) {
+                            options.unshift({ label: 'Unknown profile #' + id, value: String(id) });
+                        }
+                        return el('div', { key: id, style: { display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '6px' } },
+                            el(components.SelectControl, {
+                                value: String(id),
+                                options: options,
+                                onChange: function (value) {
+                                    const next = authorProfileIds.slice();
+                                    const replacement = Number(value);
+                                    if (!replacement || authorProfileIds.some(function (authorId, authorIndex) { return authorIndex !== index && authorId === replacement; })) return;
+                                    next[index] = replacement;
+                                    updateMeta('_revelations_author_profile_ids', JSON.stringify(next));
+                                },
+                            }),
+                            el(components.Button, { isSecondary: true, isSmall: true, disabled: index === 0, onClick: function () {
+                                const next = authorProfileIds.slice();
+                                [next[index - 1], next[index]] = [next[index], next[index - 1]];
+                                updateMeta('_revelations_author_profile_ids', JSON.stringify(next));
+                            } }, 'Move up'),
+                            el(components.Button, { isDestructive: true, isSmall: true, onClick: function () {
+                                updateMeta('_revelations_author_profile_ids', JSON.stringify(authorProfileIds.filter(function (_, authorIndex) { return authorIndex !== index; })));
+                            } }, 'Remove')
+                        );
+                    }),
+                    authorPickerOpen && el(components.SelectControl, {
+                        label: 'Add author',
+                        value: '',
+                        options: [{ label: 'Select author', value: '' }].concat(authorProfiles.filter(function (author) {
+                            return !authorProfileIds.includes(Number(author.id));
+                        }).map(function (author) {
+                            return { label: author.name, value: String(author.id) };
+                        })),
+                        onChange: function (value) {
+                            const authorId = Number(value);
+                            if (!authorId || authorProfileIds.includes(authorId)) return;
+                            updateMeta('_revelations_author_profile_ids', JSON.stringify(authorProfileIds.concat(authorId)));
+                            setAuthorPickerOpen(false);
+                        },
+                    }),
+                    el(components.Button, { isSecondary: true, isSmall: true, onClick: function () { setAuthorPickerOpen(!authorPickerOpen); } }, authorPickerOpen ? 'Cancel' : 'Add author'),
+                    editorData.createAuthorUrl && el(components.Button, { isSecondary: true, isSmall: true, href: editorData.createAuthorUrl, target: '_blank', rel: 'noopener noreferrer', style: { marginLeft: '6px' } }, 'Create new author')
                 ),
 
                 el(components.SelectControl, {

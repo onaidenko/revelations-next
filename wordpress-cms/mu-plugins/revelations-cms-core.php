@@ -214,6 +214,10 @@ function revelations_cms_editor_data(
         'reviewStatus'            => 'not_required',
         'reviewedSnapshot'        => null,
         'editorialCategories'     => function_exists( 'revelations_editorial_category_contract_allowed_terms' ) ? revelations_editorial_category_contract_allowed_terms() : array(),
+        'authorProfiles'          => array_map( static function ( WP_Post $author ): array {
+            return array( 'id' => $author->ID, 'name' => $author->post_title );
+        }, get_posts( array( 'post_type' => 'rev_author', 'post_status' => array( 'publish', 'draft', 'private' ), 'posts_per_page' => 100, 'orderby' => 'title', 'order' => 'ASC' ) ) ),
+        'createAuthorUrl'         => current_user_can( 'edit_posts' ) ? admin_url( 'post-new.php?post_type=rev_author' ) : null,
     );
 
     if (
@@ -334,8 +338,6 @@ function revelations_cms_editor_data(
         'publicSources' => (string) get_post_meta( $post_id, 'revelations_public_sources', true ),
         'authorProfileIds' => (string) get_post_meta( $post_id, '_revelations_author_profile_ids', true ),
     );
-    $data['authorProfiles'] = array_map( static function ( WP_Post $author ): array { return array( 'id' => $author->ID, 'name' => $author->post_title ); }, get_posts( array( 'post_type'=>'rev_author', 'post_status'=>array('publish','draft','private'), 'posts_per_page'=>100, 'orderby'=>'title', 'order'=>'ASC' ) ) );
-
     return $data;
 }
 
