@@ -23,6 +23,13 @@
   parameter cannot show a completion notice when the user-specific preview
   payload is absent; the renderer remains presentation-only and continues to
   display Unspoken-specific evidence and advisory metadata from scanner output.
+- News now uses narrow event tracks: product/deployment and concrete research
+  keep the established score path, while only exceptionally large capital
+  commitments may qualify through a separate impact-and-scale path. Unspoken
+  keeps implementation as a diagnostic score, but qualification now relies on
+  a concrete angle, substantive evidence, relevance/significance and freshness
+  rather than deployment maturity. Bounded permanent diagnostics retain
+  evidence type and matched evidence signals for rejected and qualified items.
 
 Дата изменения: 2026-08-12.
 

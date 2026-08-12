@@ -484,6 +484,54 @@ revelations_scanner_runtime_test(
     empty( $news_generic_funding['qualified'] ),
     'generic funding news without scale does not automatically qualify'
 );
+
+$news_major_capital = revelations_editorial_score_news_story(
+    revelations_scanner_runtime_story(
+        'Investors commit $500bn to AI infrastructure projects',
+        'The financing will fund AI data centers and compute capacity.'
+    )
+);
+
+revelations_scanner_runtime_test(
+    true === ( $news_major_capital['qualified'] ?? false ) &&
+    'major_capital_event' === (
+        $news_major_capital['editorial_track'] ?? ''
+    ) &&
+    0.0 === (float) (
+        $news_major_capital['implementation_score'] ?? -1
+    ),
+    'exceptional AI capital event qualifies without implementation score'
+);
+
+$news_research_roundup = revelations_editorial_score_news_story(
+    revelations_scanner_runtime_story(
+        'The next big thing in LLMs',
+        'A roundup considers how AI academic research is shifting.'
+    )
+);
+
+revelations_scanner_runtime_test(
+    empty( $news_research_roundup['qualified'] ) &&
+    'insufficient_section_signal' === (
+        $news_research_roundup['rejection_code'] ?? ''
+    ),
+    'generic AI research roundup remains outside the research-event track'
+);
+
+$news_strategic_company = revelations_editorial_score_news_story(
+    revelations_scanner_runtime_story(
+        'AI company completes major acquisition',
+        'The company acquired a major AI platform in a strategic merger.'
+    )
+);
+
+revelations_scanner_runtime_test(
+    true === ( $news_strategic_company['qualified'] ?? false ) &&
+    'strategic_company_event' === (
+        $news_strategic_company['editorial_track'] ?? ''
+    ),
+    'substantive strategic company event uses its narrow event track'
+);
 $people_future_gate = revelations_editorial_scanner_ai_gate(
     $people_future_tech,
     'people'
@@ -736,6 +784,8 @@ $persisted_diagnostics =
                     'summary' => 'FULL_SOURCE_TEXT_SENTINEL',
                     'matched_future_tech_families' =>
                         array( 'autonomous_mobility' ),
+                    'evidence_type' => 'published_research',
+                    'evidence_signals' => array( 'study found' ),
                     'scores' => array( 'total' => 3.0 ),
                 ),
             ),
@@ -762,6 +812,16 @@ revelations_scanner_runtime_test(
     'autonomous_mobility' === (
         $persisted_diagnostics['closest_rejected'][0][
             'matched_future_tech_families'
+        ][0] ?? ''
+    ) &&
+    'published_research' === (
+        $persisted_diagnostics['closest_rejected'][0][
+            'evidence_type'
+        ] ?? ''
+    ) &&
+    'study found' === (
+        $persisted_diagnostics['closest_rejected'][0][
+            'evidence_signals'
         ][0] ?? ''
     ) &&
     ! str_contains(

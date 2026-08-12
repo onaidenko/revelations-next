@@ -1043,9 +1043,6 @@ function revelations_editorial_default_scanner_settings(): array {
                     'relevance_score' =>
                         4.0,
 
-                    'implementation_score' =>
-                        4.0,
-
                     'impact_score' =>
                         2.5,
 

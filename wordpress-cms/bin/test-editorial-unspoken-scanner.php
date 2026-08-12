@@ -615,6 +615,40 @@ revelations_unspoken_test(
     'hard Unspoken rejection retains the recognized angle category'
 );
 
+$neural_privacy_emerging = revelations_editorial_score_unspoken_story(
+    revelations_unspoken_story(
+        'Companies seek access to neural data',
+        'A company statement describes a concrete neural-data practice and ownership of thoughts.'
+    )
+);
+
+revelations_unspoken_test(
+    true === ( $neural_privacy_emerging['qualified'] ?? false ) &&
+    'privacy_control' === (
+        $neural_privacy_emerging['section_angle_categories'][0]
+        ?? ''
+    ) &&
+    'official_company_response' === (
+        $neural_privacy_emerging['evidence_type'] ?? ''
+    ),
+    'evidence-backed emerging neural-data issue qualifies without deployment minimum'
+);
+
+$hypothetical_neural_fear = revelations_editorial_score_unspoken_story(
+    revelations_unspoken_story(
+        'Brain interfaces could one day steal our thoughts',
+        'A vague opinion considers mental privacy without a named actor or evidence.'
+    )
+);
+
+revelations_unspoken_test(
+    true === ( $hypothetical_neural_fear['hard_rejected'] ?? false ) &&
+    'insufficient_evidence' === (
+        $hypothetical_neural_fear['rejection_code'] ?? ''
+    ),
+    'hypothetical neural-data fear without evidence remains rejected'
+);
+
 $hidden_operators = revelations_editorial_unspoken_angle(
     'Autonomous robots still require remote human operators and continuous supervision.'
 );

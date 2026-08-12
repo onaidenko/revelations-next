@@ -75,6 +75,8 @@ function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
             'technical_signals' => $signals( $story['technical_signals'] ?? array() ),
             'section_signals' => $signals( $story['section_signals'] ?? array() ),
             'section_angle_categories' => $signals( $story['section_angle_categories'] ?? array() ),
+            'evidence_type' => sanitize_key( (string) ( $story['evidence_type'] ?? '' ) ),
+            'evidence_signals' => $signals( $story['evidence_signals'] ?? array() ),
             'editorial_track' => sanitize_key( (string) ( $story['editorial_track'] ?? '' ) ),
             'scores' => array(
                 'total' => (float) ( $scores['total'] ?? 0 ),

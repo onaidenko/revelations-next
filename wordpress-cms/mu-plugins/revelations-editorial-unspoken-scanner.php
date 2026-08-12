@@ -757,6 +757,8 @@ function revelations_editorial_score_unspoken_story(
                 'section_angle_categories' => array_filter(
                     array( $angle['category'] )
                 ),
+                'evidence_type' => $evidence['type'],
+                'evidence_signals' => $evidence['signals'],
             )
         );
     }
@@ -855,11 +857,6 @@ function revelations_editorial_score_unspoken_story(
         $relevance_score >= (float) (
             $unspoken_thresholds['relevance_score']
             ?? 4.0
-        ) &&
-        $implementation_score >= (float) (
-            $unspoken_thresholds[
-                'implementation_score'
-            ] ?? 4.0
         );
 
     $significance_qualified =
