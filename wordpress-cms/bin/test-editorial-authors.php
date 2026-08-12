@@ -14,5 +14,7 @@ check( false !== strpos( $api, "'author_profiles'" ) && false === strpos( $api, 
 check( false !== strpos( $core, "'authorProfiles'" ) && strpos( $core, "'authorProfiles'" ) < strpos( $core, 'if (\n        $post_id < 1' ), 'editor author profiles are independent of review state and post ID' );
 check( false !== strpos( $editor, "useState(false)" ) && false !== strpos( $editor, "label: 'Select author'" ) && false !== strpos( $editor, "'Create new author'" ), 'editor uses an explicit add-author selector and existing author creation flow' );
 check( false !== strpos( $editor, 'authorProfileIds.includes(authorId)' ) && false !== strpos( $editor, "'Move up'" ) && false !== strpos( $editor, "'Remove'" ), 'editor preserves duplicate prevention, ordering, and removal controls' );
-check( false !== strpos( $editor, "'revelations_author'" ) && false !== strpos( $editor, "'Displayed author'" ), 'legacy displayed author remains an independent editor field' );
-echo "Editorial author diagnostics: 9 passed, 0 failed, 9 total.\n";
+check( false === strpos( $editor, "label: 'Displayed author'" ) && false !== strpos( $editor, "label: 'Authors'" ) && false !== strpos( $editor, "'AUTHORS'" ), 'editor exposes only the canonical AUTHORS control' );
+check( false !== strpos( $editor, 'authorProfileIds.length > 0 ||' ) && false !== strpos( $editor, "'Legacy author retained'" ), 'readiness accepts canonical authors and preserves legacy fallback readiness' );
+check( false !== strpos( $api, "'displayed_author'" ) && false !== strpos( $api, "'author_profiles'" ), 'public API retains legacy fallback and canonical author profiles' );
+echo "Editorial author diagnostics: 11 passed, 0 failed, 11 total.\n";

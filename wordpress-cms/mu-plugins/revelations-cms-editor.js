@@ -328,18 +328,21 @@
                         : 'Required before publication',
             },
             {
-                key: 'displayed-author',
-                label: 'Displayed author',
+                key: 'authors',
+                label: 'Authors',
                 ready:
+                    authorProfileIds.length > 0 ||
                     normalizeText(
                         meta.revelations_author
                     ).trim() !== '',
                 detail:
-                    normalizeText(
-                        meta.revelations_author
-                    ).trim() !== ''
+                    authorProfileIds.length > 0
                         ? 'Complete'
-                        : 'Required before publication',
+                        : normalizeText(
+                            meta.revelations_author
+                        ).trim() !== ''
+                            ? 'Legacy author retained'
+                            : 'Required before publication',
             },
             {
                 key: 'excerpt',
@@ -478,24 +481,8 @@
                     )
                 ),
 
-                el(components.TextControl, {
-                    label: 'Displayed author',
-                    help:
-                        'Author name displayed on the REVELATIONS website.',
-                    value:
-                        meta.revelations_author ||
-                        '',
-                    onChange: function (value) {
-                        updateMeta(
-                            'revelations_author',
-                            value
-                        );
-                    },
-                }),
-
                 el('div', { style: { margin: '20px 0' } },
-                    el('h3', { style: { margin: '0 0 6px', fontSize: '13px' } }, 'AUTHOR(S)'),
-                    el('p', { style: { margin: '0 0 8px', color: '#646970', fontSize: '12px' } }, 'Canonical ordered profiles. Legacy displayed author remains unchanged.'),
+                    el('h3', { style: { margin: '0 0 6px', fontSize: '13px' } }, 'AUTHORS'),
                     authorProfileIds.map(function (id, index) {
                         const options = authorProfiles.map(function (author) {
                             return { label: author.name, value: String(author.id) };
