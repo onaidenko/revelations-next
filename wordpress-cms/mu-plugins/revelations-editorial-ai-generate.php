@@ -1448,6 +1448,10 @@ function revelations_editorial_generate_draft_with_ai(
         );
 
     if ( empty( $validation['valid'] ) ) {
+        $failure_diagnostics = $runtime_diagnostics;
+        if ( is_array( $validation['fact_check_evidence_diagnostics'] ?? null ) ) {
+            $failure_diagnostics['fact_check_evidence_diagnostics'] = $validation['fact_check_evidence_diagnostics'];
+        }
         return revelations_editorial_ai_generation_validation_error(
             sanitize_key(
                 (string) (
@@ -1461,7 +1465,7 @@ function revelations_editorial_generate_draft_with_ai(
                     ?? 'Generated article validation failed.'
                 )
             ),
-            $runtime_diagnostics
+            $failure_diagnostics
         );
     }
 

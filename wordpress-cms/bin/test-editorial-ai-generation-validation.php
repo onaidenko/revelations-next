@@ -29,6 +29,16 @@ if ( false === $generation_source ) {
     exit( 1 );
 }
 
+$logs_source = file_get_contents(
+    $plugin_dir .
+    '/revelations-editorial-logs.php'
+);
+
+if ( false === $logs_source ) {
+    fwrite( STDERR, "FAIL: unable to read AI generation log source\n" );
+    exit( 1 );
+}
+
 $registry_prompt =
     "SOURCE REGISTRY\n" .
     "[s001] Source one | URL: https://example.test/one\n\n" .
@@ -548,6 +558,71 @@ revelations_validation_test(
         $result['code'] ?? ''
     ),
     'source evidence absent from snapshot is rejected'
+);
+
+$diagnostic_source_snapshot =
+    "[p001] The source measured 95% accuracy.";
+$diagnostic_article = revelations_validation_with_claim(
+    revelations_validation_article(),
+    $benchmark_claim
+);
+$diagnostic_article['fact_check_flags'] = array(
+    array_merge(
+        revelations_validation_flag(
+            $benchmark_claim,
+            'benchmark',
+            'The source measured 95% accuracy.'
+        ),
+        array(
+            'claim_unit_id' => 'blocks.0.text',
+            'evidence_ids' => array( 'p999' ),
+        )
+    ),
+);
+$missing_id_diagnostics = revelations_validation_run(
+    $diagnostic_article,
+    'tech',
+    $diagnostic_source_snapshot
+);
+revelations_validation_test(
+    'invalid_fact_check_evidence' === ( $missing_id_diagnostics['code'] ?? '' ) &&
+    0 === ( $missing_id_diagnostics['fact_check_evidence_diagnostics']['fact_check_flag_index'] ?? -1 ) &&
+    'blocks.0.text' === ( $missing_id_diagnostics['fact_check_evidence_diagnostics']['claim_unit_id'] ?? '' ) &&
+    array( 'p999' ) === ( $missing_id_diagnostics['fact_check_evidence_diagnostics']['requested_evidence_ids'] ?? array() ) &&
+    false === ( $missing_id_diagnostics['fact_check_evidence_diagnostics']['evidence_id_resolution'][0]['resolved'] ?? true ) &&
+    0 === ( $missing_id_diagnostics['fact_check_evidence_diagnostics']['resolved_count'] ?? -1 ) &&
+    1 === ( $missing_id_diagnostics['fact_check_evidence_diagnostics']['requested_count'] ?? -1 ) &&
+    'missing_evidence_id' === ( $missing_id_diagnostics['fact_check_evidence_diagnostics']['mismatch_category'] ?? '' ) &&
+    ! isset( $missing_id_diagnostics['fact_check_evidence_diagnostics']['returned_sha256'] ),
+    'missing fact-check evidence ID records bounded resolution diagnostics'
+);
+
+$diagnostic_article['fact_check_flags'][0]['evidence_ids'] = array( 'p001' );
+$diagnostic_article['fact_check_flags'][0]['source_evidence'] =
+    'The source measured nearly 100% accuracy.';
+$text_mismatch_diagnostics = revelations_validation_run(
+    $diagnostic_article,
+    'tech',
+    $diagnostic_source_snapshot
+);
+revelations_validation_test(
+    'invalid_fact_check_evidence' === ( $text_mismatch_diagnostics['code'] ?? '' ) &&
+    true === ( $text_mismatch_diagnostics['fact_check_evidence_diagnostics']['evidence_id_resolution'][0]['resolved'] ?? false ) &&
+    1 === ( $text_mismatch_diagnostics['fact_check_evidence_diagnostics']['resolved_count'] ?? -1 ) &&
+    'source_evidence_text_mismatch' === ( $text_mismatch_diagnostics['fact_check_evidence_diagnostics']['mismatch_category'] ?? '' ) &&
+    strlen( 'The source measured 95% accuracy.' ) === ( $text_mismatch_diagnostics['fact_check_evidence_diagnostics']['expected_char_count'] ?? -1 ) &&
+    strlen( 'The source measured nearly 100% accuracy.' ) === ( $text_mismatch_diagnostics['fact_check_evidence_diagnostics']['returned_char_count'] ?? -1 ) &&
+    hash( 'sha256', 'The source measured 95% accuracy.' ) === ( $text_mismatch_diagnostics['fact_check_evidence_diagnostics']['expected_sha256'] ?? '' ) &&
+    hash( 'sha256', 'The source measured nearly 100% accuracy.' ) === ( $text_mismatch_diagnostics['fact_check_evidence_diagnostics']['returned_sha256'] ?? '' ),
+    'fact-check evidence text mismatch records bounded comparison diagnostics'
+);
+
+revelations_validation_test(
+    str_contains( $generation_source, "'fact_check_evidence_diagnostics'" ) &&
+    str_contains( $logs_source, "'_rev_fact_check_evidence_diagnostics'" ) &&
+    ! str_contains( $logs_source, "'_rev_fact_check_claim'" ) &&
+    ! str_contains( $logs_source, "'_rev_fact_check_source_evidence'" ),
+    'fact-check failure diagnostics reach private run logs without claim or evidence text meta'
 );
 
 $inkling_source_evidence =

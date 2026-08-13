@@ -183,6 +183,7 @@ function revelations_editorial_create_run_log(
         'sole_support_central_pillar' => false,
         'sole_support_majority_pillars' => false,
         'dominance_reason' => '',
+        'fact_check_evidence_diagnostics' => array(),
         'source_results'     => array(),
         'rejection_counts'   => array(),
         'closest_rejected'   => array(),
@@ -409,6 +410,7 @@ function revelations_editorial_create_run_log(
         '_rev_sole_support_central_pillar' => ! empty( $data['sole_support_central_pillar'] ) ? 1 : 0,
         '_rev_sole_support_majority_pillars' => ! empty( $data['sole_support_majority_pillars'] ) ? 1 : 0,
         '_rev_dominance_reason' => sanitize_key( (string) $data['dominance_reason'] ),
+        '_rev_fact_check_evidence_diagnostics' => wp_json_encode( is_array( $data['fact_check_evidence_diagnostics'] ) ? $data['fact_check_evidence_diagnostics'] : array(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
 
         '_rev_source_results' => wp_json_encode( $scan_diagnostics['source_results'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
@@ -667,6 +669,7 @@ function revelations_editorial_log_ai_generation(
             'sole_support_central_pillar' => ! empty( $result['sole_support_central_pillar'] ),
             'sole_support_majority_pillars' => ! empty( $result['sole_support_majority_pillars'] ),
             'dominance_reason' => sanitize_key( (string) ( $result['dominance_reason'] ?? '' ) ),
+            'fact_check_evidence_diagnostics' => is_array( $result['fact_check_evidence_diagnostics'] ?? null ) ? $result['fact_check_evidence_diagnostics'] : array(),
         )
     );
 }

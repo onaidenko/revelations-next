@@ -41,13 +41,94 @@ function revelations_editorial_ai_fact_check_claim_types(): array {
  */
 function revelations_editorial_ai_validation_failure(
     string $code,
-    string $message
+    string $message,
+    array $diagnostics = array()
 ): array {
-    return array(
+    return array_merge( array(
         'valid'   => false,
         'code'    => $code,
         'message' => $message,
+    ), $diagnostics );
+}
+
+/**
+ * Bounded private detail for one fact-check evidence failure. Never retain
+ * claim text, source evidence text, model output or prompts.
+ *
+ * @param array<int, mixed> $evidence_ids
+ * @param array<string, string> $source_evidence_map
+ * @return array<string, mixed>
+ */
+function revelations_editorial_ai_fact_check_evidence_diagnostics(
+    int $flag_index,
+    string $claim_unit_id,
+    array $evidence_ids,
+    array $source_evidence_map,
+    string $source_evidence,
+    bool $claim_is_used,
+    string $normalized_source_evidence,
+    string $normalized_source_snapshot
+): array {
+    $requested = array();
+    $resolution = array();
+    $resolved = array();
+    $category = '';
+
+    foreach ( $evidence_ids as $evidence_id ) {
+        if ( ! is_string( $evidence_id ) ) {
+            $requested[] = null;
+            $resolution[] = array( 'evidence_id' => null, 'resolved' => false );
+            $category = 'non_string_evidence_id';
+            continue;
+        }
+
+        $safe_evidence_id = preg_match( '/^p[0-9]{3,}$/', $evidence_id ) ? $evidence_id : null;
+        $requested[] = $safe_evidence_id;
+        $is_resolved = null !== $safe_evidence_id && isset( $source_evidence_map[ $safe_evidence_id ] );
+        $resolution[] = array( 'evidence_id' => $safe_evidence_id, 'resolved' => $is_resolved );
+        if ( ! $is_resolved ) {
+            if ( '' === $category ) {
+                $category = 'missing_evidence_id';
+            }
+            continue;
+        }
+        $resolved[] = $source_evidence_map[ $safe_evidence_id ];
+    }
+
+    $diagnostics = array(
+        'fact_check_flag_index' => $flag_index,
+        'claim_unit_id' => preg_match( '/^[A-Za-z0-9._-]{1,128}$/', $claim_unit_id ) ? $claim_unit_id : '',
+        'requested_evidence_ids' => $requested,
+        'evidence_id_resolution' => $resolution,
+        'requested_count' => count( $evidence_ids ),
+        'resolved_count' => count( $resolved ),
     );
+
+    if ( '' === $category && ! $claim_is_used ) {
+        $category = 'claim_not_used';
+    }
+
+    if ( '' === $category && '' === $normalized_source_evidence ) {
+        $category = 'empty_source_evidence';
+    }
+
+    if ( '' === $category && array() !== $evidence_ids ) {
+        $expected = implode( "\n\n", $resolved );
+        if ( $expected !== $source_evidence ) {
+            $category = 'source_evidence_text_mismatch';
+            $diagnostics['expected_char_count'] = strlen( $expected );
+            $diagnostics['returned_char_count'] = strlen( $source_evidence );
+            $diagnostics['expected_sha256'] = hash( 'sha256', $expected );
+            $diagnostics['returned_sha256'] = hash( 'sha256', $source_evidence );
+        }
+    }
+
+    if ( '' === $category && array() === $evidence_ids && ! str_contains( $normalized_source_snapshot, $normalized_source_evidence ) ) {
+        $category = 'source_snapshot_text_mismatch';
+    }
+
+    $diagnostics['mismatch_category'] = '' !== $category ? $category : 'other_validation_condition';
+    return $diagnostics;
 }
 
 /**
@@ -1752,7 +1833,7 @@ function revelations_editorial_ai_validate_generated_article(
             )
         );
 
-    foreach ( $flags as $flag ) {
+    foreach ( $flags as $flag_index => $flag ) {
         if ( ! is_array( $flag ) ) {
             return revelations_editorial_ai_validation_failure(
                 'invalid_fact_check_flag',
@@ -1892,7 +1973,19 @@ function revelations_editorial_ai_validate_generated_article(
         ) {
             return revelations_editorial_ai_validation_failure(
                 'invalid_fact_check_evidence',
-                'Fact-check evidence could not be verified.'
+                'Fact-check evidence could not be verified.',
+                array(
+                    'fact_check_evidence_diagnostics' => revelations_editorial_ai_fact_check_evidence_diagnostics(
+                        (int) $flag_index,
+                        $claim_unit_id,
+                        $evidence_ids,
+                        $source_evidence_map,
+                        $source_evidence,
+                        $claim_is_used,
+                        $normalized_source_evidence,
+                        $normalized_source_snapshot
+                    ),
+                )
             );
         }
 
