@@ -65,6 +65,12 @@ approval requirement are canonical in
   Pillar-level provenance distinguishes primary detail dominance from a
   secondary-source rewrite risk. Private draft/run metadata stores compact provenance and counts;
   public content receives a multi-source footer only.
+- Global Research & Source Policy is shared across every generated section:
+  lead classification, independent corroboration, source roles, restricted
+  lead safeguards, evidence provenance, sensitive claims, attribution and
+  source dominance never live in section profiles. After final validation,
+  only source records resolved from actually used block/claim evidence IDs can
+  enter the public `Sources:` footer; broader research remains private.
 
 - `revelations-editorial-ai-generation-profiles.php` — pure registry
   профилей генерации для News, Tech, People, Places и Unspoken. Профиль

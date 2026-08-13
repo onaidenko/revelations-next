@@ -458,6 +458,12 @@ the pre-commit state recorded above.
   lead-host exclusion and all independent-source gates. Failed research logs
   retain bounded call/query/citation/source counts and a parser/verification
   stage, never raw responses or prompts.
+- Research sources, final-used evidence sources and public footer sources are
+  separate private stages. The footer uses only deduplicated source provenance
+  resolved from final block/claim evidence IDs, ordered globally by reliability.
+  Thus a discovery-only lead or unused research source never appears publicly.
+  Generation reports article-body word count; Human Review's current-word count
+  intentionally includes rendered Gutenberg footer blocks.
 - Присвоение `Julia U.` только пустому author уже соответствует
   контракту. Image generation, batch generation и auto-publish
   отсутствуют, что также соответствует контракту.

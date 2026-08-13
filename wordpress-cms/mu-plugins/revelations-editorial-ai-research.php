@@ -59,6 +59,34 @@ function revelations_editorial_ai_research_is_independent_url( string $url, stri
     return '' !== $host && $host !== strtolower( $lead_host );
 }
 
+/**
+ * Global Research & Source Policy: resolve final evidence use to source provenance.
+ * This layer is intentionally shared by every section.
+ *
+ * @param array<int, array<string, mixed>> $blocks
+ * @param array<int, array<string, mixed>> $flags
+ * @param array<string, array<string, string>> $provenance
+ * @param array<int, array<string, mixed>> $research_sources
+ * @return array<string, mixed>
+ */
+function revelations_editorial_ai_used_evidence_sources( array $blocks, array $flags, array $provenance, array $research_sources ): array {
+    $used_ids = array(); $sensitive_ids = array();
+    foreach ( $blocks as $block ) foreach ( is_array( $block['evidence_ids'] ?? null ) ? $block['evidence_ids'] : array() as $id ) if ( is_string( $id ) ) $used_ids[ $id ] = true;
+    foreach ( $flags as $flag ) foreach ( is_array( $flag['evidence_ids'] ?? null ) ? $flag['evidence_ids'] : array() as $id ) if ( is_string( $id ) ) { $used_ids[ $id ] = true; $sensitive_ids[ $id ] = true; }
+    $by_key = array(); foreach ( $research_sources as $source ) if ( is_array( $source ) ) { $key = revelations_editorial_ai_research_url_key( (string) ( $source['url'] ?? '' ) ); if ( '' !== $key ) $by_key[ $key ] = $source; }
+    $used = array();
+    foreach ( array_keys( $used_ids ) as $id ) {
+        $origin = $provenance[ $id ] ?? array(); $key = revelations_editorial_ai_research_url_key( (string) ( $origin['url'] ?? '' ) );
+        if ( '' === $key || ! isset( $by_key[ $key ] ) ) continue;
+        if ( ! isset( $used[ $key ] ) ) $used[ $key ] = array( 'url' => (string) $by_key[ $key ]['url'], 'name' => sanitize_text_field( (string) ( $by_key[ $key ]['name'] ?? '' ) ), 'reliability' => sanitize_key( (string) ( $by_key[ $key ]['reliability'] ?? 'unknown' ) ), 'source_type' => sanitize_key( (string) ( $by_key[ $key ]['source_type'] ?? 'unknown' ) ), 'evidence_ids' => array(), 'sensitive' => false );
+        $used[ $key ]['evidence_ids'][] = $id; $used[ $key ]['sensitive'] = $used[ $key ]['sensitive'] || isset( $sensitive_ids[ $id ] );
+    }
+    $rank = array( 'primary_authoritative' => 0, 'major_editorial' => 1, 'specialist_trade' => 2, 'company_pr' => 3, 'opinion_analysis' => 4, 'social_user_generated' => 5, 'unknown' => 6 );
+    uasort( $used, static function ( array $a, array $b ) use ( $rank ): int { return ( $rank[ $a['reliability'] ] ?? 99 ) <=> ( $rank[ $b['reliability'] ] ?? 99 ); } );
+    $primary = 0; $secondary = 0; foreach ( $used as $source ) { if ( 'primary_authoritative' === $source['reliability'] ) ++$primary; else ++$secondary; }
+    return array( 'used_sources' => array_values( $used ), 'used_evidence_ids' => array_keys( $used_ids ), 'research_source_count' => count( $research_sources ), 'used_evidence_source_count' => count( $used ), 'public_source_count' => count( $used ), 'unused_research_source_count' => max( 0, count( $research_sources ) - count( $used ) ), 'primary_used_count' => $primary, 'secondary_used_count' => $secondary );
+}
+
 /** @return array<string, mixed> */
 function revelations_editorial_ai_research_web_provenance( array $response ): array {
     $urls = array(); $action_urls = 0; $annotation_urls = 0; $calls = 0; $completed = 0; $failed = 0; $queries = 0;

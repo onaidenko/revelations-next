@@ -23,6 +23,16 @@ cannot override that Constitution without explicit product-owner approval.
   support for a central pillar or a majority of pillars. Lead support is excluded from evidence
   and a brief must supply its own complete pillar order.
 
+## Global research source usage
+
+- **Решение:** Global Research & Source Policy applies uniformly to News,
+  Tech, Places, People and Unspoken. Section profiles retain only the section
+  angle and story focus.
+- **Решение:** research discovery is not public attribution. A generated
+  footer is derived solely from final article evidence IDs, then deduplicated
+  and ordered by source role. Sensitive claim provenance is retained; unused
+  research sources stay private. This selection never rewrites article facts.
+
 ## Publication dates
 
 - **Решение:** visible CMS-derived article dates use the UTC calendar date of

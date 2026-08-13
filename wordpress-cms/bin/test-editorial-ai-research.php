@@ -5,6 +5,7 @@ declare(strict_types=1);
 define( 'ABSPATH', __DIR__ . '/' );
 function esc_url_raw( string $value ): string { return $value; }
 function sanitize_text_field( string $value ): string { return trim( $value ); }
+function sanitize_key( string $value ): string { return strtolower( preg_replace( '/[^a-z0-9_]/', '', $value ) ?? '' ); }
 function wp_parse_url( string $url, int $component = -1 ) { return parse_url( $url, $component ); }
 
 require dirname( __DIR__ ) . '/mu-plugins/revelations-editorial-ai-research.php';
@@ -35,4 +36,11 @@ if ( isset( $both['urls'][ revelations_editorial_ai_research_url_key( 'https://i
 $no_tool = revelations_editorial_ai_research_web_provenance( array( 'output' => array( array( 'type' => 'message', 'role' => 'assistant', 'content' => array() ) ) ) );
 if ( 0 !== $no_tool['web_search_call_count'] ) { fwrite( STDERR, "Tool-not-used regression.\n" ); exit( 1 ); }
 if ( revelations_editorial_ai_research_is_independent_url( 'https://www.wired.com/story/x', 'www.wired.com' ) ) { fwrite( STDERR, "Lead-host exclusion regression.\n" ); exit( 1 ); }
+$usage = revelations_editorial_ai_used_evidence_sources(
+    array( array( 'evidence_ids' => array( 'p001', 'p003' ) ) ),
+    array( array( 'evidence_ids' => array( 'p003' ) ) ),
+    array( 'p001' => array( 'url' => 'https://gao.gov/report', 'host' => 'gao.gov' ), 'p002' => array( 'url' => 'https://columbia.edu/yuste', 'host' => 'columbia.edu' ), 'p003' => array( 'url' => 'https://nih.gov/study', 'host' => 'nih.gov' ) ),
+    array( array( 'url' => 'https://gao.gov/report', 'name' => 'U.S. Government Accountability Office', 'reliability' => 'primary_authoritative', 'source_type' => 'official_government' ), array( 'url' => 'https://columbia.edu/yuste', 'name' => 'Rafael Yuste - Columbia University NeuroTechnology Center', 'reliability' => 'primary_authoritative', 'source_type' => 'official_government' ), array( 'url' => 'https://nih.gov/study', 'name' => 'National Institutes of Health', 'reliability' => 'primary_authoritative', 'source_type' => 'official_government' ) )
+);
+if ( 2 !== $usage['public_source_count'] || 1 !== $usage['unused_research_source_count'] || 2 !== $usage['primary_used_count'] ) { fwrite( STDERR, "Used-source selection regression.\n" ); exit( 1 ); }
 echo "Editorial AI research diagnostics passed.\n";

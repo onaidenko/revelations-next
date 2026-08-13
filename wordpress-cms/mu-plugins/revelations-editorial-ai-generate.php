@@ -409,7 +409,7 @@ function revelations_editorial_ai_blocks_to_gutenberg(
     array $blocks,
     string $source_name = '',
     string $source_url = '',
-    array $research_sources = array()
+    array $public_sources = array()
 ): string {
     $content = array();
 
@@ -552,7 +552,7 @@ function revelations_editorial_ai_blocks_to_gutenberg(
     }
 
     $links = array();
-    foreach ( $research_sources as $source ) {
+    foreach ( $public_sources as $source ) {
         if ( ! is_array( $source ) ) continue;
         $url = esc_url( (string) ( $source['url'] ?? '' ) );
         $name = sanitize_text_field( (string) ( $source['name'] ?? '' ) );
@@ -1418,6 +1418,17 @@ function revelations_editorial_generate_draft_with_ai(
         ? $validated_article['blocks']
         : array();
 
+    $source_usage = revelations_editorial_ai_used_evidence_sources(
+        $blocks,
+        $fact_check_flags,
+        is_array( $research['provenance'] ?? null ) ? $research['provenance'] : array(),
+        is_array( $research['sources'] ?? null ) ? $research['sources'] : array()
+    );
+
+    if ( 0 === absint( $source_usage['used_evidence_source_count'] ?? 0 ) ) {
+        return new WP_Error( 'invalid_evidence_source_usage', 'Generated article contains no resolvable used evidence sources.' );
+    }
+
     $word_count =
         revelations_editorial_ai_article_word_count(
             $blocks
@@ -1453,7 +1464,7 @@ function revelations_editorial_generate_draft_with_ai(
             $blocks,
             $source_name,
             $source_url,
-            is_array( $research['sources'] ?? null ) ? $research['sources'] : array()
+            is_array( $source_usage['used_sources'] ?? null ) ? $source_usage['used_sources'] : array()
         );
 
     if (
@@ -1631,6 +1642,9 @@ function revelations_editorial_generate_draft_with_ai(
         /* Compact provenance only - never private snapshot bodies or prompts. */
         '_revelations_ai_lead_source_classification' => wp_json_encode( $lead_classification, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
         '_revelations_ai_research_sources' => wp_json_encode( $research['sources'] ?? array(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
+        '_revelations_ai_used_evidence_sources' => wp_json_encode( $source_usage['used_sources'] ?? array(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
+        '_revelations_ai_public_sources' => wp_json_encode( $source_usage['used_sources'] ?? array(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
+        '_revelations_ai_source_usage_summary' => wp_json_encode( array_diff_key( $source_usage, array_flip( array( 'used_sources', 'used_evidence_ids' ) ) ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
         '_revelations_ai_evidence_count' => absint( $research['evidence_count'] ?? 0 ),
         '_revelations_ai_primary_sources' => absint( $research['primary_count'] ?? 0 ),
         '_revelations_ai_source_dominance_status' => sanitize_key( (string) ( $dominance['status'] ?? 'independently_corroborated' ) ),
@@ -1772,6 +1786,11 @@ function revelations_editorial_generate_draft_with_ai(
                 )
             ),
         'research_source_count' => count( $research['sources'] ?? array() ),
+        'used_evidence_source_count' => absint( $source_usage['used_evidence_source_count'] ?? 0 ),
+        'public_source_count' => absint( $source_usage['public_source_count'] ?? 0 ),
+        'unused_research_source_count' => absint( $source_usage['unused_research_source_count'] ?? 0 ),
+        'primary_used_count' => absint( $source_usage['primary_used_count'] ?? 0 ),
+        'secondary_used_count' => absint( $source_usage['secondary_used_count'] ?? 0 ),
         'research_evidence_count' => absint( $research['evidence_count'] ?? 0 ),
         'research_primary_count' => absint( $research['primary_count'] ?? 0 ),
         'source_dominance_status' => sanitize_key( (string) ( $dominance['status'] ?? 'independently_corroborated' ) ),
@@ -2042,6 +2061,9 @@ function revelations_editorial_ai_create_version_backup(
 
         '_rev_ai_lead_source_classification' => get_post_meta( $draft_id, '_revelations_ai_lead_source_classification', true ),
         '_rev_ai_research_sources' => get_post_meta( $draft_id, '_revelations_ai_research_sources', true ),
+        '_rev_ai_used_evidence_sources' => get_post_meta( $draft_id, '_revelations_ai_used_evidence_sources', true ),
+        '_rev_ai_public_sources' => get_post_meta( $draft_id, '_revelations_ai_public_sources', true ),
+        '_rev_ai_source_usage_summary' => get_post_meta( $draft_id, '_revelations_ai_source_usage_summary', true ),
         '_rev_ai_evidence_count' => get_post_meta( $draft_id, '_revelations_ai_evidence_count', true ),
         '_rev_ai_primary_sources' => get_post_meta( $draft_id, '_revelations_ai_primary_sources', true ),
         '_rev_ai_source_dominance_status' => get_post_meta( $draft_id, '_revelations_ai_source_dominance_status', true ),
@@ -2321,7 +2343,7 @@ function revelations_editorial_render_ai_generation_notices(): void {
             <p>
                 <?php echo esc_html(
                     sprintf(
-                        '%d words · section %s · %d input tokens · %d output tokens · %.2f seconds',
+                        '%d article body words · section %s · %d input tokens · %d output tokens · %.2f seconds',
                         absint(
                             $result['word_count'] ?? 0
                         ),

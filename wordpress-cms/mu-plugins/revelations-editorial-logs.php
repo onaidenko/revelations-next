@@ -167,6 +167,11 @@ function revelations_editorial_create_run_log(
         'verified_source_count' => 0,
         'independent_host_count' => 0,
         'research_failure_stage' => '',
+        'used_evidence_source_count' => 0,
+        'public_source_count' => 0,
+        'unused_research_source_count' => 0,
+        'primary_used_count' => 0,
+        'secondary_used_count' => 0,
         'source_results'     => array(),
         'rejection_counts'   => array(),
         'closest_rejected'   => array(),
@@ -377,6 +382,11 @@ function revelations_editorial_create_run_log(
         '_rev_research_verified_source_count' => absint( $data['verified_source_count'] ),
         '_rev_research_independent_host_count' => absint( $data['independent_host_count'] ),
         '_rev_research_failure_stage' => sanitize_key( (string) $data['research_failure_stage'] ),
+        '_rev_used_evidence_source_count' => absint( $data['used_evidence_source_count'] ),
+        '_rev_public_source_count' => absint( $data['public_source_count'] ),
+        '_rev_unused_research_source_count' => absint( $data['unused_research_source_count'] ),
+        '_rev_primary_used_count' => absint( $data['primary_used_count'] ),
+        '_rev_secondary_used_count' => absint( $data['secondary_used_count'] ),
 
         '_rev_source_results' => wp_json_encode( $scan_diagnostics['source_results'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
@@ -619,6 +629,11 @@ function revelations_editorial_log_ai_generation(
             'verified_source_count' => absint( $result['verified_source_count'] ?? 0 ),
             'independent_host_count' => absint( $result['independent_host_count'] ?? 0 ),
             'research_failure_stage' => sanitize_key( (string) ( $result['failure_stage'] ?? '' ) ),
+            'used_evidence_source_count' => absint( $result['used_evidence_source_count'] ?? 0 ),
+            'public_source_count' => absint( $result['public_source_count'] ?? 0 ),
+            'unused_research_source_count' => absint( $result['unused_research_source_count'] ?? 0 ),
+            'primary_used_count' => absint( $result['primary_used_count'] ?? 0 ),
+            'secondary_used_count' => absint( $result['secondary_used_count'] ?? 0 ),
         )
     );
 }
