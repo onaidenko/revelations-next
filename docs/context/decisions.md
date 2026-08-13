@@ -27,6 +27,10 @@ cannot override that Constitution without explicit product-owner approval.
   still preserves central-pillar independence, sensitive support, attribution
   and material qualifiers. Linked additional evidence retains bounded linkage
   metadata through final-pack validation.
+- **Decision:** Responses transport observability is server-owned and has no
+  retry behaviour. Each stage persists only bounded technical metadata needed
+  to classify a failure; prompts, raw response bodies and model prose remain
+  private and unrecorded.
 
 - **Решение:** RSS lead and its private source snapshot are discovery input,
   not the factual boundary for a generated article. Factual web research gets

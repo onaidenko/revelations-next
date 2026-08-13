@@ -67,6 +67,10 @@ class WP_Error {
     public function get_error_message(): string {
         return $this->message;
     }
+
+    public function get_error_data( string $code = '' ): array {
+        return $this->data;
+    }
 }
 
 /**
@@ -118,6 +122,7 @@ $revelations_integration_transport_calls = 0;
 $revelations_integration_transport_requests = array();
 $revelations_integration_transport_article = array();
 $revelations_integration_settings = array();
+$revelations_integration_transport_overrides = array();
 
 /**
  * WordPress registration stub. Callbacks are intentionally not executed.
@@ -481,21 +486,27 @@ function revelations_editorial_get_settings(): array {
 function wp_remote_post(
     string $url,
     array $arguments
-): array {
+): mixed {
     global $revelations_integration_transport_calls;
     global $revelations_integration_transport_requests;
     global $revelations_integration_transport_article;
+    global $revelations_integration_transport_overrides;
 
     $request_body = json_decode( (string) ( $arguments['body'] ?? '' ), true );
     $is_research = is_array( $request_body ) && ! empty( $request_body['tools'] );
     $is_brief = is_array( $request_body ) && 'revelations_editorial_brief' === ( $request_body['text']['format']['name'] ?? '' );
 
+    $call_index = $revelations_integration_transport_calls;
     $revelations_integration_transport_calls++;
     $revelations_integration_transport_requests[] =
         array(
             'url' => $url,
             'arguments' => $arguments,
         );
+
+    $override = $revelations_integration_transport_overrides[ $call_index ] ?? null;
+    if ( is_callable( $override ) ) return $override( $is_research, $is_brief );
+    if ( null !== $override ) return $override;
 
     $output_text = wp_json_encode(
         $is_research ? revelations_integration_research() : ( $is_brief ? revelations_integration_brief() : $revelations_integration_transport_article ),
@@ -535,6 +546,11 @@ function wp_remote_post(
         ),
         'body' => $body,
     );
+}
+
+/** @return array<string, mixed> */
+function revelations_integration_responses_fixture( int $http_status, string $status, string $output, bool $research = false ): array {
+    return array( 'response' => array( 'code' => $http_status ), 'headers' => array( 'x-request-id' => 'synthetic-request-id' ), 'body' => wp_json_encode( array( 'id' => 'synthetic-response-id', 'status' => $status, 'usage' => array( 'input_tokens' => 11, 'output_tokens' => 7, 'total_tokens' => 18 ), 'incomplete_details' => array( 'reason' => 'max_output_tokens' ), 'error' => array( 'type' => 'rate_limit_error', 'code' => 'rate_limit_exceeded', 'message' => 'raw-response-marker' ), 'output' => array( ...( $research ? array( array( 'type' => 'web_search_call', 'status' => 'completed', 'action' => array( 'sources' => array( array( 'url' => 'https://agency.gov/record' ), array( 'url' => 'https://editorial.example.test/report' ) ) ) ) ) : array() ), array( 'content' => array( array( 'type' => 'output_text', 'text' => $output ) ) ) ) ), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) );
 }
 
 /**
@@ -831,6 +847,7 @@ function revelations_integration_reset(
     global $revelations_integration_transport_requests;
     global $revelations_integration_transport_article;
     global $revelations_integration_settings;
+    global $revelations_integration_transport_overrides;
 
     $revelations_integration_posts = array(
         100 => new WP_Post(
@@ -885,6 +902,7 @@ function revelations_integration_reset(
     $revelations_integration_next_post_id = 1000;
     $revelations_integration_transport_calls = 0;
     $revelations_integration_transport_requests = array();
+    $revelations_integration_transport_overrides = array();
     $revelations_integration_settings = array();
     $revelations_integration_transport_article =
         revelations_integration_article(
@@ -1327,6 +1345,55 @@ revelations_integration_check(
     str_contains( (string) ( $runtime_policy_second_request['instructions'] ?? '' ), 'Runtime Policy Beta' ) &&
     ! str_contains( (string) ( $runtime_policy_second_request['instructions'] ?? '' ), 'Runtime Policy Alpha' ),
     'updated stored Editorial Policy is used by the next generation without deploy'
+);
+
+/* Every Responses boundary retains a bounded, stage-specific failure record. */
+$responses_failure_cases = array(
+    'transport' => array( 'suffix' => 'transport_failed', 'response' => static fn( bool $research, bool $brief ): WP_Error => new WP_Error( 'synthetic_transport', 'Synthetic transport failure.' ) ),
+    'http' => array( 'suffix' => 'http_failed', 'response' => static fn( bool $research, bool $brief ): array => revelations_integration_responses_fixture( 429, 'failed', '{}', $research ) ),
+    'invalid_json' => array( 'suffix' => 'invalid_response_json', 'response' => static fn( bool $research, bool $brief ): array => array( 'response' => array( 'code' => 200 ), 'headers' => array( 'x-request-id' => 'synthetic-request-id' ), 'body' => '{not-json' ) ),
+    'incomplete' => array( 'suffix' => 'incomplete_response', 'response' => static fn( bool $research, bool $brief ): array => revelations_integration_responses_fixture( 200, 'incomplete', '{}', $research ) ),
+    'failed' => array( 'suffix' => 'response_failed', 'response' => static fn( bool $research, bool $brief ): array => revelations_integration_responses_fixture( 200, 'failed', '{}', $research ) ),
+    'invalid_structured_output' => array( 'suffix' => 'invalid_structured_output', 'response' => static fn( bool $research, bool $brief ): array => revelations_integration_responses_fixture( 200, 'completed', 'not-json', $research ) ),
+);
+$responses_stages = array(
+    'research' => array( 'call' => 0, 'code_prefix' => 'research', 'diagnostic_stage' => 'research' ),
+    'brief' => array( 'call' => 1, 'code_prefix' => 'brief', 'diagnostic_stage' => 'editorial_brief' ),
+    'final' => array( 'call' => 2, 'code_prefix' => 'final', 'diagnostic_stage' => 'final_generation' ),
+);
+foreach ( $responses_stages as $stage_name => $stage ) foreach ( $responses_failure_cases as $case_name => $case ) {
+    revelations_integration_reset( 'news' );
+    $revelations_integration_transport_overrides[ $stage['call'] ] = $case['response'];
+    $before = revelations_integration_state_signature();
+    $result = revelations_editorial_generate_draft_with_ai( 100 );
+    $error_data = is_wp_error( $result ) ? $result->get_error_data( $result->get_error_code() ) : array();
+    $diagnostics = is_array( $error_data['research_diagnostics'] ?? null ) ? $error_data['research_diagnostics'] : (array) ( $error_data['generation_diagnostics'] ?? array() );
+    $response_records = is_array( $diagnostics['responses_diagnostics'] ?? null ) ? $diagnostics['responses_diagnostics'] : array();
+    $response_diagnostic = is_array( $response_records ) ? end( $response_records ) : array();
+    revelations_integration_check(
+        is_wp_error( $result ) &&
+        $stage['code_prefix'] . '_' . $case['suffix'] === $result->get_error_code() &&
+        $stage['diagnostic_stage'] === ( $response_diagnostic['stage'] ?? '' ) &&
+        count( $response_records ) === ( $stage['call'] + 1 ) &&
+        ( 'transport' === $case_name ? ! empty( $response_diagnostic['transport_error'] ) : 0 < (int) ( $response_diagnostic['body_chars'] ?? 0 ) ) &&
+        ! str_contains( wp_json_encode( $diagnostics ), 'Synthetic transport failure.' ) &&
+        ! str_contains( wp_json_encode( $diagnostics ), 'raw-response-marker' ),
+        $stage_name . ' ' . $case_name . ' Responses failure has a distinct bounded diagnostic'
+    );
+    revelations_integration_check(
+        $before === revelations_integration_state_signature() &&
+        array() === revelations_integration_version_ids(),
+        $stage_name . ' ' . $case_name . ' Responses failure preserves the draft before writes'
+    );
+}
+revelations_integration_reset( 'news' );
+$revelations_integration_transport_overrides[2] = static fn( bool $research, bool $brief ): array => revelations_integration_responses_fixture( 200, 'completed', '{}', false );
+$final_schema_result = revelations_editorial_generate_draft_with_ai( 100 );
+$final_schema_data = is_wp_error( $final_schema_result ) ? $final_schema_result->get_error_data( $final_schema_result->get_error_code() ) : array();
+revelations_integration_check(
+    is_wp_error( $final_schema_result ) && 'final_schema_validation_failed' === $final_schema_result->get_error_code() &&
+    ! empty( $final_schema_data['generation_diagnostics']['responses_diagnostics'] ),
+    'final completed response with missing structured fields has a distinct schema failure'
 );
 
 /*

@@ -21,6 +21,9 @@
   and simulated draft write without a network/API call; it also verifies that
   a changed saved Editorial Policy is read by the next brief/final request and
   never reaches factual research.
+- Responses failures now persist bounded stage-specific transport, HTTP,
+  completion, API and hash/size diagnostics while never storing prompts or raw
+  model/API bodies. This local change is pending commit and deploy.
 
 Дата изменения: 2026-08-13.
 

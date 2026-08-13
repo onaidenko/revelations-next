@@ -33,6 +33,12 @@ approval requirement are canonical in
   validation evidence map. The compact source registry remains prompt-only.
   Public Sources are derived from actually used evidence, including validated
   direct-quote evidence, never from the discovery pack.
+- Every Responses boundary records a bounded private technical result on
+  failure: stage, transport/HTTP/Responses status, safe request ID and API
+  fields, body/output lengths and SHA-256, duration and returned token usage.
+  Raw prompts and model/API bodies are never stored. Research, brief and final
+  use distinct internal failure codes; later-stage failure retains completed
+  earlier-stage diagnostics.
 
 ## Scanner subsystem
 

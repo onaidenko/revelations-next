@@ -1077,17 +1077,23 @@ function revelations_editorial_generate_draft_with_ai(
         ( microtime( true ) - $started ) * 1000
     );
 
-    $decoded = is_wp_error( $http_response ) ? array() : json_decode( wp_remote_retrieve_body( $http_response ), true );
+    $response_body = is_wp_error( $http_response ) ? '' : (string) wp_remote_retrieve_body( $http_response );
+    $decoded = is_wp_error( $http_response ) ? null : json_decode( $response_body, true );
     $usage = is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array();
     $final_status = is_wp_error( $http_response ) ? 'transport_failed' : ( is_array( $decoded ) ? sanitize_key( (string) ( $decoded['status'] ?? 'response_error' ) ) : 'invalid_response' );
     $runtime_diagnostics = revelations_editorial_ai_generation_runtime_diagnostics(
         $research, $brief_result, $final_evidence, $editorial_brief,
         $usage, $duration_ms, $final_status, $editorial_policy
     );
+    $runtime_diagnostics['responses_diagnostics'] = is_array( $brief_result['responses_diagnostics'] ?? null )
+        ? $brief_result['responses_diagnostics']
+        : array();
+    $response_diagnostics = revelations_editorial_ai_responses_diagnostics( 'final_generation', $http_response, $duration_ms, is_array( $decoded ) ? $decoded : null, $response_body );
+    $runtime_diagnostics = revelations_editorial_ai_append_responses_diagnostics( $runtime_diagnostics, $response_diagnostics );
 
     if ( is_wp_error( $http_response ) ) {
         return revelations_editorial_ai_generation_runtime_failure(
-            'http_error',
+            'final_transport_failed',
             $http_response->get_error_message(),
             $runtime_diagnostics
         );
@@ -1100,22 +1106,19 @@ function revelations_editorial_generate_draft_with_ai(
 
     if ( ! is_array( $decoded ) ) {
         return revelations_editorial_ai_generation_runtime_failure(
-            'invalid_api_json',
+            'final_invalid_response_json',
             'OpenAI returned invalid JSON.',
             $runtime_diagnostics
         );
     }
 
-    if (
-        $http_status < 200 ||
-        $http_status >= 300
-    ) {
+    if ( $http_status < 200 || $http_status >= 300 ) {
         $message =
             $decoded['error']['message']
             ?? 'OpenAI request failed.';
 
         return revelations_editorial_ai_generation_runtime_failure(
-            'api_error',
+            'final_http_failed',
             sanitize_text_field(
                 (string) $message
             ),
@@ -1123,17 +1126,14 @@ function revelations_editorial_generate_draft_with_ai(
         );
     }
 
-    if (
-        'completed' !== (
-            $decoded['status'] ?? ''
-        )
-    ) {
+    if ( 'completed' !== ( $decoded['status'] ?? '' ) ) {
+        $failure_code = 'failed' === ( $decoded['status'] ?? '' ) ? 'final_response_failed' : 'final_incomplete_response';
         $incomplete_reason =
             $decoded['incomplete_details']['reason']
             ?? 'unknown';
 
         return revelations_editorial_ai_generation_runtime_failure(
-            'incomplete_response',
+            $failure_code,
             'OpenAI response was incomplete: ' .
             sanitize_text_field(
                 (string) $incomplete_reason
@@ -1147,9 +1147,12 @@ function revelations_editorial_generate_draft_with_ai(
             $decoded
         );
 
+    $runtime_diagnostics['responses_diagnostics'][ array_key_last( $runtime_diagnostics['responses_diagnostics'] ) ]['output_chars'] = strlen( $output_text );
+    $runtime_diagnostics['responses_diagnostics'][ array_key_last( $runtime_diagnostics['responses_diagnostics'] ) ]['output_sha256'] = '' !== $output_text ? hash( 'sha256', $output_text ) : '';
+
     if ( '' === $output_text ) {
         return revelations_editorial_ai_generation_validation_error(
-            'empty_output',
+            'final_invalid_structured_output',
             'OpenAI returned no article output.',
             $runtime_diagnostics
         );
@@ -1162,7 +1165,7 @@ function revelations_editorial_generate_draft_with_ai(
 
     if ( ! is_array( $article ) ) {
         return revelations_editorial_ai_generation_validation_error(
-            'invalid_article_json',
+            'final_invalid_structured_output',
             'The structured article could not be decoded.',
             $runtime_diagnostics
         );
@@ -1185,7 +1188,7 @@ function revelations_editorial_generate_draft_with_ai(
     foreach ( $required_fields as $field ) {
         if ( ! array_key_exists( $field, $article ) ) {
             return revelations_editorial_ai_generation_validation_error(
-                'missing_field',
+                'final_schema_validation_failed',
                 'The structured article is missing: ' .
                 $field,
                 $runtime_diagnostics

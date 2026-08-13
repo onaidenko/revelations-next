@@ -403,6 +403,59 @@ function revelations_editorial_ai_research_web_provenance( array $response ): ar
 /** @return WP_Error */
 function revelations_editorial_ai_research_failure( string $code, string $message, array $diagnostics = array() ): WP_Error { return new WP_Error( $code, $message, array( 'research_diagnostics' => $diagnostics ) ); }
 
+/** Bounded private Responses diagnostics; never stores request or response text. */
+function revelations_editorial_ai_responses_diagnostics( string $stage, mixed $response, int $duration_ms, ?array $decoded = null, string $body = '', string $output = '' ): array {
+    $usage = is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array();
+    $headers = ! is_wp_error( $response ) && is_array( $response ) && is_array( $response['headers'] ?? null ) ? $response['headers'] : array();
+    $request_id = is_array( $decoded ) ? sanitize_text_field( (string) ( $decoded['id'] ?? '' ) ) : '';
+    if ( '' === $request_id ) foreach ( $headers as $name => $value ) if ( 'x-request-id' === strtolower( (string) $name ) ) { $request_id = sanitize_text_field( (string) $value ); break; }
+    if ( '' === $request_id && ! is_wp_error( $response ) && function_exists( 'wp_remote_retrieve_header' ) ) $request_id = sanitize_text_field( (string) wp_remote_retrieve_header( $response, 'x-request-id' ) );
+    $error = is_array( $decoded['error'] ?? null ) ? $decoded['error'] : array();
+    return array(
+        'stage' => sanitize_key( $stage ),
+        'transport_error' => is_wp_error( $response ),
+        'transport_error_code' => is_wp_error( $response ) && method_exists( $response, 'get_error_code' ) ? sanitize_key( (string) $response->get_error_code() ) : '',
+        'http_status' => is_wp_error( $response ) ? 0 : absint( wp_remote_retrieve_response_code( $response ) ),
+        'responses_status' => is_array( $decoded ) ? sanitize_key( (string) ( $decoded['status'] ?? '' ) ) : '',
+        'request_id' => $request_id,
+        'incomplete_reason' => is_array( $decoded ) ? sanitize_key( (string) ( $decoded['incomplete_details']['reason'] ?? '' ) ) : '',
+        'api_error_type' => sanitize_key( (string) ( $error['type'] ?? '' ) ),
+        'api_error_code' => sanitize_key( (string) ( $error['code'] ?? '' ) ),
+        'body_chars' => strlen( $body ),
+        'body_sha256' => '' !== $body ? hash( 'sha256', $body ) : '',
+        'output_chars' => strlen( $output ),
+        'output_sha256' => '' !== $output ? hash( 'sha256', $output ) : '',
+        'duration_ms' => absint( $duration_ms ),
+        'input_tokens' => absint( $usage['input_tokens'] ?? 0 ),
+        'output_tokens' => absint( $usage['output_tokens'] ?? 0 ),
+        'total_tokens' => absint( $usage['total_tokens'] ?? 0 ),
+    );
+}
+
+function revelations_editorial_ai_responses_failure_code( string $stage, mixed $response, ?array $decoded ): string {
+    if ( is_wp_error( $response ) ) return $stage . '_transport_failed';
+    $http_status = absint( wp_remote_retrieve_response_code( $response ) );
+    if ( $http_status < 200 || $http_status >= 300 ) return $stage . '_http_failed';
+    if ( ! is_array( $decoded ) ) return $stage . '_invalid_response_json';
+    $status = sanitize_key( (string) ( $decoded['status'] ?? '' ) );
+    if ( 'incomplete' === $status ) return $stage . '_incomplete_response';
+    if ( 'failed' === $status ) return $stage . '_response_failed';
+    return $stage . '_incomplete_response';
+}
+
+/** @param array<string, mixed> $diagnostics */
+function revelations_editorial_ai_append_responses_diagnostics( array $diagnostics, array $response_diagnostics ): array {
+    $stages = is_array( $diagnostics['stage_usage'] ?? null ) ? $diagnostics['stage_usage'] : array();
+    $stage_usage = array( 'stage' => $response_diagnostics['stage'], 'input_tokens' => $response_diagnostics['input_tokens'], 'output_tokens' => $response_diagnostics['output_tokens'], 'total_tokens' => $response_diagnostics['total_tokens'], 'duration_ms' => $response_diagnostics['duration_ms'], 'response_status' => $response_diagnostics['responses_status'] ?: ( ! empty( $response_diagnostics['transport_error'] ) ? 'transport_failed' : 'response_failed' ) );
+    $replaced = false; foreach ( $stages as $index => $existing ) if ( $response_diagnostics['stage'] === ( $existing['stage'] ?? '' ) ) { $stages[ $index ] = $stage_usage; $replaced = true; break; } if ( ! $replaced ) $stages[] = $stage_usage;
+    $responses = is_array( $diagnostics['responses_diagnostics'] ?? null ) ? $diagnostics['responses_diagnostics'] : array(); $responses[] = $response_diagnostics;
+    $diagnostics['stage_usage'] = $stages; $diagnostics['responses_diagnostics'] = $responses;
+    $diagnostics['input_tokens'] = array_sum( array_column( $stages, 'input_tokens' ));
+    $diagnostics['output_tokens'] = array_sum( array_column( $stages, 'output_tokens' ));
+    $diagnostics['total_tokens'] = array_sum( array_column( $stages, 'total_tokens' ));
+    return $diagnostics;
+}
+
 /** @return array<int, string> */
 function revelations_editorial_ai_research_targets( string $headline, string $summary, string $lead_excerpt ): array {
     $text = trim( $headline . '. ' . $summary . ' ' . mb_substr( $lead_excerpt, 0, 3500, 'UTF-8' ) ); $targets = array(); $seen = array();
@@ -420,13 +473,17 @@ function revelations_editorial_ai_research_evidence_pack( array $config, string 
     $input = "Candidate topic: {$headline}\nSection: {$section}\nLead source: " . ( $lead['name'] ?? '' ) . "\nLead URL: " . ( $lead['url'] ?? '' ) . "\nLead classification: " . wp_json_encode( $lead ) . "\nCandidate summary: {$summary}\nConcrete factual research targets:\n- " . implode( "\n- ", $targets ) . "\nFactual questions: What happened? Which named entities, dates, technical details, regulatory claims or numbers can be independently verified? What context or significance is independently reported?\nSource and evidence requirements: two independent hosts beyond the lead; claim-level context; source type and reliability; attribute contested claims; no narrative.\nLead clues only, not evidence:\n{$lead_excerpt}";
     $body = array( 'model' => $config['model'], 'instructions' => $instructions, 'input' => $input, 'tools' => array( array( 'type' => 'web_search' ) ), 'tool_choice' => 'required', 'include' => array( 'web_search_call.action.sources' ), 'reasoning' => array( 'effort' => 'none' ), 'text' => array( 'format' => array( 'type' => 'json_schema', 'name' => 'revelations_factual_research', 'strict' => true, 'schema' => revelations_editorial_ai_research_schema() ) ), 'max_output_tokens' => 3500, 'store' => false );
     $started = microtime( true ); $response = wp_remote_post( 'https://api.openai.com/v1/responses', array( 'timeout' => 120, 'redirection' => 0, 'headers' => array( 'Authorization' => 'Bearer ' . $config['api_key'], 'Content-Type' => 'application/json' ), 'body' => wp_json_encode( $body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ), 'data_format' => 'body' ) );
-    if ( is_wp_error( $response ) ) return revelations_editorial_ai_research_failure( 'research_failed', 'Independent research request failed.', array( 'failure_stage' => 'transport' ) );
-    $status = (int) wp_remote_retrieve_response_code( $response ); $decoded = json_decode( wp_remote_retrieve_body( $response ), true );
-    if ( ! is_array( $decoded ) || $status < 200 || $status >= 300 || 'completed' !== ( $decoded['status'] ?? '' ) ) return revelations_editorial_ai_research_failure( 'research_failed', 'Independent research could not be completed.', array( 'failure_stage' => 'response_status', 'http_status' => $status, 'response_status' => is_array( $decoded ) ? sanitize_key( (string) ( $decoded['status'] ?? '' ) ) : '' ) );
+    $duration_ms = (int) round( ( microtime( true ) - $started ) * 1000 );
+    $response_body = is_wp_error( $response ) ? '' : (string) wp_remote_retrieve_body( $response ); $decoded = is_wp_error( $response ) ? null : json_decode( $response_body, true );
+    if ( is_wp_error( $response ) || ! is_array( $decoded ) || (int) wp_remote_retrieve_response_code( $response ) < 200 || (int) wp_remote_retrieve_response_code( $response ) >= 300 || 'completed' !== ( $decoded['status'] ?? '' ) ) {
+        $response_diagnostics = revelations_editorial_ai_responses_diagnostics( 'research', $response, $duration_ms, is_array( $decoded ) ? $decoded : null, $response_body );
+        return revelations_editorial_ai_research_failure( revelations_editorial_ai_responses_failure_code( 'research', $response, is_array( $decoded ) ? $decoded : null ), 'Independent research could not be completed.', revelations_editorial_ai_append_responses_diagnostics( array( 'failure_stage' => 'responses' ), $response_diagnostics ) );
+    }
     $provenance = revelations_editorial_ai_research_web_provenance( $decoded );
     if ( 0 === $provenance['web_search_call_count'] ) return revelations_editorial_ai_research_failure( 'research_tool_not_used', 'Independent research completed without using web search.', array_merge( $provenance, array( 'failure_stage' => 'tool_use', 'response_status' => 'completed' ) ) );
     if ( array() === $provenance['urls'] ) return revelations_editorial_ai_research_failure( 'research_no_web_sources', 'Independent research returned no verifiable web-search sources.', array_merge( $provenance, array( 'failure_stage' => 'provenance', 'response_status' => 'completed' ) ) );
-    $research = json_decode( revelations_editorial_ai_generation_extract_text( $decoded ), true ); if ( ! is_array( $research ) || ! is_array( $research['sources'] ?? null ) ) return revelations_editorial_ai_research_failure( 'research_failed', 'Independent research returned no usable evidence.', array_merge( $provenance, array( 'failure_stage' => 'structured_json', 'structured_json_source_count' => 0 ) ) );
+    $structured_output = revelations_editorial_ai_generation_extract_text( $decoded );
+    $research = json_decode( $structured_output, true ); if ( ! is_array( $research ) || ! is_array( $research['sources'] ?? null ) ) return revelations_editorial_ai_research_failure( 'research_invalid_structured_output', 'Independent research returned no usable evidence.', revelations_editorial_ai_append_responses_diagnostics( array_merge( $provenance, array( 'failure_stage' => 'structured_json', 'structured_json_source_count' => 0 ) ), revelations_editorial_ai_responses_diagnostics( 'research', $response, $duration_ms, $decoded, $response_body, $structured_output ) ) );
     $web_urls = $provenance['urls'];
     $sources = array(); $hosts = array(); $primary_count = 0;
     foreach ( $research['sources'] as $source ) {
@@ -446,8 +503,18 @@ function revelations_editorial_ai_research_evidence_pack( array $config, string 
     if ( ! empty( $lead['requires_independent_corroboration'] ) && $primary_count < 1 ) return revelations_editorial_ai_research_failure( 'insufficient_independent_evidence', 'This lead type requires corroborating primary authoritative evidence.', array_merge( $diagnostics, array( 'failure_stage' => 'primary_requirement' ) ) );
     $source_list = array_values( $sources ); $registry_data = revelations_editorial_ai_research_source_registry( $source_list ); $units = array(); $provenance = array(); foreach ( $source_list as $source ) foreach ( $source['claims'] as $claim ) { $id = sprintf( 'p%03d', count( $units ) + 1 ); $source_key = revelations_editorial_ai_research_url_key( (string) $source['url'] ); $source_id = $registry_data['source_ids'][ $source_key ] ?? ''; $text = '[' . $source_id . '] Claim: ' . $claim['claim'] . "\nSupport: " . $claim['context'] . ( '' !== $claim['attribution'] ? "\nAttribution: " . $claim['attribution'] : '' ); $units[] = array( 'id' => $id, 'text' => $text ); $provenance[ $id ] = array( 'url' => $source['url'], 'host' => $source['host'], 'reliability' => $source['reliability'], 'role' => $source['server_role'] ?? 'secondary', 'authority_kind' => $source['authority_kind'] ?? '', 'source_id' => $source_id ); }
     $evidence = revelations_editorial_ai_research_format_evidence_pack( $registry_data['registry'], $units ); if ( array() === $units ) return new WP_Error( 'insufficient_independent_evidence', 'Independent research contained no claim-level evidence.' );
-    $result = array( 'sources' => $source_list, 'source_registry' => $registry_data['registry'], 'evidence_units' => $units, 'evidence_text' => $evidence, 'provenance' => $provenance, 'evidence_count' => count( $units ), 'primary_count' => $primary_count, 'lead_classification' => $lead, 'duration_ms' => (int) round( ( microtime( true ) - $started ) * 1000 ), 'usage' => is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ) );
-    $result['research_diagnostics'] = revelations_editorial_ai_completed_stage_diagnostics( $result );
+    $result = array( 'sources' => $source_list, 'source_registry' => $registry_data['registry'], 'evidence_units' => $units, 'evidence_text' => $evidence, 'provenance' => $provenance, 'evidence_count' => count( $units ), 'primary_count' => $primary_count, 'lead_classification' => $lead, 'duration_ms' => $duration_ms, 'usage' => is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ) );
+    $result['research_diagnostics'] = revelations_editorial_ai_append_responses_diagnostics(
+        revelations_editorial_ai_completed_stage_diagnostics( $result ),
+        revelations_editorial_ai_responses_diagnostics(
+            'research',
+            $response,
+            $duration_ms,
+            $decoded,
+            $response_body,
+            $structured_output
+        )
+    );
     return $result;
 }
 
@@ -508,15 +575,23 @@ function revelations_editorial_ai_editorial_brief( array $config, string $sectio
     $input = "RESEARCH EVIDENCE\n" . ( array() !== $registry ? revelations_editorial_ai_research_format_evidence_pack( $registry, $units ) : revelations_editorial_ai_format_source_evidence_units( $units ) );
     $body = array( 'model' => $config['model'], 'instructions' => $instructions, 'input' => $input, 'reasoning' => array( 'effort' => 'none' ), 'text' => array( 'format' => array( 'type' => 'json_schema', 'name' => 'revelations_editorial_brief', 'strict' => true, 'schema' => revelations_editorial_ai_editorial_brief_schema() ) ), 'max_output_tokens' => 2500, 'store' => false );
     $started = microtime( true ); $response = wp_remote_post( 'https://api.openai.com/v1/responses', array( 'timeout' => 120, 'redirection' => 0, 'headers' => array( 'Authorization' => 'Bearer ' . $config['api_key'], 'Content-Type' => 'application/json' ), 'body' => wp_json_encode( $body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ), 'data_format' => 'body' ) );
-    if ( is_wp_error( $response ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief request failed.', $research_diagnostics );
     $duration_ms = (int) round( ( microtime( true ) - $started ) * 1000 );
-    $status = (int) wp_remote_retrieve_response_code( $response ); $decoded = json_decode( wp_remote_retrieve_body( $response ), true ); if ( ! is_array( $decoded ) || $status < 200 || $status >= 300 || 'completed' !== ( $decoded['status'] ?? '' ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief could not be completed.', $research_diagnostics );
-    $brief = json_decode( revelations_editorial_ai_generation_extract_text( $decoded ), true ); if ( ! is_array( $brief ) || ! is_array( $brief['factual_pillars'] ?? null ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief returned no factual pillars.', $research_diagnostics );
+    $response_body = is_wp_error( $response ) ? '' : (string) wp_remote_retrieve_body( $response ); $decoded = is_wp_error( $response ) ? null : json_decode( $response_body, true );
+    if ( is_wp_error( $response ) || ! is_array( $decoded ) || (int) wp_remote_retrieve_response_code( $response ) < 200 || (int) wp_remote_retrieve_response_code( $response ) >= 300 || 'completed' !== ( $decoded['status'] ?? '' ) ) {
+        $response_diagnostics = revelations_editorial_ai_responses_diagnostics( 'editorial_brief', $response, $duration_ms, is_array( $decoded ) ? $decoded : null, $response_body );
+        return revelations_editorial_ai_editorial_brief_failure( revelations_editorial_ai_responses_failure_code( 'brief', $response, is_array( $decoded ) ? $decoded : null ), 'Editorial brief could not be completed.', revelations_editorial_ai_append_responses_diagnostics( $research_diagnostics, $response_diagnostics ) );
+    }
+    $structured_output = revelations_editorial_ai_generation_extract_text( $decoded );
+    $brief = json_decode( $structured_output, true ); if ( ! is_array( $brief ) || ! is_array( $brief['factual_pillars'] ?? null ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_invalid_structured_output', 'Editorial brief returned no factual pillars.', revelations_editorial_ai_append_responses_diagnostics( $research_diagnostics, revelations_editorial_ai_responses_diagnostics( 'editorial_brief', $response, $duration_ms, $decoded, $response_body, $structured_output ) ) );
     $pillar_prevalidation_summary =
         revelations_editorial_ai_brief_pillar_prevalidation_diagnostics(
             $brief
         );
     $brief_diagnostics = array_merge( revelations_editorial_ai_completed_stage_diagnostics( $research, $brief, is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), $duration_ms, sanitize_key( (string) ( $decoded['status'] ?? '' ) ) ), array( 'pillar_prevalidation_summary' => $pillar_prevalidation_summary ) );
+    $brief_diagnostics['responses_diagnostics'] = is_array( $research_diagnostics['responses_diagnostics'] ?? null )
+        ? $research_diagnostics['responses_diagnostics']
+        : array();
+    $brief_diagnostics = revelations_editorial_ai_append_responses_diagnostics( $brief_diagnostics, revelations_editorial_ai_responses_diagnostics( 'editorial_brief', $response, $duration_ms, $decoded, $response_body, $structured_output ) );
     $provenance = is_array( $research['provenance'] ?? null )
         ? $research['provenance']
         : array();
@@ -537,7 +612,7 @@ function revelations_editorial_ai_editorial_brief( array $config, string $sectio
             'evidence_ids_empty' !== $failed_condition
         ) {
             return revelations_editorial_ai_editorial_brief_failure(
-                'brief_failed',
+                'brief_schema_validation_failed',
                 'A factual pillar has no valid identity, importance or evidence references.',
                 $brief_diagnostics
             );
@@ -545,7 +620,7 @@ function revelations_editorial_ai_editorial_brief( array $config, string $sectio
 
         if ( ! is_array( $pillar ) ) {
             return revelations_editorial_ai_editorial_brief_failure(
-                'brief_failed',
+                'brief_schema_validation_failed',
                 'A factual pillar has no valid identity, importance or evidence references.',
                 $brief_diagnostics
             );
@@ -567,7 +642,7 @@ function revelations_editorial_ai_editorial_brief( array $config, string $sectio
             ! is_array( $pillar['evidence_ids'] ?? null )
         ) {
             return revelations_editorial_ai_editorial_brief_failure(
-                'brief_failed',
+                'brief_schema_validation_failed',
                 'A factual pillar has no valid identity, importance or evidence references.',
                 $brief_diagnostics
             );
@@ -580,13 +655,13 @@ function revelations_editorial_ai_editorial_brief( array $config, string $sectio
         }
     }
     $supports = revelations_editorial_ai_pillar_support_from_brief( $brief, $provenance );
-    if ( is_wp_error( $supports ) ) return revelations_editorial_ai_editorial_brief_failure( (string) $supports->get_error_code(), $supports->get_error_message(), $brief_diagnostics );
-    $pillar_count = count( $supports ); $order = $brief['pillar_order'] ?? array(); $valid_order = is_array( $order ) && array_values( $order ) === range( 0, $pillar_count - 1 ); if ( $pillar_count < 3 || $pillar_count > 5 || $central_count < 1 || ! $valid_order ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief does not provide a complete independent pillar order.', array_merge( $brief_diagnostics, revelations_editorial_ai_pillar_diagnostics( $supports ) ) );
+    if ( is_wp_error( $supports ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', $supports->get_error_message(), $brief_diagnostics );
+    $pillar_count = count( $supports ); $order = $brief['pillar_order'] ?? array(); $valid_order = is_array( $order ) && array_values( $order ) === range( 0, $pillar_count - 1 ); if ( $pillar_count < 3 || $pillar_count > 5 || $central_count < 1 || ! $valid_order ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', 'Editorial brief does not provide a complete independent pillar order.', array_merge( $brief_diagnostics, revelations_editorial_ai_pillar_diagnostics( $supports ) ) );
     $dominance = revelations_editorial_ai_evaluate_pillar_dominance( $supports );
     $brief_diagnostics = array_merge( $brief_diagnostics, revelations_editorial_ai_pillar_diagnostics( $supports, $dominance ) );
     if ( ! empty( $dominance['hard_failure'] ) ) return revelations_editorial_ai_editorial_brief_failure( 'insufficient_independent_evidence', 'A secondary source is the sole support for the central or majority factual pillars.', array_merge( $brief_diagnostics, array( 'failure_stage' => 'editorial_brief_dominance' ) ) );
-    if ( ! is_array( $brief['sensitive_evidence_ids'] ?? null ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief returned invalid sensitive-evidence selections.', $brief_diagnostics ); foreach ( $brief['sensitive_evidence_ids'] as $id ) if ( ! isset( $provenance[ (string) $id ] ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief selected unknown sensitive evidence.', $brief_diagnostics ); $brief['sensitive_evidence_ids'] = array_values( array_unique( array_map( 'strval', $brief['sensitive_evidence_ids'] ) ) );
-    foreach ( array( 'attribution_evidence_ids' => 'attribution', 'essential_context_evidence_ids' => 'essential_context' ) as $field => $category ) { $links = revelations_editorial_ai_normalize_brief_evidence_links( $brief[ $field ] ?? null, $provenance, $pillar_ids, $category ); if ( empty( $links['valid'] ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief selected unlinked additional evidence.', $brief_diagnostics ); $brief[ $field ] = $links['ids']; $brief[ str_replace( '_ids', '_links', $field ) ] = $links['links']; }
+    if ( ! is_array( $brief['sensitive_evidence_ids'] ?? null ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', 'Editorial brief returned invalid sensitive-evidence selections.', $brief_diagnostics ); foreach ( $brief['sensitive_evidence_ids'] as $id ) if ( ! isset( $provenance[ (string) $id ] ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', 'Editorial brief selected unknown sensitive evidence.', $brief_diagnostics ); $brief['sensitive_evidence_ids'] = array_values( array_unique( array_map( 'strval', $brief['sensitive_evidence_ids'] ) ) );
+    foreach ( array( 'attribution_evidence_ids' => 'attribution', 'essential_context_evidence_ids' => 'essential_context' ) as $field => $category ) { $links = revelations_editorial_ai_normalize_brief_evidence_links( $brief[ $field ] ?? null, $provenance, $pillar_ids, $category ); if ( empty( $links['valid'] ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', 'Editorial brief selected unlinked additional evidence.', $brief_diagnostics ); $brief[ $field ] = $links['ids']; $brief[ str_replace( '_ids', '_links', $field ) ] = $links['links']; }
     $brief['pillar_support'] = $supports; $brief['dominance'] = $dominance; $brief['evidence_selection_counts'] = revelations_editorial_ai_brief_selection_counts( $brief );
-    return array( 'brief' => $brief, 'duration_ms' => $duration_ms, 'usage' => is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ) );
+    return array( 'brief' => $brief, 'duration_ms' => $duration_ms, 'usage' => is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ), 'responses_diagnostics' => $brief_diagnostics['responses_diagnostics'] );
 }

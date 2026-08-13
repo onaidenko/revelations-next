@@ -115,6 +115,34 @@ function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
     );
 }
 
+/** @return array<int, array<string, mixed>> */
+function revelations_editorial_sanitize_responses_diagnostics( array $records ): array {
+    $safe = array();
+    foreach ( array_slice( $records, -3 ) as $record ) {
+        if ( ! is_array( $record ) ) continue;
+        $safe[] = array(
+            'stage' => sanitize_key( (string) ( $record['stage'] ?? '' ) ),
+            'transport_error' => ! empty( $record['transport_error'] ),
+            'transport_error_code' => sanitize_key( (string) ( $record['transport_error_code'] ?? '' ) ),
+            'http_status' => absint( $record['http_status'] ?? 0 ),
+            'responses_status' => sanitize_key( (string) ( $record['responses_status'] ?? '' ) ),
+            'request_id' => sanitize_text_field( (string) ( $record['request_id'] ?? '' ) ),
+            'incomplete_reason' => sanitize_key( (string) ( $record['incomplete_reason'] ?? '' ) ),
+            'api_error_type' => sanitize_key( (string) ( $record['api_error_type'] ?? '' ) ),
+            'api_error_code' => sanitize_key( (string) ( $record['api_error_code'] ?? '' ) ),
+            'body_chars' => absint( $record['body_chars'] ?? 0 ),
+            'body_sha256' => preg_match( '/^[a-f0-9]{64}$/', (string) ( $record['body_sha256'] ?? '' ) ) ? (string) $record['body_sha256'] : '',
+            'output_chars' => absint( $record['output_chars'] ?? 0 ),
+            'output_sha256' => preg_match( '/^[a-f0-9]{64}$/', (string) ( $record['output_sha256'] ?? '' ) ) ? (string) $record['output_sha256'] : '',
+            'duration_ms' => absint( $record['duration_ms'] ?? 0 ),
+            'input_tokens' => absint( $record['input_tokens'] ?? 0 ),
+            'output_tokens' => absint( $record['output_tokens'] ?? 0 ),
+            'total_tokens' => absint( $record['total_tokens'] ?? 0 ),
+        );
+    }
+    return $safe;
+}
+
 /**
  * Create a private editorial run log.
  *
@@ -185,6 +213,7 @@ function revelations_editorial_create_run_log(
         'sole_support_majority_pillars' => false,
         'dominance_reason' => '',
         'fact_check_evidence_diagnostics' => array(),
+        'responses_diagnostics' => array(),
         'source_results'     => array(),
         'rejection_counts'   => array(),
         'closest_rejected'   => array(),
@@ -413,6 +442,7 @@ function revelations_editorial_create_run_log(
         '_rev_sole_support_majority_pillars' => ! empty( $data['sole_support_majority_pillars'] ) ? 1 : 0,
         '_rev_dominance_reason' => sanitize_key( (string) $data['dominance_reason'] ),
         '_rev_fact_check_evidence_diagnostics' => wp_json_encode( is_array( $data['fact_check_evidence_diagnostics'] ) ? $data['fact_check_evidence_diagnostics'] : array(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+        '_rev_ai_responses_diagnostics' => wp_json_encode( revelations_editorial_sanitize_responses_diagnostics( is_array( $data['responses_diagnostics'] ) ? $data['responses_diagnostics'] : array() ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
 
         '_rev_source_results' => wp_json_encode( $scan_diagnostics['source_results'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
@@ -673,6 +703,7 @@ function revelations_editorial_log_ai_generation(
             'sole_support_majority_pillars' => ! empty( $result['sole_support_majority_pillars'] ),
             'dominance_reason' => sanitize_key( (string) ( $result['dominance_reason'] ?? '' ) ),
             'fact_check_evidence_diagnostics' => is_array( $result['fact_check_evidence_diagnostics'] ?? null ) ? $result['fact_check_evidence_diagnostics'] : array(),
+            'responses_diagnostics' => is_array( $result['responses_diagnostics'] ?? null ) ? $result['responses_diagnostics'] : array(),
         )
     );
 }
