@@ -43,6 +43,13 @@ approval requirement are canonical in
   Raw prompts and model/API bodies are never stored. Research, brief and final
   use distinct internal failure codes; later-stage failure retains completed
   earlier-stage diagnostics.
+- A completed research pack may receive exactly one server-controlled Editorial
+  Brief replan only after a semantic central-pillar independence or secondary
+  dominance failure and only when the existing pack has eligible primary or
+  independently hosted secondary support. The replan reuses the same runtime
+  policy, section profile and evidence pack, receives ID-only validator
+  feedback, never repeats research or reaches final writing before validation,
+  and preserves both brief attempts in bounded private diagnostics.
 
 ## Scanner subsystem
 

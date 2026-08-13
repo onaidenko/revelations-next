@@ -22,6 +22,19 @@
 
 Дата изменения: 2026-08-14.
 
+## Bounded Editorial Brief replan (pending commit/deploy)
+
+- A semantic Brief support failure can make one replan from the completed
+  research pack when server-owned provenance proves an eligible alternative is
+  already available. It never retries transport, schema or research failures,
+  never repeats web research and never starts final writing before a valid
+  second Brief.
+- Run diagnostics retain attempt count, initial reason, invalid pillar IDs,
+  bounded Responses records and aggregate Brief usage without prompts or prior
+  model prose.
+
+Дата изменения: 2026-08-14.
+
 ## Generation architecture remediation (pending commit/deploy)
 
 - The local generation remediation separates runtime editorial settings from

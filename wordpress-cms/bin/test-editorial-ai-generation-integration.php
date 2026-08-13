@@ -833,6 +833,13 @@ function revelations_integration_brief(): array {
     return array( 'what_happened' => 'An AI workflow is used in editorial work.', 'why_revelations_cares' => 'It shows human control around AI.', 'thesis' => 'AI drafting depends on review.', 'factual_pillars' => array( array( 'pillar_id' => 'pillar_1', 'pillar' => 'AI supports drafting.', 'importance' => 'central', 'evidence_ids' => array( 'p001' ) ), array( 'pillar_id' => 'pillar_2', 'pillar' => 'Staff compare records.', 'importance' => 'supporting', 'evidence_ids' => array( 'p002' ) ), array( 'pillar_id' => 'pillar_3', 'pillar' => 'People retain control.', 'importance' => 'supporting', 'evidence_ids' => array( 'p001', 'p002' ) ) ), 'confirmed' => array( 'The workflow exists.' ), 'attributed' => array(), 'interpretation' => array( 'The workflow changes practice.' ), 'do_not_claim' => array( 'Do not claim broad industry adoption.' ), 'pillar_order' => array( 0, 1, 2 ), 'sensitive_evidence_ids' => array(), 'attribution_evidence_ids' => array(), 'essential_context_evidence_ids' => array() );
 }
 
+/** @return array<string, mixed> */
+function revelations_integration_weak_brief(): array {
+    $brief = revelations_integration_brief();
+    $brief['factual_pillars'][0]['evidence_ids'] = array( 'p002' );
+    return $brief;
+}
+
 /**
  * Reset the complete in-memory WordPress and transport state.
  */
@@ -1345,6 +1352,77 @@ revelations_integration_check(
     str_contains( (string) ( $runtime_policy_second_request['instructions'] ?? '' ), 'Runtime Policy Beta' ) &&
     ! str_contains( (string) ( $runtime_policy_second_request['instructions'] ?? '' ), 'Runtime Policy Alpha' ),
     'updated stored Editorial Policy is used by the next generation without deploy'
+);
+
+/* A semantic brief-support failure gets one bounded replan, never new research. */
+revelations_integration_reset( 'news' );
+$revelations_integration_settings = array( 'editorial_policy' => 'Runtime replan policy.' );
+$weak_brief = revelations_integration_weak_brief();
+$revelations_integration_transport_overrides[1] = static fn( bool $research, bool $brief ): array => revelations_integration_responses_fixture( 200, 'completed', wp_json_encode( $weak_brief ), false );
+$replan_result = revelations_editorial_generate_draft_with_ai( 100 );
+$replan_requests = $revelations_integration_transport_requests;
+$replan_research = json_decode( (string) ( $replan_requests[0]['arguments']['body'] ?? '' ), true );
+$replan_brief = json_decode( (string) ( $replan_requests[1]['arguments']['body'] ?? '' ), true );
+$replan_retry = json_decode( (string) ( $replan_requests[2]['arguments']['body'] ?? '' ), true );
+revelations_integration_check(
+    is_array( $replan_result ) &&
+    4 === $revelations_integration_transport_calls &&
+    ! empty( $replan_result['brief_replan_attempted'] ) &&
+    2 === (int) ( $replan_result['brief_attempt_count'] ?? 0 ) &&
+    'valid' === ( $replan_result['brief_replan_validation_result'] ?? '' ) &&
+    91 === (int) ( $replan_result['stage_usage'][1]['input_tokens'] ?? 0 ) &&
+    127 === (int) ( $replan_result['stage_usage'][1]['output_tokens'] ?? 0 ) &&
+    4 === count( $replan_result['responses_diagnostics'] ?? array() ) &&
+    str_contains( (string) ( $replan_brief['instructions'] ?? '' ), 'Runtime replan policy.' ) &&
+    str_contains( (string) ( $replan_retry['instructions'] ?? '' ), 'Runtime replan policy.' ) &&
+    str_contains( (string) ( $replan_retry['instructions'] ?? '' ), 'SERVER-OWNED BRIEF VALIDATION FEEDBACK' ) &&
+    str_contains( (string) ( $replan_brief['instructions'] ?? '' ), 'primary-authoritative support' ) &&
+    str_contains( (string) ( $replan_retry['instructions'] ?? '' ), 'primary-authoritative support' ),
+    'a weak central pillar uses one same-pack replan with aggregated diagnostics and unchanged safeguards'
+);
+revelations_integration_check(
+    ! str_contains( (string) ( $replan_research['instructions'] ?? '' ), 'Runtime replan policy.' ),
+    'runtime Editorial Policy remains absent from research during a brief replan'
+);
+
+/* A second weak brief is a normal hard failure; final generation is never called. */
+revelations_integration_reset( 'news' );
+$revelations_integration_transport_overrides[1] = static fn( bool $research, bool $brief ): array => revelations_integration_responses_fixture( 200, 'completed', wp_json_encode( revelations_integration_weak_brief() ), false );
+$revelations_integration_transport_overrides[2] = static fn( bool $research, bool $brief ): array => revelations_integration_responses_fixture( 200, 'completed', wp_json_encode( revelations_integration_weak_brief() ), false );
+$replan_failed_result = revelations_editorial_generate_draft_with_ai( 100 );
+$replan_failed_data = is_wp_error( $replan_failed_result ) ? $replan_failed_result->get_error_data( $replan_failed_result->get_error_code() ) : array();
+$replan_failed_diagnostics = is_array( $replan_failed_data['generation_diagnostics'] ?? null ) ? $replan_failed_data['generation_diagnostics'] : array();
+revelations_integration_check(
+    is_wp_error( $replan_failed_result ) &&
+    'insufficient_independent_evidence' === $replan_failed_result->get_error_code() &&
+    3 === $revelations_integration_transport_calls &&
+    2 === (int) ( $replan_failed_diagnostics['brief_attempt_count'] ?? 0 ) &&
+    ! empty( $replan_failed_diagnostics['brief_replan_attempted'] ) &&
+    'failed' === ( $replan_failed_diagnostics['brief_replan_validation_result'] ?? '' ) &&
+    236 === (int) ( $replan_failed_diagnostics['total_tokens'] ?? 0 ),
+    'a second weak brief fails after one replan without final generation'
+);
+
+/* A completed pack made only of first-party evidence cannot justify a semantic replan. */
+revelations_integration_reset( 'news' );
+$no_alternative_config = revelations_editorial_ai_request_config();
+$no_alternative_lead = revelations_editorial_ai_classify_lead_source( 'https://example.test/source', 'Synthetic Source', revelations_integration_source_text() );
+$no_alternative_research = revelations_editorial_ai_research_evidence_pack( $no_alternative_config, 'news', $no_alternative_lead, 'Source headline', 'An AI workflow enters editorial operations.', revelations_integration_source_text() );
+foreach ( $no_alternative_research['provenance'] as $evidence_id => $origin ) $no_alternative_research['provenance'][ $evidence_id ]['role'] = 'first_party';
+$revelations_integration_transport_overrides[1] = static fn( bool $research, bool $brief ): array => revelations_integration_responses_fixture( 200, 'completed', wp_json_encode( revelations_integration_weak_brief() ), false );
+$no_alternative_result = revelations_editorial_ai_editorial_brief( $no_alternative_config, 'news', revelations_editorial_ai_generation_profile( 'news' ), array(), $no_alternative_research );
+$no_alternative_data = is_wp_error( $no_alternative_result ) ? $no_alternative_result->get_error_data( $no_alternative_result->get_error_code() ) : array();
+$no_alternative_diagnostics = is_array( $no_alternative_data['generation_diagnostics'] ?? null ) ? $no_alternative_data['generation_diagnostics'] : array();
+revelations_integration_check(
+    is_wp_error( $no_alternative_result ) &&
+    'insufficient_independent_evidence' === $no_alternative_result->get_error_code() &&
+    2 === $revelations_integration_transport_calls &&
+    empty( $no_alternative_diagnostics['brief_replan_attempted'] ),
+    'a weak brief without eligible primary or independent secondary support does not retry'
+);
+revelations_integration_check(
+    ! revelations_editorial_ai_brief_replan_has_eligible_support( array( array( 'role' => 'secondary', 'host' => 'one.example.test' ), array( 'role' => 'first_party', 'host' => 'company.example.test' ) ) ),
+    'one secondary source plus first-party material is not treated as an eligible replan alternative'
 );
 
 /* Every Responses boundary retains a bounded, stage-specific failure record. */

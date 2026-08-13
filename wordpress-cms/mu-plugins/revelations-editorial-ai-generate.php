@@ -142,7 +142,13 @@ function revelations_editorial_ai_generation_runtime_diagnostics( array $researc
         'response_status' => sanitize_key( $final_status ),
         'stage_usage' => $stage_usage,
         'context_sizes' => $context_sizes,
-    ), revelations_editorial_ai_research_diagnostics( $research ), revelations_editorial_ai_pillar_diagnostics( is_array( $editorial_brief['pillar_support'] ?? null ) ? $editorial_brief['pillar_support'] : array(), is_array( $editorial_brief['dominance'] ?? null ) ? $editorial_brief['dominance'] : array() ) );
+    ), revelations_editorial_ai_research_diagnostics( $research ), revelations_editorial_ai_pillar_diagnostics( is_array( $editorial_brief['pillar_support'] ?? null ) ? $editorial_brief['pillar_support'] : array(), is_array( $editorial_brief['dominance'] ?? null ) ? $editorial_brief['dominance'] : array() ), array(
+        'brief_attempt_count' => absint( $brief_result['brief_attempt_count'] ?? 1 ),
+        'brief_initial_failure_reason' => sanitize_key( (string) ( $brief_result['brief_initial_failure_reason'] ?? '' ) ),
+        'brief_invalid_pillar_ids' => array_values( (array) ( $brief_result['brief_invalid_pillar_ids'] ?? array() ) ),
+        'brief_replan_attempted' => ! empty( $brief_result['brief_replan_attempted'] ),
+        'brief_replan_validation_result' => sanitize_key( (string) ( $brief_result['brief_replan_validation_result'] ?? '' ) ),
+    ) );
 }
 
 /** @return WP_Error */
@@ -899,7 +905,7 @@ function revelations_editorial_generate_draft_with_ai(
             ), revelations_editorial_ai_pillar_diagnostics(
                 is_array( $editorial_brief['pillar_support'] ?? null ) ? $editorial_brief['pillar_support'] : array(),
                 is_array( $editorial_brief['dominance'] ?? null ) ? $editorial_brief['dominance'] : array()
-            ) )
+            ), array_intersect_key( (array) ( $brief_result['generation_diagnostics'] ?? array() ), array_flip( array( 'responses_diagnostics', 'brief_attempt_count', 'brief_initial_failure_reason', 'brief_invalid_pillar_ids', 'brief_replan_attempted', 'brief_replan_validation_result' ) ) ) )
         );
     }
     $source_input = (string) ( $final_evidence['evidence_text'] ?? '' );
@@ -1917,6 +1923,12 @@ function revelations_editorial_generate_draft_with_ai(
         'primary_source_dominance_note' => ! empty( $dominance['primary_source_dominance_note'] ),
         'stage_usage' => $stage_usage,
         'context_sizes' => $context_sizes,
+        'responses_diagnostics' => is_array( $runtime_diagnostics['responses_diagnostics'] ?? null ) ? $runtime_diagnostics['responses_diagnostics'] : array(),
+        'brief_attempt_count' => absint( $runtime_diagnostics['brief_attempt_count'] ?? 1 ),
+        'brief_initial_failure_reason' => sanitize_key( (string) ( $runtime_diagnostics['brief_initial_failure_reason'] ?? '' ) ),
+        'brief_invalid_pillar_ids' => array_values( (array) ( $runtime_diagnostics['brief_invalid_pillar_ids'] ?? array() ) ),
+        'brief_replan_attempted' => ! empty( $runtime_diagnostics['brief_replan_attempted'] ),
+        'brief_replan_validation_result' => sanitize_key( (string) ( $runtime_diagnostics['brief_replan_validation_result'] ?? '' ) ),
     );
 }
 

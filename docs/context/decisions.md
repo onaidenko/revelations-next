@@ -422,6 +422,15 @@ cannot override that Constitution without explicit product-owner approval.
   standalone Next.js process войдёт в cgroup и откроет порт. Одноразовый
   socket lookup дважды вызывал безопасный rollback исправного candidate.
 
+## Bounded Editorial Brief replanning
+
+- **Решение:** a semantic brief support failure may use exactly one replan from
+  the completed research pack, and only when server-owned provenance shows an
+  eligible primary or independently hosted secondary alternative. It is not a
+  retry of Research and cannot relax central-pillar independence or dominance.
+- **Диагностика:** the run stores IDs, source roles/hosts, attempt usage and
+  bounded Responses status only; it never stores the rejected model prose.
+
 ## CMS failure semantics for ISR
 
 - **Решение:** transient CMS failures must throw after bounded retries; they
