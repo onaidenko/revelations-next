@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 define( 'ABSPATH', __DIR__ . '/' );
+class WP_Error { public function __construct( public string $code = '', public string $message = '', public array $data = array() ) {} }
+function is_wp_error( mixed $value ): bool { return $value instanceof WP_Error; }
 function esc_url_raw( string $value ): string { return $value; }
 function sanitize_text_field( string $value ): string { return trim( $value ); }
 function sanitize_key( string $value ): string { return strtolower( preg_replace( '/[^a-z0-9_]/', '', $value ) ?? '' ); }
@@ -43,4 +45,16 @@ $usage = revelations_editorial_ai_used_evidence_sources(
     array( array( 'url' => 'https://gao.gov/report', 'name' => 'U.S. Government Accountability Office', 'reliability' => 'primary_authoritative', 'source_type' => 'official_government' ), array( 'url' => 'https://columbia.edu/yuste', 'name' => 'Rafael Yuste - Columbia University NeuroTechnology Center', 'reliability' => 'primary_authoritative', 'source_type' => 'official_government' ), array( 'url' => 'https://nih.gov/study', 'name' => 'National Institutes of Health', 'reliability' => 'primary_authoritative', 'source_type' => 'official_government' ) )
 );
 if ( 2 !== $usage['public_source_count'] || 1 !== $usage['unused_research_source_count'] || 2 !== $usage['primary_used_count'] ) { fwrite( STDERR, "Used-source selection regression.\n" ); exit( 1 ); }
+$sources = array(); for ( $index = 1; $index <= 5; ++$index ) $sources[] = array( 'url' => 'https://source' . $index . '.example/report', 'name' => 'Source ' . $index, 'host' => 'source' . $index . '.example', 'source_type' => 1 === $index ? 'research_paper' : 'reported_news', 'reliability' => 1 === $index ? 'primary_authoritative' : 'major_editorial', 'publication_date' => '2026-08-13' );
+$registry_data = revelations_editorial_ai_research_source_registry( $sources ); $units = array(); $provenance = array();
+for ( $index = 1; $index <= 25; ++$index ) { $source_index = ( ( $index - 1 ) % 5 ) + 1; $id = sprintf( 'p%03d', $index ); $source_url = $sources[ $source_index - 1 ]['url']; $source_id = $registry_data['source_ids'][ revelations_editorial_ai_research_url_key( $source_url ) ]; $support = 25 === $index ? 'Neural data applies only when it can be processed with device assistance.' : ( 5 === $index ? 'The finding may apply under the studied conditions.' : 'qualifying context.' ); $units[] = array( 'id' => $id, 'text' => '[' . $source_id . '] Claim: evidence ' . $index . "\nSupport: " . $support ); $provenance[ $id ] = array( 'url' => $source_url, 'host' => $sources[ $source_index - 1 ]['host'], 'role' => 1 === $source_index ? 'primary' : 'secondary', 'source_id' => $source_id ); }
+$brief = array( 'factual_pillars' => array( array( 'evidence_ids' => array( 'p001', 'p002' ) ), array( 'evidence_ids' => array( 'p003' ) ), array( 'evidence_ids' => array( 'p004' ) ) ), 'sensitive_evidence_ids' => array( 'p025' ), 'attribution_evidence_ids' => array( 'p005' ), 'essential_context_evidence_ids' => array(), 'pillar_support' => array( array( 'importance' => 'central', 'sources' => array( $provenance['p001'], $provenance['p002'] ) ), array( 'importance' => 'supporting', 'sources' => array( $provenance['p003'] ) ), array( 'importance' => 'supporting', 'sources' => array( $provenance['p004'] ) ) ) );
+$final_pack = revelations_editorial_ai_final_evidence_pack( array( 'evidence_units' => $units, 'source_registry' => $registry_data['registry'], 'provenance' => $provenance, 'lead_classification' => array( 'requires_independent_corroboration' => false ) ), $brief );
+if ( is_wp_error( $final_pack ) || 6 !== $final_pack['evidence_count'] || false === strpos( $final_pack['evidence_text'], '[p025]' ) || false === strpos( $final_pack['evidence_text'], 'SOURCE REGISTRY' ) ) { fwrite( STDERR, "Final evidence selection regression.\n" ); exit( 1 ); }
+if ( 1 !== substr_count( $final_pack['evidence_text'], 'URL: https://source1.example/report' ) || 5 !== count( $final_pack['source_registry'] ) ) { fwrite( STDERR, "Source registry compaction regression.\n" ); exit( 1 ); }
+if ( false === strpos( $final_pack['evidence_text'], 'only when it can be processed with device assistance' ) || false === strpos( $final_pack['evidence_text'], 'may apply under the studied conditions' ) ) { fwrite( STDERR, "Formal qualifier preservation regression.\n" ); exit( 1 ); }
+$final_usage = revelations_editorial_ai_used_evidence_sources( array( array( 'evidence_ids' => array( 'p001', 'p025' ) ) ), array(), $provenance, $sources );
+if ( 2 !== $final_usage['public_source_count'] || ! in_array( 'p025', $final_usage['used_evidence_ids'], true ) ) { fwrite( STDERR, "Registry provenance public-source regression.\n" ); exit( 1 ); }
+$formal_rule = revelations_editorial_ai_formal_definition_safeguard();
+if ( false === strpos( $formal_rule, 'category boundary' ) || false === strpos( $formal_rule, 'uncertainty level' ) || false !== stripos( $formal_rule, 'Colorado' ) ) { fwrite( STDERR, "Formal-definition safeguard regression.\n" ); exit( 1 ); }
 echo "Editorial AI research diagnostics passed.\n";

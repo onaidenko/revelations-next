@@ -65,6 +65,18 @@ approval requirement are canonical in
   Pillar-level provenance distinguishes primary detail dominance from a
   secondary-source rewrite risk. Private draft/run metadata stores compact provenance and counts;
   public content receives a multi-source footer only.
+- Research and the editorial brief may inspect the broad evidence pack. The
+  final writer receives a pre-writing `final_evidence_pack`: only evidence IDs
+  selected by factual pillars, sensitive-claim, attribution or essential
+  context fields in the brief. A shared source registry holds source metadata
+  once and units reference its `sNNN` ID. Before final writing the compact pack
+  rechecks independent hosts, restricted-lead primary support and dominance;
+  public source resolution still uses the original private provenance.
+- A single global final-writing factuality safeguard preserves material scope,
+  qualifiers, conditions, category boundaries and uncertainty for legal,
+  regulatory, scientific and formal definitions. It is not duplicated in
+  section profiles. Private diagnostics record per-request stage usage and
+  bounded context-size counts, while aggregate generation usage remains.
 - Global Research & Source Policy is shared across every generated section:
   lead classification, independent corroboration, source roles, restricted
   lead safeguards, evidence provenance, sensitive claims, attribution and

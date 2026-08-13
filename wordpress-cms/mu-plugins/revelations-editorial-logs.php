@@ -172,6 +172,8 @@ function revelations_editorial_create_run_log(
         'unused_research_source_count' => 0,
         'primary_used_count' => 0,
         'secondary_used_count' => 0,
+        'stage_usage' => array(),
+        'context_sizes' => array(),
         'source_results'     => array(),
         'rejection_counts'   => array(),
         'closest_rejected'   => array(),
@@ -387,6 +389,8 @@ function revelations_editorial_create_run_log(
         '_rev_unused_research_source_count' => absint( $data['unused_research_source_count'] ),
         '_rev_primary_used_count' => absint( $data['primary_used_count'] ),
         '_rev_secondary_used_count' => absint( $data['secondary_used_count'] ),
+        '_rev_ai_stage_usage' => wp_json_encode( is_array( $data['stage_usage'] ) ? $data['stage_usage'] : array(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+        '_rev_ai_context_sizes' => wp_json_encode( is_array( $data['context_sizes'] ) ? $data['context_sizes'] : array(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
 
         '_rev_source_results' => wp_json_encode( $scan_diagnostics['source_results'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
@@ -634,6 +638,8 @@ function revelations_editorial_log_ai_generation(
             'unused_research_source_count' => absint( $result['unused_research_source_count'] ?? 0 ),
             'primary_used_count' => absint( $result['primary_used_count'] ?? 0 ),
             'secondary_used_count' => absint( $result['secondary_used_count'] ?? 0 ),
+            'stage_usage' => is_array( $result['stage_usage'] ?? null ) ? $result['stage_usage'] : array(),
+            'context_sizes' => is_array( $result['context_sizes'] ?? null ) ? $result['context_sizes'] : array(),
         )
     );
 }

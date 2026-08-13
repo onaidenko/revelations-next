@@ -32,6 +32,16 @@ cannot override that Constitution without explicit product-owner approval.
   footer is derived solely from final article evidence IDs, then deduplicated
   and ordered by source role. Sensitive claim provenance is retained; unused
   research sources stay private. This selection never rewrites article facts.
+- **Решение:** the brief is the boundary between broad corroboration and final
+  writing. It selects pillar, sensitive, attribution and essential-context
+  evidence before prose is requested; final writing cannot use other research
+  units. The compact set repeats independence, restricted-lead primary and
+  dominance checks before it is sent.
+- **Safeguard:** shared source metadata is serialized once in a private
+  `sNNN` registry. A global factuality instruction preserves material scope,
+  qualifiers, conditions, category boundaries and uncertainty in formal legal,
+  regulatory, scientific and technical definitions. It is shared, not copied
+  into section profiles.
 
 ## Publication dates
 

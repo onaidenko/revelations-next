@@ -691,7 +691,7 @@ function revelations_editorial_generate_draft_with_ai(
         );
     }
 
-    if ( ! function_exists( 'revelations_editorial_ai_source_evidence_units' ) || ! function_exists( 'revelations_editorial_ai_format_source_evidence_units' ) || ! function_exists( 'revelations_editorial_ai_resolve_evidence_references' ) || ! function_exists( 'revelations_editorial_ai_research_evidence_pack' ) || ! function_exists( 'revelations_editorial_ai_editorial_brief' ) ) {
+    if ( ! function_exists( 'revelations_editorial_ai_source_evidence_units' ) || ! function_exists( 'revelations_editorial_ai_format_source_evidence_units' ) || ! function_exists( 'revelations_editorial_ai_resolve_evidence_references' ) || ! function_exists( 'revelations_editorial_ai_research_evidence_pack' ) || ! function_exists( 'revelations_editorial_ai_editorial_brief' ) || ! function_exists( 'revelations_editorial_ai_final_evidence_pack' ) || ! function_exists( 'revelations_editorial_ai_formal_definition_safeguard' ) ) {
         return new WP_Error(
             'generation_validation_unavailable',
             'Editorial evidence validation is unavailable.'
@@ -833,16 +833,14 @@ function revelations_editorial_generate_draft_with_ai(
         return $brief_result;
     }
 
-    $source_input = (string) ( $research['evidence_text'] ?? '' );
-    $evidence_units = revelations_editorial_ai_source_evidence_units( $source_input );
-
-    if ( array() === $evidence_units ) {
-        return new WP_Error( 'insufficient_independent_evidence', 'Independent research did not produce usable evidence units.' );
-    }
-
-    $formatted_evidence = revelations_editorial_ai_format_source_evidence_units( $evidence_units );
     $editorial_brief = is_array( $brief_result['brief'] ?? null ) ? $brief_result['brief'] : array();
-    $dominance = is_array( $editorial_brief['dominance'] ?? null ) ? $editorial_brief['dominance'] : array();
+    $final_evidence = revelations_editorial_ai_final_evidence_pack( $research, $editorial_brief );
+    if ( is_wp_error( $final_evidence ) ) return $final_evidence;
+    $source_input = (string) ( $final_evidence['evidence_text'] ?? '' );
+    $evidence_units = is_array( $final_evidence['evidence_units'] ?? null ) ? $final_evidence['evidence_units'] : array();
+    if ( array() === $evidence_units ) return new WP_Error( 'insufficient_independent_evidence', 'Editorial brief selected no usable final evidence.' );
+    $formatted_evidence = $source_input;
+    $dominance = is_array( $final_evidence['dominance'] ?? null ) ? $final_evidence['dominance'] : array();
 
     $instructions =
         "You are the editorial writer for REVELATIONS.\n\n" .
@@ -854,6 +852,8 @@ function revelations_editorial_generate_draft_with_ai(
 
         "Do not invent facts, quotations, dates, statistics, motives or conclusions. " .
         "Do not add knowledge from memory. Clearly separate confirmed facts from interpretation.\n\n" .
+
+        revelations_editorial_ai_formal_definition_safeguard() . "\n\n" .
 
         "Do not closely paraphrase any source, mirror its sequence, or reproduce long passages verbatim. Synthesize across the evidence pack. Use natural attribution for claim-specific facts. Do not include a source-credit line; the application adds a Sources footer automatically.\n\n" .
 
@@ -935,9 +935,9 @@ function revelations_editorial_generate_draft_with_ai(
         $rss_summary .
         "\n\nEDITORIAL BRIEF (use as a planning aid, not evidence)\n" .
         wp_json_encode( $editorial_brief, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) .
-        "\n\n----- BEGIN RESEARCH EVIDENCE UNITS -----\n" .
+        "\n\n----- BEGIN SELECTED RESEARCH EVIDENCE -----\n" .
         $formatted_evidence .
-        "\n----- END RESEARCH EVIDENCE UNITS -----";
+        "\n----- END SELECTED RESEARCH EVIDENCE -----";
 
     $request_body = array(
         'model' => $model,
@@ -1569,6 +1569,24 @@ function revelations_editorial_generate_draft_with_ai(
         ? $decoded['usage']
         : array();
 
+    $stage_usage = array(
+        array( 'stage' => 'research', 'input_tokens' => absint( $research['usage']['input_tokens'] ?? 0 ), 'output_tokens' => absint( $research['usage']['output_tokens'] ?? 0 ), 'total_tokens' => absint( $research['usage']['total_tokens'] ?? 0 ), 'duration_ms' => absint( $research['duration_ms'] ?? 0 ), 'response_status' => sanitize_key( (string) ( $research['response_status'] ?? 'completed' ) ) ),
+        array( 'stage' => 'editorial_brief', 'input_tokens' => absint( $brief_result['usage']['input_tokens'] ?? 0 ), 'output_tokens' => absint( $brief_result['usage']['output_tokens'] ?? 0 ), 'total_tokens' => absint( $brief_result['usage']['total_tokens'] ?? 0 ), 'duration_ms' => absint( $brief_result['duration_ms'] ?? 0 ), 'response_status' => sanitize_key( (string) ( $brief_result['response_status'] ?? 'completed' ) ) ),
+        array( 'stage' => 'final_generation', 'input_tokens' => absint( $usage['input_tokens'] ?? 0 ), 'output_tokens' => absint( $usage['output_tokens'] ?? 0 ), 'total_tokens' => absint( $usage['total_tokens'] ?? 0 ), 'duration_ms' => $duration_ms, 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ) ),
+    );
+    $context_sizes = array(
+        'research_source_count' => count( $research['sources'] ?? array() ),
+        'research_evidence_count' => absint( $research['evidence_count'] ?? 0 ),
+        'final_evidence_count' => absint( $final_evidence['evidence_count'] ?? 0 ),
+        'source_registry_count' => count( $research['source_registry'] ?? array() ),
+        'final_source_registry_count' => absint( $final_evidence['source_count'] ?? 0 ),
+        'factual_pillar_count' => count( $editorial_brief['factual_pillars'] ?? array() ),
+        'brief_evidence_chars' => strlen( (string) ( $research['evidence_text'] ?? '' ) ),
+        'final_evidence_chars' => absint( $final_evidence['serialized_chars'] ?? 0 ),
+        'policy_chars' => strlen( $editorial_policy ),
+        'brief_chars' => strlen( (string) wp_json_encode( $editorial_brief, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ),
+    );
+
     $meta = array(
         'revelations_seo_title' =>
             mb_substr(
@@ -1654,6 +1672,8 @@ function revelations_editorial_generate_draft_with_ai(
         '_revelations_ai_secondary_source_dominance_warning' => ! empty( $dominance['secondary_source_dominance_warning'] ) ? '1' : '0',
         '_revelations_ai_primary_source_dominance_note' => ! empty( $dominance['primary_source_dominance_note'] ) ? '1' : '0',
         '_revelations_ai_editorial_brief' => wp_json_encode( $editorial_brief, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
+        '_revelations_ai_stage_usage' => wp_json_encode( $stage_usage, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
+        '_revelations_ai_context_sizes' => wp_json_encode( $context_sizes, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ),
         '_revelations_ai_research_duration_ms' => absint( $research['duration_ms'] ?? 0 ),
         '_revelations_ai_brief_duration_ms' => absint( $brief_result['duration_ms'] ?? 0 ),
 
@@ -1798,6 +1818,8 @@ function revelations_editorial_generate_draft_with_ai(
         'lead_source_support_count' => absint( $dominance['lead_source_support_count'] ?? 0 ),
         'secondary_source_dominance_warning' => ! empty( $dominance['secondary_source_dominance_warning'] ),
         'primary_source_dominance_note' => ! empty( $dominance['primary_source_dominance_note'] ),
+        'stage_usage' => $stage_usage,
+        'context_sizes' => $context_sizes,
     );
 }
 
@@ -2073,6 +2095,8 @@ function revelations_editorial_ai_create_version_backup(
         '_rev_ai_secondary_source_dominance_warning' => get_post_meta( $draft_id, '_revelations_ai_secondary_source_dominance_warning', true ),
         '_rev_ai_primary_source_dominance_note' => get_post_meta( $draft_id, '_revelations_ai_primary_source_dominance_note', true ),
         '_rev_ai_editorial_brief' => get_post_meta( $draft_id, '_revelations_ai_editorial_brief', true ),
+        '_rev_ai_stage_usage' => get_post_meta( $draft_id, '_revelations_ai_stage_usage', true ),
+        '_rev_ai_context_sizes' => get_post_meta( $draft_id, '_revelations_ai_context_sizes', true ),
 
         '_rev_ai_word_count' =>
             $current_word_count,

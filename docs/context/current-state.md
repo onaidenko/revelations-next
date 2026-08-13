@@ -1,5 +1,26 @@
 # Текущее состояние
 
+## Compact evidence boundary for AI generation
+
+- Research remains broad and retains the existing independent-source and
+  primary-authoritative safeguards. The editorial brief now returns its
+  3-5 factual pillars plus explicit sensitive, attribution and essential
+  context evidence IDs. Final writing receives only that selected set.
+- A request-local source registry carries each source's URL, publisher,
+  type, reliability, host and date once. Claim units reference `sNNN`; their
+  support text is not uniformly truncated, so formal qualifiers remain intact.
+  Selected provenance still resolves final evidence IDs to the existing public
+  `research_sources -> used_evidence_sources -> public_sources` flow.
+- The selected pack is rechecked for independent hosts, restricted-lead primary
+  support and pillar dominance before final writing. A shared final-writing
+  factuality rule preserves material scope, conditions, category boundaries
+  and uncertainty in legal, regulatory, scientific and formal definitions.
+- Private draft and run-log diagnostics now retain bounded per-stage usage
+  (`research`, `editorial_brief`, `final_generation`) and context-size counts;
+  they do not retain prompts or raw Responses payloads.
+
+Дата изменения: 2026-08-13.
+
 ## Future-tech editorial gate and scan diagnostics
 
 - All editorial sections now use strict `AI OR meaningful future-tech`
