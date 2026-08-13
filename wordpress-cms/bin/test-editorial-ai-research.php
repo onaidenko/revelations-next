@@ -20,6 +20,9 @@ if ( 'book_excerpt' !== $book['source_type'] || 'excerpt_licensed_syndicated' !=
 if ( 'official_government' !== $government['source_type'] || 'primary_authoritative' !== $government['reliability'] ) { fwrite( STDERR, "Official-source routing regression.\n" ); exit( 1 ); }
 $schema = revelations_editorial_ai_research_schema();
 if ( ! in_array( 'book_excerpt', revelations_editorial_ai_research_allowed_source_types(), true ) || ! isset( $schema['properties']['sources'] ) ) { fwrite( STDERR, "Research schema regression.\n" ); exit( 1 ); }
+$brief_schema = revelations_editorial_ai_editorial_brief_schema();
+$pillar_schema = $brief_schema['properties']['factual_pillars']['items'] ?? array();
+if ( array( 'pillar_1', 'pillar_2', 'pillar_3', 'pillar_4', 'pillar_5' ) !== ( $pillar_schema['properties']['pillar_id']['enum'] ?? array() ) ) { fwrite( STDERR, "Brief pillar-ID schema regression.\n" ); exit( 1 ); }
 $secondary = array( 'host' => 'secondary.example', 'role' => 'secondary' ); $other = array( 'host' => 'other.example', 'role' => 'secondary' ); $primary = array( 'host' => 'paper.example', 'role' => 'primary' );
 $reject = revelations_editorial_ai_evaluate_pillar_dominance( array( array( 'importance' => 'central', 'sources' => array( $secondary ) ), array( 'importance' => 'supporting', 'sources' => array( $secondary ) ), array( 'importance' => 'supporting', 'sources' => array( $secondary ) ), array( 'importance' => 'supporting', 'sources' => array( $secondary ) ), array( 'importance' => 'supporting', 'sources' => array( $other ) ) ) );
 if ( empty( $reject['hard_failure'] ) || 'insufficient_independent_evidence' !== $reject['status'] ) { fwrite( STDERR, "Secondary-backbone rejection regression.\n" ); exit( 1 ); }
@@ -58,6 +61,30 @@ $completed_diagnostics = array_merge(
     revelations_editorial_ai_pillar_diagnostics( $diagnostic_supports, $diagnostic_dominance )
 );
 if ( 21 !== $completed_diagnostics['input_tokens'] || 41 !== $completed_diagnostics['output_tokens'] || 62 !== $completed_diagnostics['total_tokens'] || 2 !== count( $completed_diagnostics['stage_usage'] ) || isset( $completed_diagnostics['final_generation'] ) || 's001' !== ( $completed_diagnostics['evidence_source_mapping']['p001'] ?? '' ) || 'secondary.example' !== ( $completed_diagnostics['dominant_source_host'] ?? '' ) || empty( $completed_diagnostics['sole_support_central_pillar'] ) || empty( $completed_diagnostics['dominance_hard_failure'] ) ) { fwrite( STDERR, "Early-failure diagnostics regression.\n" ); exit( 1 ); }
+$valid_pillars = array();
+for ( $index = 1; $index <= 5; ++$index ) {
+    $valid_pillars[] = array(
+        'pillar_id' => 'pillar_' . $index,
+        'pillar' => 'Bounded structural test.',
+        'importance' => 1 === $index ? 'central' : 'supporting',
+        'evidence_ids' => array( sprintf( 'p%03d', $index ) ),
+    );
+}
+$valid_pillar_diagnostics =
+    revelations_editorial_ai_brief_pillar_prevalidation_diagnostics(
+        array( 'factual_pillars' => $valid_pillars )
+    );
+if ( 5 !== count( $valid_pillar_diagnostics ) || array() !== array_filter( $valid_pillar_diagnostics, static fn ( array $pillar ): bool => '' !== $pillar['failed_condition'] ) || 'string' !== ( $valid_pillar_diagnostics[0]['pillar_id_type'] ?? '' ) || array( 'string' ) !== ( $valid_pillar_diagnostics[0]['evidence_id_element_types'] ?? array() ) ) { fwrite( STDERR, "Valid pillar prevalidation regression.\n" ); exit( 1 ); }
+$malformed_pillars = $valid_pillars;
+$malformed_pillars[0]['pillar_id'] = 'Pillar 1';
+$malformed_pillars[2]['importance'] = 'primary';
+$malformed_pillars[3]['evidence_ids'] = array();
+$malformed_pillars[4]['pillar_id'] = 'pillar_4';
+$malformed_diagnostics =
+    revelations_editorial_ai_brief_pillar_prevalidation_diagnostics(
+        array( 'factual_pillars' => $malformed_pillars )
+    );
+if ( 'pillar_id_invalid' !== ( $malformed_diagnostics[0]['failed_condition'] ?? '' ) || 'importance_invalid' !== ( $malformed_diagnostics[2]['failed_condition'] ?? '' ) || 'evidence_ids_empty' !== ( $malformed_diagnostics[3]['failed_condition'] ?? '' ) || 'pillar_id_duplicate' !== ( $malformed_diagnostics[4]['failed_condition'] ?? '' ) || 0 !== ( $malformed_diagnostics[3]['evidence_ids_count'] ?? -1 ) ) { fwrite( STDERR, "Malformed pillar prevalidation regression.\n" ); exit( 1 ); }
 $citation_url = 'https://example.org/report?utm_source=newsletter';
 $payload_both = array( 'output' => array( array( 'type' => 'web_search_call', 'status' => 'completed', 'action' => array( 'type' => 'search', 'query' => 'neurotechnology', 'sources' => array( array( 'url' => 'https://primary.example.org/report' ) ) ) ), array( 'type' => 'message', 'role' => 'assistant', 'content' => array( array( 'type' => 'output_text', 'annotations' => array( array( 'type' => 'url_citation', 'url' => $citation_url ) ) ) ) ) ) );
 $both = revelations_editorial_ai_research_web_provenance( $payload_both );

@@ -24,6 +24,11 @@
   sensitive support and material legal, regulatory, scientific and formal
   qualifiers. Bounded context diagnostics expose pillar, attribution-only,
   essential-only, sensitive-only and final evidence counts.
+- The structured brief schema now restricts `pillar_id` to `pillar_1` through
+  `pillar_5`, matching the server contract. Before structural pillar
+  validation, private run diagnostics retain only each pillar's bounded ID and
+  importance values/types, evidence-ID count/types, presence flag and failed
+  condition; they never retain pillar prose or raw model output.
 
 Дата изменения: 2026-08-13.
 
