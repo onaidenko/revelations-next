@@ -403,6 +403,8 @@ function revelations_editorial_render_unspoken_preview(): void {
                                             )
                                         )
                                     ); ?>
+                                    . Evidence presence does not establish
+                                    the truth of the underlying claim.
                                 </div>
                                 <?php if ( '' !== ( $item['secondary_section'] ?? '' ) ) : ?>
                                     <div class="revelations-candidate-meta">
@@ -413,13 +415,14 @@ function revelations_editorial_render_unspoken_preview(): void {
                                                     'secondary_section'
                                                 ]
                                             )
-                                        ); ?>.
+                                        ); ?>. The saved section remains Unspoken
+                                        unless an operator changes it.
                                     </div>
                                 <?php endif; ?>
                                 <?php if ( ! empty( $item['single_source_allegation'] ) ) : ?>
                                     <div class="revelations-candidate-meta">
-                                        Single-source allegation - requires
-                                        reputational review.
+                                        Single-source allegation.
+                                        Requires reputational review.
                                     </div>
                                 <?php endif; ?>
                             </td>
