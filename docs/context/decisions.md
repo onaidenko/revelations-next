@@ -4,6 +4,25 @@ The permanent conflict and staging-first rules live in
 [`../PROJECT_CONSTITUTION.md`](../PROJECT_CONSTITUTION.md). This decision log
 cannot override that Constitution without explicit product-owner approval.
 
+## Evidence-first AI drafting
+
+- **Решение:** RSS lead and its private source snapshot are discovery input,
+  not the factual boundary for a generated article. Factual web research gets
+  topic, section, lead and evidence requirements only. The saved Editorial
+  Policy enters only the subsequent evidence-to-brief stage and final writing;
+  it remains the sole editable policy source.
+- **Safeguard:** two independently hosted corroborating sources are required.
+  Book excerpts, opinion, sponsored/native material, press releases and
+  likely-paywalled leads additionally require primary-authoritative support;
+  otherwise the pipeline returns `insufficient_independent_evidence` and does
+  not write a draft. Private evidence/prompt material stays private.
+- **Safeguard:** dominance is assessed from three to five factual pillars and
+  their source roles, not raw claim counts. Primary-authoritative technical
+  detail dominance is logged as a note. A secondary source dominating more
+  than 70% of pillars is a warning; it blocks when it is the sole substantive
+  support for a central pillar or a majority of pillars. Lead support is excluded from evidence
+  and a brief must supply its own complete pillar order.
+
 ## Publication dates
 
 - **Решение:** visible CMS-derived article dates use the UTC calendar date of

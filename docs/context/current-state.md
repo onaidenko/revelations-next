@@ -421,7 +421,7 @@ the pre-commit state recorded above.
 - Excerpt служит описанием карточки, SEO description хранится
   отдельно и не должен дословно его повторять.
 - Требуются fact-check flags для чувствительных утверждений и строгая
-  проверка прямых цитат по source snapshot.
+  проверка прямых цитат по compact research evidence pack.
 - Генерация остаётся ручной и по одной статье; публикация требует
   редактуры и актуального human review.
 - Default displayed author остаётся `Julia U.` и применяется только
@@ -443,8 +443,15 @@ the pre-commit state recorded above.
   Editorial Desk и включены в Human Review hash.
 - Source section является server-only context; generation больше не
   назначает WordPress category из model output.
-- Source snapshot ограничен одним источником; автоматического
-  multi-source verification нет.
+- Lead snapshot классифицируется и служит только для discovery. Factual
+  research не получает Editorial Policy, thesis или voice instructions; после
+  compact evidence pack отдельный brief stage получает saved policy и section
+  profile, затем final writing получает brief плюс evidence. Two independently
+  hosted sources beyond the lead обязательны; restricted lead types требуют
+  corroborating primary-authoritative evidence. Pillar provenance даёт warning
+  при secondary dominance, но primary technical-detail dominance только
+  отмечается; sole-secondary support central pillar или большинства pillars
+  блокирует generation.
 - Присвоение `Julia U.` только пустому author уже соответствует
   контракту. Image generation, batch generation и auto-publish
   отсутствуют, что также соответствует контракту.

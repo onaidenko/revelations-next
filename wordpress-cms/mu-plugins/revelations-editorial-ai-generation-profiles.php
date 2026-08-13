@@ -53,10 +53,11 @@ function revelations_editorial_ai_generation_profiles(): array {
         'unspoken' => array(
             'label' => 'Unspoken',
             'instructions' =>
-                'Cover an uncomfortable industry development: a failure, ' .
-                'negative consequence, hidden cost, broken promise, harm, ' .
-                'conflict of interest, or ethical or social problem. Use ' .
-                'especially careful attribution and strict fact-checking.',
+                'Cover the overlooked layer of an AI or future-tech story: ' .
+                'second-order effects, hidden labor, limits, autonomy gaps, ' .
+                'power or control dynamics, trust and identity questions, ' .
+                'or infrastructure costs. It is not a harm-or-scandal desk. ' .
+                'Use especially careful attribution and strict fact-checking.',
         ),
     );
 }

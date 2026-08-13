@@ -50,6 +50,22 @@ approval requirement are canonical in
 
 ## AI generation
 
+- `revelations-editorial-ai-research.php` separates factual research from
+  editorial judgment. It classifies a private lead snapshot and uses the
+  official OpenAI Responses `web_search` tool for independent corroboration
+  without Editorial Policy, thesis or voice instructions. A separate brief
+  stage receives the saved Editorial Policy, section profile and evidence pack
+  before the final writer.
+  Research sources must be two distinct hosts beyond the lead host; restricted
+  lead types also require a primary-authoritative source. A failed or
+  insufficient research pack returns a safe status before any draft mutation.
+- `revelations-editorial-ai-generate.php` uses the resulting evidence pack for
+  existing deterministic paragraph/evidence and sensitive-claim validation.
+  The saved Editorial Policy is injected only into the brief and final writing.
+  Pillar-level provenance distinguishes primary detail dominance from a
+  secondary-source rewrite risk. Private draft/run metadata stores compact provenance and counts;
+  public content receives a multi-source footer only.
+
 - `revelations-editorial-ai-generation-profiles.php` — pure registry
   профилей генерации для News, Tech, People, Places и Unspoken. Профиль
   выбирается только по точному исходному `_rev_section`; fallback

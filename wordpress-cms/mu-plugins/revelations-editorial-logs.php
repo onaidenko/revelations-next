@@ -147,6 +147,14 @@ function revelations_editorial_create_run_log(
         'ai_generation'      => 0,
         'ai_regenerated'     => false,
         'error_code'         => '',
+        'research_source_count' => 0,
+        'research_evidence_count' => 0,
+        'research_primary_count' => 0,
+        'source_dominance_status' => '',
+        'factual_pillar_count' => 0,
+        'lead_source_support_count' => 0,
+        'secondary_source_dominance_warning' => false,
+        'primary_source_dominance_note' => false,
         'source_results'     => array(),
         'rejection_counts'   => array(),
         'closest_rejected'   => array(),
@@ -336,6 +344,15 @@ function revelations_editorial_create_run_log(
             sanitize_key(
                 (string) $data['error_code']
             ),
+
+        '_rev_research_source_count' => absint( $data['research_source_count'] ),
+        '_rev_research_evidence_count' => absint( $data['research_evidence_count'] ),
+        '_rev_research_primary_count' => absint( $data['research_primary_count'] ),
+        '_rev_source_dominance_status' => sanitize_key( (string) $data['source_dominance_status'] ),
+        '_rev_factual_pillar_count' => absint( $data['factual_pillar_count'] ),
+        '_rev_lead_source_support_count' => absint( $data['lead_source_support_count'] ),
+        '_rev_secondary_source_dominance_warning' => ! empty( $data['secondary_source_dominance_warning'] ) ? 1 : 0,
+        '_rev_primary_source_dominance_note' => ! empty( $data['primary_source_dominance_note'] ) ? 1 : 0,
 
         '_rev_source_results' => wp_json_encode( $scan_diagnostics['source_results'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
@@ -557,6 +574,15 @@ function revelations_editorial_log_ai_generation(
 
             'error_code' =>
                 $error_code,
+
+            'research_source_count' => absint( $result['research_source_count'] ?? 0 ),
+            'research_evidence_count' => absint( $result['research_evidence_count'] ?? 0 ),
+            'research_primary_count' => absint( $result['research_primary_count'] ?? 0 ),
+            'source_dominance_status' => sanitize_key( (string) ( $result['source_dominance_status'] ?? '' ) ),
+            'factual_pillar_count' => absint( $result['factual_pillar_count'] ?? 0 ),
+            'lead_source_support_count' => absint( $result['lead_source_support_count'] ?? 0 ),
+            'secondary_source_dominance_warning' => ! empty( $result['secondary_source_dominance_warning'] ),
+            'primary_source_dominance_note' => ! empty( $result['primary_source_dominance_note'] ),
         )
     );
 }

@@ -470,6 +470,10 @@ function wp_remote_post(
     global $revelations_integration_transport_requests;
     global $revelations_integration_transport_article;
 
+    $request_body = json_decode( (string) ( $arguments['body'] ?? '' ), true );
+    $is_research = is_array( $request_body ) && ! empty( $request_body['tools'] );
+    $is_brief = is_array( $request_body ) && 'revelations_editorial_brief' === ( $request_body['text']['format']['name'] ?? '' );
+
     $revelations_integration_transport_calls++;
     $revelations_integration_transport_requests[] =
         array(
@@ -478,7 +482,7 @@ function wp_remote_post(
         );
 
     $output_text = wp_json_encode(
-        $revelations_integration_transport_article,
+        $is_research ? revelations_integration_research() : ( $is_brief ? revelations_integration_brief() : $revelations_integration_transport_article ),
         JSON_UNESCAPED_UNICODE |
         JSON_UNESCAPED_SLASHES
     );
@@ -494,6 +498,7 @@ function wp_remote_post(
                 'total_tokens' => 200,
             ),
             'output' => array(
+                ...( $is_research ? array( array( 'type' => 'web_search_call', 'action' => array( 'sources' => array( array( 'url' => 'https://primary.example.test/record' ), array( 'url' => 'https://editorial.example.test/report' ) ) ) ) ) : array() ),
                 array(
                     'content' => array(
                         array(
@@ -548,6 +553,9 @@ require_once
 require_once
     $plugin_dir .
     '/revelations-editorial-ai-generation-validation.php';
+require_once
+    $plugin_dir .
+    '/revelations-editorial-ai-research.php';
 require_once
     $plugin_dir .
     '/revelations-editorial-ai-review-metadata.php';
@@ -786,6 +794,20 @@ function revelations_integration_article(
     );
 }
 
+/** @return array<string, mixed> */
+function revelations_integration_research(): array {
+    $claim = 'The source describes an AI workflow used during routine editorial operations. Staff compare the generated material with the supplied record before making editorial decisions. The workflow supports drafting while people retain control. The source states: Teams now use the system during routine editorial work.';
+    $source = static function ( string $url, string $name, string $reliability ) use ( $claim ): array {
+        return array( 'url' => $url, 'name' => $name, 'publication_date' => '2026-01-01', 'source_type' => 'reported_news', 'reliability' => $reliability, 'claims' => array( array( 'claim' => $claim, 'context' => $claim, 'attribution' => '' ) ) );
+    };
+    return array( 'sources' => array( $source( 'https://primary.example.test/record', 'Primary Record', 'primary_authoritative' ), $source( 'https://editorial.example.test/report', 'Editorial Report', 'major_editorial' ) ) );
+}
+
+/** @return array<string, mixed> */
+function revelations_integration_brief(): array {
+    return array( 'what_happened' => 'An AI workflow is used in editorial work.', 'why_revelations_cares' => 'It shows human control around AI.', 'thesis' => 'AI drafting depends on review.', 'factual_pillars' => array( array( 'pillar' => 'AI supports drafting.', 'importance' => 'central', 'evidence_ids' => array( 'p001' ) ), array( 'pillar' => 'Staff compare records.', 'importance' => 'supporting', 'evidence_ids' => array( 'p002' ) ), array( 'pillar' => 'People retain control.', 'importance' => 'supporting', 'evidence_ids' => array( 'p001', 'p002' ) ) ), 'confirmed' => array( 'The workflow exists.' ), 'attributed' => array(), 'interpretation' => array( 'The workflow changes practice.' ), 'do_not_claim' => array( 'Do not claim broad industry adoption.' ), 'pillar_order' => array( 0, 1, 2 ) );
+}
+
 /**
  * Reset the complete in-memory WordPress and transport state.
  */
@@ -988,7 +1010,7 @@ function revelations_integration_request_body(): array {
     global $revelations_integration_transport_requests;
 
     $request =
-        $revelations_integration_transport_requests[0]
+        $revelations_integration_transport_requests[ count( $revelations_integration_transport_requests ) - 1 ]
         ?? array();
 
     $body = json_decode(
@@ -1152,7 +1174,7 @@ foreach ( $supported_sections as $section ) {
 
     revelations_integration_check(
         is_array( $result ) &&
-        1 === $revelations_integration_transport_calls,
+        3 === $revelations_integration_transport_calls,
         $section . ' completes through the fake structured transport'
     );
     revelations_integration_check(
@@ -1424,7 +1446,7 @@ foreach ( $validation_cases as $label => $case ) {
         $label . ' returns the expected validation error'
     );
     revelations_integration_check(
-        1 === $revelations_integration_transport_calls,
+        3 === $revelations_integration_transport_calls,
         $label . ' uses fake transport before server validation'
     );
     revelations_integration_check(
