@@ -13,6 +13,15 @@
 
 Дата изменения: 2026-08-13.
 
+## Structured Outputs schema compatibility (pending commit/deploy)
+
+- Strict Responses schemas no longer send unsupported `uniqueItems`: the three
+  Editorial Brief lists and Final block evidence IDs are checked for uniqueness
+  by PHP instead. A network-free allowlist validates the actual Research,
+  Brief and Final schema builders before the generation regression suite.
+
+Дата изменения: 2026-08-14.
+
 ## Generation architecture remediation (pending commit/deploy)
 
 - The local generation remediation separates runtime editorial settings from

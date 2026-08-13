@@ -375,7 +375,6 @@ function revelations_editorial_ai_article_schema(): array {
                             'items' => $evidence_id,
 
                             'minItems' => 1,
-                            'uniqueItems' => true,
 
                             'description' =>
                                 'One or more supplied source paragraph IDs supporting this complete block.',

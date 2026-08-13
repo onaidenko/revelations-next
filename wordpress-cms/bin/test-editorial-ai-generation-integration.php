@@ -1396,6 +1396,49 @@ revelations_integration_check(
     'final completed response with missing structured fields has a distinct schema failure'
 );
 
+/* API-compatible schemas retain all uniqueness invariants on the server. */
+$duplicate_brief_cases = array(
+    'duplicate pillar evidence IDs' => static function( array $brief ): array {
+        $brief['factual_pillars'][0]['evidence_ids'] = array( 'p001', 'p001' );
+        return $brief;
+    },
+    'duplicate pillar order' => static function( array $brief ): array {
+        $brief['pillar_order'] = array( 0, 0, 2 );
+        return $brief;
+    },
+    'duplicate sensitive evidence IDs' => static function( array $brief ): array {
+        $brief['sensitive_evidence_ids'] = array( 'p001', 'p001' );
+        return $brief;
+    },
+);
+foreach ( $duplicate_brief_cases as $label => $mutate_brief ) {
+    revelations_integration_reset( 'news' );
+    $duplicate_brief = $mutate_brief( revelations_integration_brief() );
+    $revelations_integration_transport_overrides[1] = static fn( bool $research, bool $brief ): array => revelations_integration_responses_fixture( 200, 'completed', wp_json_encode( $duplicate_brief ), false );
+    $before = revelations_integration_state_signature();
+    $result = revelations_editorial_generate_draft_with_ai( 100 );
+    revelations_integration_check(
+        is_wp_error( $result ) &&
+        'brief_schema_validation_failed' === $result->get_error_code() &&
+        2 === $revelations_integration_transport_calls &&
+        $before === revelations_integration_state_signature(),
+        $label . ' is rejected server-side before final generation or writes'
+    );
+}
+revelations_integration_reset( 'news' );
+$duplicate_final = revelations_integration_article( 'news' );
+$duplicate_final['blocks'][0]['evidence_ids'] = array( 'p001', 'p001' );
+$revelations_integration_transport_article = $duplicate_final;
+$before = revelations_integration_state_signature();
+$duplicate_final_result = revelations_editorial_generate_draft_with_ai( 100 );
+revelations_integration_check(
+    is_wp_error( $duplicate_final_result ) &&
+    'invalid_fact_check_evidence' === $duplicate_final_result->get_error_code() &&
+    3 === $revelations_integration_transport_calls &&
+    $before === revelations_integration_state_signature(),
+    'duplicate final block evidence IDs remain rejected server-side before writes'
+);
+
 /*
  * Over-maximum output remains a usable unpublished draft.
  */

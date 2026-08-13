@@ -31,6 +31,10 @@ cannot override that Constitution without explicit product-owner approval.
   retry behaviour. Each stage persists only bounded technical metadata needed
   to classify a failure; prompts, raw response bodies and model prose remain
   private and unrecorded.
+- **Decision:** OpenAI Structured Outputs compatibility is an outbound-schema
+  concern, not an editorial invariant. The offline allowlist rejects unsupported
+  strict-schema keywords before a request; all uniqueness guarantees remain
+  enforced by PHP validation.
 
 - **Решение:** RSS lead and its private source snapshot are discovery input,
   not the factual boundary for a generated article. Factual web research gets

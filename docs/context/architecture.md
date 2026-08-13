@@ -25,6 +25,10 @@ approval requirement are canonical in
 - Factual and provenance safeguards are server-owned. A model reliability label
   is descriptive only; server classification determines primary, first-party
   and secondary roles used for lead, central-pillar and dominance checks.
+- All outbound Research, Editorial Brief and Final Generation Structured
+  Outputs schemas are constrained by an offline allowlist for OpenAI's strict
+  supported subset. Unsupported API-only constraints stay out of the request;
+  uniqueness remains an explicit server-side validation invariant.
 - A central factual pillar requires server-verified primary support or support
   from at least two independent hosts. The final evidence pack reconstructs
   support from selected pNNN IDs and repeats provenance, independence,
