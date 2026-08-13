@@ -463,11 +463,21 @@ function revelations_editorial_ai_source_evidence_units(
             continue;
         }
 
+        $id = sprintf( 'p%03d', count( $units ) + 1 );
+
+        /*
+         * A validation-only representation may be rendered with stable
+         * `[pNNN]` labels. Rehydrate that label instead of treating it as
+         * source prose, so the legacy validator compares the original unit
+         * text and identity without seeing prompt-only registry metadata.
+         */
+        if ( preg_match( '/^\[(p[0-9]{3,})\]\s+(.+)$/su', $text, $match ) ) {
+            $id = $match[1];
+            $text = trim( $match[2] );
+        }
+
         $units[] = array(
-            'id' => sprintf(
-                'p%03d',
-                count( $units ) + 1
-            ),
+            'id' => $id,
             'text' => $text,
         );
     }

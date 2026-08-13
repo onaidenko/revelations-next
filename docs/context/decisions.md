@@ -42,6 +42,12 @@ cannot override that Constitution without explicit product-owner approval.
   qualifiers, conditions, category boundaries and uncertainty in formal legal,
   regulatory, scientific and technical definitions. It is shared, not copied
   into section profiles.
+- **Safeguard:** the compact registry representation is prompt-only. Existing
+  fact-check validation receives a separate flat serialization of selected
+  stable evidence units, preserving `pNNN` identity without weakening
+  evidence, sensitive-claim or attribution validation. Completed stage
+  diagnostics are retained on a validation failure, but raw model material is
+  not persisted.
 
 ## Publication dates
 

@@ -1,5 +1,19 @@
 # Текущее состояние
 
+## Compact-evidence validation boundary repair
+
+- The compact final prompt keeps its `SOURCE REGISTRY` plus selected evidence
+  units, but the legacy fact-check validator now receives a separate flat
+  serialization of the already-normalized `pNNN` array. The registry can no
+  longer become a synthetic first unit and shift evidence IDs.
+- Bounded stage usage and context-size diagnostics are created immediately
+  after the completed final Responses request. If either evidence-resolution
+  or post-final validation rejects the result, the failed private run log now
+  retains the three stages and the same aggregate context counts, without raw
+  prompts, web results or model output.
+
+Дата изменения: 2026-08-13.
+
 ## Compact evidence boundary for AI generation
 
 - Research remains broad and retains the existing independent-source and

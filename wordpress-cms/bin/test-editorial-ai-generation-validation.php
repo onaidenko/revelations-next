@@ -29,6 +29,22 @@ if ( false === $generation_source ) {
     exit( 1 );
 }
 
+$registry_prompt =
+    "SOURCE REGISTRY\n" .
+    "[s001] Source one | URL: https://example.test/one\n\n" .
+    "EVIDENCE UNITS\n" .
+    "[p001] [s001] Claim: first\n\n" .
+    "[p002] [s001] Claim: On January 1, 2024, the second claim was verified.\n\n" .
+    "[p003] [s001] Claim: third";
+$stable_units = array(
+    array( 'id' => 'p001', 'text' => '[s001] Claim: first' ),
+    array( 'id' => 'p002', 'text' => '[s001] Claim: On January 1, 2024, the second claim was verified.' ),
+    array( 'id' => 'p003', 'text' => '[s001] Claim: third' ),
+);
+$flat_validation_evidence = revelations_editorial_ai_format_source_evidence_units( $stable_units );
+$prompt_units = revelations_editorial_ai_source_evidence_units( $registry_prompt );
+$validation_map = revelations_editorial_ai_source_evidence_map( revelations_editorial_ai_source_evidence_units( $flat_validation_evidence ) );
+
 $passed = 0;
 $failed = 0;
 
@@ -50,6 +66,28 @@ function revelations_validation_test(
     $failed++;
     echo 'FAIL: ' . $message . "\n";
 }
+
+revelations_validation_test(
+    '[s001] Claim: On January 1, 2024, the second claim was verified.' === ( $validation_map['p002'] ?? '' ) &&
+    '[s001] Claim: third' === ( $validation_map['p003'] ?? '' ) &&
+    4 === count( $prompt_units ) &&
+    str_starts_with( (string) ( $prompt_units[0]['text'] ?? '' ), 'SOURCE REGISTRY' ),
+    'flat validation evidence preserves pNNN while registry prompt would shift legacy parsing'
+);
+
+$stable_sensitive_article = array(
+    'fact_check_flags' => array(),
+    'direct_quotes' => array(),
+    'blocks' => array(
+        array( 'type' => 'paragraph', 'text' => 'On January 1, 2024, the second claim was verified.', 'heading_level' => 0, 'evidence_ids' => array( 'p002' ) ),
+    ),
+);
+$stable_sensitive_resolution = revelations_editorial_ai_resolve_evidence_references( $stable_sensitive_article, $stable_units );
+revelations_validation_test(
+    true === ( $stable_sensitive_resolution['valid'] ?? false ) &&
+    array( 'p002' ) === ( $stable_sensitive_resolution['article']['fact_check_flags'][0]['evidence_ids'] ?? array() ),
+    'sensitive claim resolves against its intended p002 validation evidence'
+);
 
 /**
  * Return a safe baseline article with no sensitive claims.
@@ -1313,6 +1351,32 @@ $generation_function =
 $validation_position = strpos(
     $generation_function,
     'revelations_editorial_ai_validate_generated_article('
+);
+
+$flat_validation_position = strpos(
+    $generation_function,
+    'revelations_editorial_ai_format_source_evidence_units( $evidence_units )'
+);
+$prompt_representation_position = strpos(
+    $generation_function,
+    '$source_input'
+);
+
+revelations_validation_test(
+    false !== $flat_validation_position &&
+    false !== $validation_position &&
+    $flat_validation_position > $validation_position &&
+    false !== $prompt_representation_position,
+    'legacy validator receives flat units rather than registry-containing prompt evidence'
+);
+
+revelations_validation_test(
+    str_contains( $generation_source, 'revelations_editorial_ai_generation_runtime_diagnostics(' ) &&
+    str_contains( $generation_source, "'generation_diagnostics' => \$diagnostics" ) &&
+    str_contains( $generation_source, "\$error_data['generation_diagnostics']" ) &&
+    str_contains( $generation_source, "'input_tokens' => array_sum( array_column( \$stage_usage, 'input_tokens' ) )" ) &&
+    1 === substr_count( $generation_function, '$stage_usage = $runtime_diagnostics' ),
+    'post-final validation failures and successful runs share one bounded stage-metrics aggregate'
 );
 
 $backup_position = strpos(

@@ -77,6 +77,11 @@ approval requirement are canonical in
   regulatory, scientific and formal definitions. It is not duplicated in
   section profiles. Private diagnostics record per-request stage usage and
   bounded context-size counts, while aggregate generation usage remains.
+- The legacy deterministic fact-check validator receives a flat serialization
+  reconstructed from the selected normalized `pNNN` units, never the
+  registry-containing prompt representation. Thus its existing unit parser
+  retains the original IDs, while source registry/provenance remains solely a
+  compact downstream prompt and public-source-resolution concern.
 - Global Research & Source Policy is shared across every generated section:
   lead classification, independent corroboration, source roles, restricted
   lead safeguards, evidence provenance, sensitive claims, attribution and

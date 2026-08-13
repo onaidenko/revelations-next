@@ -102,6 +102,49 @@ function revelations_editorial_ai_generation_extract_text(
 }
 
 /**
+ * Keep bounded stage metrics available even when post-response validation
+ * rejects a draft before any WordPress mutation.
+ *
+ * @return array<string, mixed>
+ */
+function revelations_editorial_ai_generation_runtime_diagnostics( array $research, array $brief_result, array $final_evidence, array $editorial_brief, array $final_usage, int $final_duration_ms, string $final_status, string $editorial_policy ): array {
+    $stage_usage = array(
+        array( 'stage' => 'research', 'input_tokens' => absint( $research['usage']['input_tokens'] ?? 0 ), 'output_tokens' => absint( $research['usage']['output_tokens'] ?? 0 ), 'total_tokens' => absint( $research['usage']['total_tokens'] ?? 0 ), 'duration_ms' => absint( $research['duration_ms'] ?? 0 ), 'response_status' => sanitize_key( (string) ( $research['response_status'] ?? 'completed' ) ) ),
+        array( 'stage' => 'editorial_brief', 'input_tokens' => absint( $brief_result['usage']['input_tokens'] ?? 0 ), 'output_tokens' => absint( $brief_result['usage']['output_tokens'] ?? 0 ), 'total_tokens' => absint( $brief_result['usage']['total_tokens'] ?? 0 ), 'duration_ms' => absint( $brief_result['duration_ms'] ?? 0 ), 'response_status' => sanitize_key( (string) ( $brief_result['response_status'] ?? 'completed' ) ) ),
+        array( 'stage' => 'final_generation', 'input_tokens' => absint( $final_usage['input_tokens'] ?? 0 ), 'output_tokens' => absint( $final_usage['output_tokens'] ?? 0 ), 'total_tokens' => absint( $final_usage['total_tokens'] ?? 0 ), 'duration_ms' => $final_duration_ms, 'response_status' => sanitize_key( $final_status ) ),
+    );
+    $context_sizes = array(
+        'research_source_count' => count( $research['sources'] ?? array() ),
+        'research_evidence_count' => absint( $research['evidence_count'] ?? 0 ),
+        'final_evidence_count' => absint( $final_evidence['evidence_count'] ?? 0 ),
+        'source_registry_count' => count( $research['source_registry'] ?? array() ),
+        'final_source_registry_count' => absint( $final_evidence['source_count'] ?? 0 ),
+        'factual_pillar_count' => count( $editorial_brief['factual_pillars'] ?? array() ),
+        'brief_evidence_chars' => strlen( (string) ( $research['evidence_text'] ?? '' ) ),
+        'final_evidence_chars' => absint( $final_evidence['serialized_chars'] ?? 0 ),
+        'policy_chars' => strlen( $editorial_policy ),
+        'brief_chars' => strlen( (string) wp_json_encode( $editorial_brief, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ),
+    );
+    return array(
+        'input_tokens' => array_sum( array_column( $stage_usage, 'input_tokens' ) ),
+        'output_tokens' => array_sum( array_column( $stage_usage, 'output_tokens' ) ),
+        'total_tokens' => array_sum( array_column( $stage_usage, 'total_tokens' ) ),
+        'research_source_count' => $context_sizes['research_source_count'],
+        'research_evidence_count' => $context_sizes['research_evidence_count'],
+        'research_primary_count' => absint( $research['primary_count'] ?? 0 ),
+        'factual_pillar_count' => $context_sizes['factual_pillar_count'],
+        'response_status' => sanitize_key( $final_status ),
+        'stage_usage' => $stage_usage,
+        'context_sizes' => $context_sizes,
+    );
+}
+
+/** @return WP_Error */
+function revelations_editorial_ai_generation_validation_error( string $code, string $message, array $diagnostics ): WP_Error {
+    return new WP_Error( $code, $message, array( 'generation_diagnostics' => $diagnostics ) );
+}
+
+/**
  * Structured editorial response schema.
  *
  * @return array<string, mixed>
@@ -1070,15 +1113,28 @@ function revelations_editorial_generate_draft_with_ai(
         );
     }
 
+    $usage = is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array();
+    $runtime_diagnostics = revelations_editorial_ai_generation_runtime_diagnostics(
+        $research,
+        $brief_result,
+        $final_evidence,
+        $editorial_brief,
+        $usage,
+        $duration_ms,
+        (string) ( $decoded['status'] ?? '' ),
+        $editorial_policy
+    );
+
     $output_text =
         revelations_editorial_ai_generation_extract_text(
             $decoded
         );
 
     if ( '' === $output_text ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_validation_error(
             'empty_output',
-            'OpenAI returned no article output.'
+            'OpenAI returned no article output.',
+            $runtime_diagnostics
         );
     }
 
@@ -1088,9 +1144,10 @@ function revelations_editorial_generate_draft_with_ai(
     );
 
     if ( ! is_array( $article ) ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_validation_error(
             'invalid_article_json',
-            'The structured article could not be decoded.'
+            'The structured article could not be decoded.',
+            $runtime_diagnostics
         );
     }
 
@@ -1110,10 +1167,11 @@ function revelations_editorial_generate_draft_with_ai(
 
     foreach ( $required_fields as $field ) {
         if ( ! array_key_exists( $field, $article ) ) {
-            return new WP_Error(
+            return revelations_editorial_ai_generation_validation_error(
                 'missing_field',
                 'The structured article is missing: ' .
-                $field
+                $field,
+                $runtime_diagnostics
             );
         }
     }
@@ -1125,7 +1183,7 @@ function revelations_editorial_generate_draft_with_ai(
         );
 
     if ( empty( $evidence_resolution['valid'] ) ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_validation_error(
             sanitize_key(
                 (string) (
                     $evidence_resolution['code']
@@ -1137,7 +1195,8 @@ function revelations_editorial_generate_draft_with_ai(
                     $evidence_resolution['message']
                     ?? 'Generated evidence references are invalid.'
                 )
-            )
+            ),
+            $runtime_diagnostics
         );
     }
 
@@ -1369,11 +1428,12 @@ function revelations_editorial_generate_draft_with_ai(
                     $blocks,
             ),
             $current_section,
-            $source_input
+            /* Flat pNNN units only: the registry is prompt-only. */
+            revelations_editorial_ai_format_source_evidence_units( $evidence_units )
         );
 
     if ( empty( $validation['valid'] ) ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_validation_error(
             sanitize_key(
                 (string) (
                     $validation['code']
@@ -1385,7 +1445,8 @@ function revelations_editorial_generate_draft_with_ai(
                     $validation['message']
                     ?? 'Generated article validation failed.'
                 )
-            )
+            ),
+            $runtime_diagnostics
         );
     }
 
@@ -1563,29 +1624,8 @@ function revelations_editorial_generate_draft_with_ai(
         return $updated;
     }
 
-    $usage = is_array(
-        $decoded['usage'] ?? null
-    )
-        ? $decoded['usage']
-        : array();
-
-    $stage_usage = array(
-        array( 'stage' => 'research', 'input_tokens' => absint( $research['usage']['input_tokens'] ?? 0 ), 'output_tokens' => absint( $research['usage']['output_tokens'] ?? 0 ), 'total_tokens' => absint( $research['usage']['total_tokens'] ?? 0 ), 'duration_ms' => absint( $research['duration_ms'] ?? 0 ), 'response_status' => sanitize_key( (string) ( $research['response_status'] ?? 'completed' ) ) ),
-        array( 'stage' => 'editorial_brief', 'input_tokens' => absint( $brief_result['usage']['input_tokens'] ?? 0 ), 'output_tokens' => absint( $brief_result['usage']['output_tokens'] ?? 0 ), 'total_tokens' => absint( $brief_result['usage']['total_tokens'] ?? 0 ), 'duration_ms' => absint( $brief_result['duration_ms'] ?? 0 ), 'response_status' => sanitize_key( (string) ( $brief_result['response_status'] ?? 'completed' ) ) ),
-        array( 'stage' => 'final_generation', 'input_tokens' => absint( $usage['input_tokens'] ?? 0 ), 'output_tokens' => absint( $usage['output_tokens'] ?? 0 ), 'total_tokens' => absint( $usage['total_tokens'] ?? 0 ), 'duration_ms' => $duration_ms, 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ) ),
-    );
-    $context_sizes = array(
-        'research_source_count' => count( $research['sources'] ?? array() ),
-        'research_evidence_count' => absint( $research['evidence_count'] ?? 0 ),
-        'final_evidence_count' => absint( $final_evidence['evidence_count'] ?? 0 ),
-        'source_registry_count' => count( $research['source_registry'] ?? array() ),
-        'final_source_registry_count' => absint( $final_evidence['source_count'] ?? 0 ),
-        'factual_pillar_count' => count( $editorial_brief['factual_pillars'] ?? array() ),
-        'brief_evidence_chars' => strlen( (string) ( $research['evidence_text'] ?? '' ) ),
-        'final_evidence_chars' => absint( $final_evidence['serialized_chars'] ?? 0 ),
-        'policy_chars' => strlen( $editorial_policy ),
-        'brief_chars' => strlen( (string) wp_json_encode( $editorial_brief, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ),
-    );
+    $stage_usage = $runtime_diagnostics['stage_usage'];
+    $context_sizes = $runtime_diagnostics['context_sizes'];
 
     $meta = array(
         'revelations_seo_title' =>
@@ -2244,13 +2284,15 @@ add_action(
                     'revelations_editorial_log_ai_generation'
                 )
             ) {
+                $error_data = is_array( $result->get_error_data( $error_code ) ) ? $result->get_error_data( $error_code ) : array();
                 revelations_editorial_log_ai_generation(
                     $draft_id,
                     'failed',
                     $generation_duration_ms,
-                    is_array( $result->get_error_data( $error_code ) )
-                        ? (array) ( $result->get_error_data( $error_code )['research_diagnostics'] ?? array() )
-                        : array(),
+                    array_merge(
+                        (array) ( $error_data['research_diagnostics'] ?? array() ),
+                        (array) ( $error_data['generation_diagnostics'] ?? array() )
+                    ),
                     $result
                 );
             }
