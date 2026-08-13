@@ -1,5 +1,22 @@
 # Текущее состояние
 
+## Early generation-failure observability
+
+- A successful research stage now immediately has a bounded private diagnostic
+  representation: usage, duration/status, source/evidence and role counts,
+  independent-host count, serialized-evidence size, a registry summary
+  (`source_id`, host, role/type and evidence-unit count), and `pNNN -> sNNN`
+  provenance IDs. It contains no prompt, URL, excerpt, web result or model
+  output.
+- A parsed completed editorial brief now records its own usage, duration,
+  pillar count and bounded support map before local validation. A local brief
+  failure therefore retains centrality, source IDs/roles/hosts, independent
+  host counts and the evaluated dominance reason. No final-generation stage is
+  recorded unless its Responses request actually ran; aggregate usage is the
+  sum of completed stages only.
+
+Дата изменения: 2026-08-13.
+
 ## Compact-evidence validation boundary repair
 
 - The compact final prompt keeps its `SOURCE REGISTRY` plus selected evidence

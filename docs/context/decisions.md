@@ -48,6 +48,11 @@ cannot override that Constitution without explicit product-owner approval.
   evidence, sensitive-claim or attribution validation. Completed stage
   diagnostics are retained on a validation failure, but raw model material is
   not persisted.
+- **Observability:** successful research and parsed-brief boundaries emit
+  bounded private lifecycle diagnostics before later local gates run. Failed
+  runs retain stage usage plus ID-only research provenance and pillar support;
+  no raw evidence, prompt, web result or model output is persisted. A final
+  stage exists in diagnostics only after its actual Responses request.
 
 ## Publication dates
 

@@ -125,7 +125,7 @@ function revelations_editorial_ai_generation_runtime_diagnostics( array $researc
         'policy_chars' => strlen( $editorial_policy ),
         'brief_chars' => strlen( (string) wp_json_encode( $editorial_brief, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ),
     );
-    return array(
+    return array_merge( array(
         'input_tokens' => array_sum( array_column( $stage_usage, 'input_tokens' ) ),
         'output_tokens' => array_sum( array_column( $stage_usage, 'output_tokens' ) ),
         'total_tokens' => array_sum( array_column( $stage_usage, 'total_tokens' ) ),
@@ -136,7 +136,7 @@ function revelations_editorial_ai_generation_runtime_diagnostics( array $researc
         'response_status' => sanitize_key( $final_status ),
         'stage_usage' => $stage_usage,
         'context_sizes' => $context_sizes,
-    );
+    ), revelations_editorial_ai_research_diagnostics( $research ), revelations_editorial_ai_pillar_diagnostics( is_array( $editorial_brief['pillar_support'] ?? null ) ? $editorial_brief['pillar_support'] : array(), is_array( $editorial_brief['dominance'] ?? null ) ? $editorial_brief['dominance'] : array() ) );
 }
 
 /** @return WP_Error */
@@ -878,7 +878,22 @@ function revelations_editorial_generate_draft_with_ai(
 
     $editorial_brief = is_array( $brief_result['brief'] ?? null ) ? $brief_result['brief'] : array();
     $final_evidence = revelations_editorial_ai_final_evidence_pack( $research, $editorial_brief );
-    if ( is_wp_error( $final_evidence ) ) return $final_evidence;
+    if ( is_wp_error( $final_evidence ) ) {
+        return revelations_editorial_ai_generation_validation_error(
+            (string) $final_evidence->get_error_code(),
+            $final_evidence->get_error_message(),
+            array_merge( revelations_editorial_ai_completed_stage_diagnostics(
+                $research,
+                $editorial_brief,
+                is_array( $brief_result['usage'] ?? null ) ? $brief_result['usage'] : array(),
+                absint( $brief_result['duration_ms'] ?? 0 ),
+                sanitize_key( (string) ( $brief_result['response_status'] ?? '' ) )
+            ), revelations_editorial_ai_pillar_diagnostics(
+                is_array( $editorial_brief['pillar_support'] ?? null ) ? $editorial_brief['pillar_support'] : array(),
+                is_array( $editorial_brief['dominance'] ?? null ) ? $editorial_brief['dominance'] : array()
+            ) )
+        );
+    }
     $source_input = (string) ( $final_evidence['evidence_text'] ?? '' );
     $evidence_units = is_array( $final_evidence['evidence_units'] ?? null ) ? $final_evidence['evidence_units'] : array();
     if ( array() === $evidence_units ) return new WP_Error( 'insufficient_independent_evidence', 'Editorial brief selected no usable final evidence.' );

@@ -9,6 +9,8 @@ function esc_url_raw( string $value ): string { return $value; }
 function sanitize_text_field( string $value ): string { return trim( $value ); }
 function sanitize_key( string $value ): string { return strtolower( preg_replace( '/[^a-z0-9_]/', '', $value ) ?? '' ); }
 function wp_parse_url( string $url, int $component = -1 ) { return parse_url( $url, $component ); }
+function wp_json_encode( mixed $value, int $flags = 0 ): string|false { return json_encode( $value, $flags ); }
+function absint( mixed $value ): int { return abs( (int) $value ); }
 
 require dirname( __DIR__ ) . '/mu-plugins/revelations-editorial-ai-research.php';
 
@@ -25,6 +27,37 @@ $primary_allowed = revelations_editorial_ai_evaluate_pillar_dominance( array( ar
 if ( ! empty( $primary_allowed['hard_failure'] ) || empty( $primary_allowed['primary_source_dominance_note'] ) ) { fwrite( STDERR, "Primary-dominance allowance regression.\n" ); exit( 1 ); }
 $distributed = revelations_editorial_ai_evaluate_pillar_dominance( array( array( 'importance' => 'central', 'sources' => array( $secondary, $other ) ), array( 'importance' => 'supporting', 'sources' => array( $primary ) ), array( 'importance' => 'supporting', 'sources' => array( $other ) ), array( 'importance' => 'supporting', 'sources' => array( $secondary ) ), array( 'importance' => 'supporting', 'sources' => array( $primary ) ) ) );
 if ( ! empty( $distributed['hard_failure'] ) ) { fwrite( STDERR, "Distributed-support allowance regression.\n" ); exit( 1 ); }
+$diagnostic_research = array(
+    'sources' => array(
+        array( 'url' => 'https://secondary.example/a' ),
+        array( 'url' => 'https://other.example/b' ),
+    ),
+    'source_registry' => array(
+        's001' => array( 'host' => 'secondary.example', 'source_type' => 'reported_news', 'reliability' => 'major_editorial' ),
+        's002' => array( 'host' => 'other.example', 'source_type' => 'reported_news', 'reliability' => 'major_editorial' ),
+    ),
+    'provenance' => array(
+        'p001' => array( 'source_id' => 's001', 'host' => 'secondary.example', 'role' => 'secondary' ),
+        'p002' => array( 'source_id' => 's001', 'host' => 'secondary.example', 'role' => 'secondary' ),
+        'p003' => array( 'source_id' => 's002', 'host' => 'other.example', 'role' => 'secondary' ),
+    ),
+    'usage' => array( 'input_tokens' => 10, 'output_tokens' => 20, 'total_tokens' => 30 ),
+    'duration_ms' => 100,
+    'response_status' => 'completed',
+    'evidence_count' => 3,
+    'evidence_text' => '[p001] bounded',
+);
+$diagnostic_supports = array(
+    array( 'importance' => 'central', 'evidence_ids' => array( 'p001' ), 'sources' => array( $diagnostic_research['provenance']['p001'] ) ),
+    array( 'importance' => 'supporting', 'evidence_ids' => array( 'p002' ), 'sources' => array( $diagnostic_research['provenance']['p002'] ) ),
+    array( 'importance' => 'supporting', 'evidence_ids' => array( 'p003' ), 'sources' => array( $diagnostic_research['provenance']['p003'] ) ),
+);
+$diagnostic_dominance = revelations_editorial_ai_evaluate_pillar_dominance( $diagnostic_supports );
+$completed_diagnostics = array_merge(
+    revelations_editorial_ai_completed_stage_diagnostics( $diagnostic_research, array( 'factual_pillars' => array( 1, 2, 3 ) ), array( 'input_tokens' => 11, 'output_tokens' => 21, 'total_tokens' => 32 ), 101, 'completed' ),
+    revelations_editorial_ai_pillar_diagnostics( $diagnostic_supports, $diagnostic_dominance )
+);
+if ( 21 !== $completed_diagnostics['input_tokens'] || 41 !== $completed_diagnostics['output_tokens'] || 62 !== $completed_diagnostics['total_tokens'] || 2 !== count( $completed_diagnostics['stage_usage'] ) || isset( $completed_diagnostics['final_generation'] ) || 's001' !== ( $completed_diagnostics['evidence_source_mapping']['p001'] ?? '' ) || 'secondary.example' !== ( $completed_diagnostics['dominant_source_host'] ?? '' ) || empty( $completed_diagnostics['sole_support_central_pillar'] ) || empty( $completed_diagnostics['dominance_hard_failure'] ) ) { fwrite( STDERR, "Early-failure diagnostics regression.\n" ); exit( 1 ); }
 $citation_url = 'https://example.org/report?utm_source=newsletter';
 $payload_both = array( 'output' => array( array( 'type' => 'web_search_call', 'status' => 'completed', 'action' => array( 'type' => 'search', 'query' => 'neurotechnology', 'sources' => array( array( 'url' => 'https://primary.example.org/report' ) ) ) ), array( 'type' => 'message', 'role' => 'assistant', 'content' => array( array( 'type' => 'output_text', 'annotations' => array( array( 'type' => 'url_citation', 'url' => $citation_url ) ) ) ) ) ) );
 $both = revelations_editorial_ai_research_web_provenance( $payload_both );

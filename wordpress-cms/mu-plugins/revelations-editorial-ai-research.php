@@ -85,6 +85,83 @@ function revelations_editorial_ai_research_source_registry( array $sources ): ar
     return array( 'registry' => $registry, 'source_ids' => $source_ids );
 }
 
+/** Bounded private provenance summary: never claim text, URLs or prompts. */
+function revelations_editorial_ai_research_diagnostics( array $research ): array {
+    $registry = is_array( $research['source_registry'] ?? null ) ? $research['source_registry'] : array();
+    $provenance = is_array( $research['provenance'] ?? null ) ? $research['provenance'] : array();
+    $counts = array(); foreach ( $provenance as $id => $origin ) if ( is_array( $origin ) && '' !== (string) ( $origin['source_id'] ?? '' ) ) $counts[ (string) $origin['source_id'] ] = ( $counts[ (string) $origin['source_id'] ] ?? 0 ) + 1;
+    $sources = array(); $hosts = array(); $primary = 0; $secondary = 0;
+    foreach ( $registry as $source_id => $source ) { if ( ! is_array( $source ) ) continue; $role = 'primary_authoritative' === ( $source['reliability'] ?? '' ) ? 'primary' : 'secondary'; if ( 'primary' === $role ) ++$primary; else ++$secondary; if ( '' !== (string) ( $source['host'] ?? '' ) ) $hosts[ (string) $source['host'] ] = true; $sources[] = array( 'source_id' => (string) $source_id, 'host' => sanitize_text_field( (string) ( $source['host'] ?? '' ) ), 'source_type' => sanitize_key( (string) ( $source['source_type'] ?? 'unknown' ) ), 'reliability' => sanitize_key( (string) ( $source['reliability'] ?? 'unknown' ) ), 'role' => $role, 'evidence_unit_count' => absint( $counts[ $source_id ] ?? 0 ) ); }
+    $mapping = array(); foreach ( $provenance as $id => $origin ) if ( is_array( $origin ) && '' !== (string) ( $origin['source_id'] ?? '' ) ) $mapping[ (string) $id ] = (string) $origin['source_id'];
+    return array( 'research_source_registry_summary' => $sources, 'evidence_source_mapping' => $mapping, 'research_independent_host_count' => count( $hosts ), 'independent_host_count' => count( $hosts ), 'research_primary_source_count' => $primary, 'research_secondary_source_count' => $secondary, 'source_role_counts' => array( 'primary' => $primary, 'secondary' => $secondary ), 'research_serialized_evidence_chars' => strlen( (string) ( $research['evidence_text'] ?? '' ) ) );
+}
+
+/** @param array<int, array<string, mixed>> $supports */
+function revelations_editorial_ai_pillar_diagnostics( array $supports, array $dominance = array() ): array {
+    $pillars = array(); $sole = array();
+    foreach ( $supports as $index => $support ) { $sources = is_array( $support['sources'] ?? null ) ? $support['sources'] : array(); $summary = array(); $hosts = array(); foreach ( $sources as $source ) if ( is_array( $source ) ) { $summary[] = array( 'source_id' => sanitize_key( (string) ( $source['source_id'] ?? '' ) ), 'host' => sanitize_text_field( (string) ( $source['host'] ?? '' ) ), 'role' => sanitize_key( (string) ( $source['role'] ?? '' ) ) ); if ( '' !== (string) ( $source['host'] ?? '' ) ) $hosts[ (string) $source['host'] ] = true; } if ( 1 === count( $summary ) && 'secondary' === $summary[0]['role'] ) { $host = $summary[0]['host']; $sole[ $host ] = array( 'count' => absint( $sole[ $host ]['count'] ?? 0 ) + 1, 'central' => ! empty( $sole[ $host ]['central'] ) || 'central' === ( $support['importance'] ?? '' ), 'source_id' => $summary[0]['source_id'] ); } $pillars[] = array( 'pillar_id' => 'pillar_' . ( $index + 1 ), 'central' => 'central' === ( $support['importance'] ?? '' ), 'evidence_id_count' => count( $support['evidence_ids'] ?? array() ), 'source_ids' => array_values( array_filter( array_map( static fn( $source ) => $source['source_id'], $summary ) ) ), 'source_roles' => array_values( array_unique( array_map( static fn( $source ) => $source['role'], $summary ) ) ), 'source_hosts' => array_values( array_keys( $hosts ) ), 'independent_host_count' => count( $hosts ) ); }
+    $dominant = array(); if ( array() !== $sole ) { uasort( $sole, static fn( $a, $b ) => $b['count'] <=> $a['count'] ); $host = (string) array_key_first( $sole ); $dominant = array( 'dominant_source_id' => $sole[ $host ]['source_id'], 'dominant_source_host' => $host, 'sole_support_central_pillar' => ! empty( $sole[ $host ]['central'] ), 'sole_support_majority_pillars' => $sole[ $host ]['count'] > count( $pillars ) / 2, 'dominance_reason' => ! empty( $sole[ $host ]['central'] ) ? 'secondary_source_sole_central_pillar' : ( $sole[ $host ]['count'] > count( $pillars ) / 2 ? 'secondary_source_sole_majority_pillars' : '' ) ); }
+    return array_merge( array( 'pillar_support_summary' => $pillars ), $dominant, array( 'source_dominance_status' => sanitize_key( (string) ( $dominance['status'] ?? '' ) ), 'secondary_source_dominance_warning' => ! empty( $dominance['secondary_source_dominance_warning'] ), 'dominance_hard_failure' => ! empty( $dominance['hard_failure'] ) ) );
+}
+
+/**
+ * Bounded completed-stage metrics. This representation is deliberately safe
+ * to retain on a failed run: it contains IDs, counts and classifications only.
+ */
+function revelations_editorial_ai_completed_stage_diagnostics( array $research, array $brief = array(), array $brief_usage = array(), int $brief_duration_ms = 0, string $brief_status = '' ): array {
+    $research_usage = is_array( $research['usage'] ?? null ) ? $research['usage'] : array();
+    $stage_usage = array(
+        array(
+            'stage' => 'research',
+            'input_tokens' => absint( $research_usage['input_tokens'] ?? 0 ),
+            'output_tokens' => absint( $research_usage['output_tokens'] ?? 0 ),
+            'total_tokens' => absint( $research_usage['total_tokens'] ?? 0 ),
+            'duration_ms' => absint( $research['duration_ms'] ?? 0 ),
+            'response_status' => sanitize_key( (string) ( $research['response_status'] ?? 'completed' ) ),
+        ),
+    );
+    $context_sizes = array(
+        'research_source_count' => count( $research['sources'] ?? array() ),
+        'research_evidence_count' => absint( $research['evidence_count'] ?? 0 ),
+        'source_registry_count' => count( $research['source_registry'] ?? array() ),
+        'serialized_evidence_chars' => strlen( (string) ( $research['evidence_text'] ?? '' ) ),
+    );
+
+    if ( array() !== $brief ) {
+        $stage_usage[] = array(
+            'stage' => 'editorial_brief',
+            'input_tokens' => absint( $brief_usage['input_tokens'] ?? 0 ),
+            'output_tokens' => absint( $brief_usage['output_tokens'] ?? 0 ),
+            'total_tokens' => absint( $brief_usage['total_tokens'] ?? 0 ),
+            'duration_ms' => absint( $brief_duration_ms ),
+            'response_status' => sanitize_key( $brief_status ?: 'completed' ),
+        );
+        $context_sizes['factual_pillar_count'] = count( $brief['factual_pillars'] ?? array() );
+        $context_sizes['brief_chars'] = strlen( (string) wp_json_encode( $brief, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) );
+    }
+
+    return array_merge(
+        array(
+            'input_tokens' => array_sum( array_column( $stage_usage, 'input_tokens' ) ),
+            'output_tokens' => array_sum( array_column( $stage_usage, 'output_tokens' ) ),
+            'total_tokens' => array_sum( array_column( $stage_usage, 'total_tokens' ) ),
+            'research_source_count' => $context_sizes['research_source_count'],
+            'research_evidence_count' => $context_sizes['research_evidence_count'],
+            'research_primary_count' => absint( $research['primary_count'] ?? 0 ),
+            'factual_pillar_count' => absint( $context_sizes['factual_pillar_count'] ?? 0 ),
+            'response_status' => array() === $brief ? (string) ( $research['response_status'] ?? '' ) : $brief_status,
+            'stage_usage' => $stage_usage,
+            'context_sizes' => $context_sizes,
+        ),
+        revelations_editorial_ai_research_diagnostics( $research )
+    );
+}
+
+/** @return WP_Error */
+function revelations_editorial_ai_editorial_brief_failure( string $code, string $message, array $diagnostics ): WP_Error {
+    return new WP_Error( $code, $message, array( 'generation_diagnostics' => $diagnostics ) );
+}
+
 /**
  * Serialize a source registry and claim-level units without repeating source
  * metadata for every claim. Context is deliberately not character-truncated:
@@ -221,7 +298,9 @@ function revelations_editorial_ai_research_evidence_pack( array $config, string 
     if ( ! empty( $lead['requires_independent_corroboration'] ) && $primary_count < 1 ) return revelations_editorial_ai_research_failure( 'insufficient_independent_evidence', 'This lead type requires corroborating primary authoritative evidence.', array_merge( $diagnostics, array( 'failure_stage' => 'primary_requirement' ) ) );
     $source_list = array_values( $sources ); $registry_data = revelations_editorial_ai_research_source_registry( $source_list ); $units = array(); $provenance = array(); foreach ( $source_list as $source ) foreach ( $source['claims'] as $claim ) { $id = sprintf( 'p%03d', count( $units ) + 1 ); $source_key = revelations_editorial_ai_research_url_key( (string) $source['url'] ); $source_id = $registry_data['source_ids'][ $source_key ] ?? ''; $text = '[' . $source_id . '] Claim: ' . $claim['claim'] . "\nSupport: " . $claim['context'] . ( '' !== $claim['attribution'] ? "\nAttribution: " . $claim['attribution'] : '' ); $units[] = array( 'id' => $id, 'text' => $text ); $provenance[ $id ] = array( 'url' => $source['url'], 'host' => $source['host'], 'reliability' => $source['reliability'], 'role' => 'primary_authoritative' === $source['reliability'] ? 'primary' : 'secondary', 'source_id' => $source_id ); }
     $evidence = revelations_editorial_ai_research_format_evidence_pack( $registry_data['registry'], $units ); if ( array() === $units ) return new WP_Error( 'insufficient_independent_evidence', 'Independent research contained no claim-level evidence.' );
-    return array( 'sources' => $source_list, 'source_registry' => $registry_data['registry'], 'evidence_units' => $units, 'evidence_text' => $evidence, 'provenance' => $provenance, 'evidence_count' => count( $units ), 'primary_count' => $primary_count, 'lead_classification' => $lead, 'duration_ms' => (int) round( ( microtime( true ) - $started ) * 1000 ), 'usage' => is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ) );
+    $result = array( 'sources' => $source_list, 'source_registry' => $registry_data['registry'], 'evidence_units' => $units, 'evidence_text' => $evidence, 'provenance' => $provenance, 'evidence_count' => count( $units ), 'primary_count' => $primary_count, 'lead_classification' => $lead, 'duration_ms' => (int) round( ( microtime( true ) - $started ) * 1000 ), 'usage' => is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ) );
+    $result['research_diagnostics'] = revelations_editorial_ai_completed_stage_diagnostics( $result );
+    return $result;
 }
 
 /**
@@ -250,22 +329,26 @@ function revelations_editorial_ai_evaluate_pillar_dominance( array $supports ): 
 /** @return array<string, mixed>|WP_Error */
 function revelations_editorial_ai_editorial_brief( array $config, string $section, array $profile, array $settings, array $research ) {
     $units = is_array( $research['evidence_units'] ?? null ) ? $research['evidence_units'] : revelations_editorial_ai_source_evidence_units( (string) ( $research['evidence_text'] ?? '' ) );
-    if ( array() === $units ) return new WP_Error( 'insufficient_independent_evidence', 'No evidence is available for an editorial brief.' );
+    $research_diagnostics = is_array( $research['research_diagnostics'] ?? null ) ? $research['research_diagnostics'] : revelations_editorial_ai_completed_stage_diagnostics( $research );
+    if ( array() === $units ) return revelations_editorial_ai_editorial_brief_failure( 'insufficient_independent_evidence', 'No evidence is available for an editorial brief.', $research_diagnostics );
     $policy = trim( (string) ( $settings['editorial_policy'] ?? '' ) ); $profile_prompt = revelations_editorial_ai_generation_profile_prompt( $section, $profile );
     $instructions = 'You are the REVELATIONS editorial brief editor. Use the saved editorial policy and the section profile to form an original angle and a factual-pillar order from the supplied evidence only. Do not use lead narrative order or source prose as a structure template. Return three to five factual pillars; every pillar must cite supplied evidence IDs. Also select the supplied IDs required for sensitive claims, mandatory attribution, and essential supporting context. Those selections are the complete boundary for final writing, so retain all material qualifiers for legal, regulatory, scientific and formal technical claims. Distinguish confirmed facts, attributed claims, REVELATIONS interpretation and claims not to make. This is planning, not an article.\n\nEditorial policy:\n' . $policy . "\n\n" . $profile_prompt;
     $registry = is_array( $research['source_registry'] ?? null ) ? $research['source_registry'] : array();
     $input = "RESEARCH EVIDENCE\n" . ( array() !== $registry ? revelations_editorial_ai_research_format_evidence_pack( $registry, $units ) : revelations_editorial_ai_format_source_evidence_units( $units ) );
     $body = array( 'model' => $config['model'], 'instructions' => $instructions, 'input' => $input, 'reasoning' => array( 'effort' => 'none' ), 'text' => array( 'format' => array( 'type' => 'json_schema', 'name' => 'revelations_editorial_brief', 'strict' => true, 'schema' => revelations_editorial_ai_editorial_brief_schema() ) ), 'max_output_tokens' => 2500, 'store' => false );
     $started = microtime( true ); $response = wp_remote_post( 'https://api.openai.com/v1/responses', array( 'timeout' => 120, 'redirection' => 0, 'headers' => array( 'Authorization' => 'Bearer ' . $config['api_key'], 'Content-Type' => 'application/json' ), 'body' => wp_json_encode( $body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ), 'data_format' => 'body' ) );
-    if ( is_wp_error( $response ) ) return new WP_Error( 'brief_failed', 'Editorial brief request failed.' );
-    $status = (int) wp_remote_retrieve_response_code( $response ); $decoded = json_decode( wp_remote_retrieve_body( $response ), true ); if ( ! is_array( $decoded ) || $status < 200 || $status >= 300 || 'completed' !== ( $decoded['status'] ?? '' ) ) return new WP_Error( 'brief_failed', 'Editorial brief could not be completed.' );
-    $brief = json_decode( revelations_editorial_ai_generation_extract_text( $decoded ), true ); if ( ! is_array( $brief ) || ! is_array( $brief['factual_pillars'] ?? null ) ) return new WP_Error( 'brief_failed', 'Editorial brief returned no factual pillars.' );
+    if ( is_wp_error( $response ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief request failed.', $research_diagnostics );
+    $duration_ms = (int) round( ( microtime( true ) - $started ) * 1000 );
+    $status = (int) wp_remote_retrieve_response_code( $response ); $decoded = json_decode( wp_remote_retrieve_body( $response ), true ); if ( ! is_array( $decoded ) || $status < 200 || $status >= 300 || 'completed' !== ( $decoded['status'] ?? '' ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief could not be completed.', $research_diagnostics );
+    $brief = json_decode( revelations_editorial_ai_generation_extract_text( $decoded ), true ); if ( ! is_array( $brief ) || ! is_array( $brief['factual_pillars'] ?? null ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief returned no factual pillars.', $research_diagnostics );
+    $brief_diagnostics = revelations_editorial_ai_completed_stage_diagnostics( $research, $brief, is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), $duration_ms, sanitize_key( (string) ( $decoded['status'] ?? '' ) ) );
     $provenance = is_array( $research['provenance'] ?? null ) ? $research['provenance'] : array(); $supports = array(); $central_count = 0;
-    foreach ( $brief['factual_pillars'] as $index => $pillar ) { if ( ! is_array( $pillar ) || '' === trim( (string) ( $pillar['pillar'] ?? '' ) ) || ! in_array( $pillar['importance'] ?? '', array( 'central', 'supporting' ), true ) || ! is_array( $pillar['evidence_ids'] ?? null ) ) return new WP_Error( 'brief_failed', 'A factual pillar has no valid importance or evidence references.' ); $ids = array_values( array_unique( array_filter( array_map( 'strval', $pillar['evidence_ids'] ) ) ) ); $pillar_support = array(); foreach ( $ids as $id ) { if ( ! isset( $provenance[ $id ] ) ) return new WP_Error( 'brief_failed', 'A factual pillar references unknown evidence.' ); $pillar_support[ $provenance[ $id ]['host'] ] = $provenance[ $id ]; } if ( array() === $pillar_support ) return new WP_Error( 'brief_failed', 'A factual pillar has no source support.' ); if ( 'central' === $pillar['importance'] ) ++$central_count; $supports[ $index ] = array( 'importance' => $pillar['importance'], 'evidence_ids' => $ids, 'sources' => array_values( $pillar_support ) ); }
-    $pillar_count = count( $supports ); if ( $pillar_count < 3 || $pillar_count > 5 || $central_count < 1 || count( array_unique( array_map( 'intval', (array) ( $brief['pillar_order'] ?? array() ) ) ) ) !== $pillar_count ) return new WP_Error( 'brief_failed', 'Editorial brief does not provide a complete independent pillar order.' );
+    foreach ( $brief['factual_pillars'] as $index => $pillar ) { if ( ! is_array( $pillar ) || '' === trim( (string) ( $pillar['pillar'] ?? '' ) ) || ! in_array( $pillar['importance'] ?? '', array( 'central', 'supporting' ), true ) || ! is_array( $pillar['evidence_ids'] ?? null ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'A factual pillar has no valid importance or evidence references.', $brief_diagnostics ); $ids = array_values( array_unique( array_filter( array_map( 'strval', $pillar['evidence_ids'] ) ) ) ); $pillar_support = array(); foreach ( $ids as $id ) { if ( ! isset( $provenance[ $id ] ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'A factual pillar references unknown evidence.', $brief_diagnostics ); $pillar_support[ $provenance[ $id ]['host'] ] = $provenance[ $id ]; } if ( array() === $pillar_support ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'A factual pillar has no source support.', $brief_diagnostics ); if ( 'central' === $pillar['importance'] ) ++$central_count; $supports[ $index ] = array( 'importance' => $pillar['importance'], 'evidence_ids' => $ids, 'sources' => array_values( $pillar_support ) ); }
+    $pillar_count = count( $supports ); if ( $pillar_count < 3 || $pillar_count > 5 || $central_count < 1 || count( array_unique( array_map( 'intval', (array) ( $brief['pillar_order'] ?? array() ) ) ) ) !== $pillar_count ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief does not provide a complete independent pillar order.', array_merge( $brief_diagnostics, revelations_editorial_ai_pillar_diagnostics( $supports ) ) );
     $dominance = revelations_editorial_ai_evaluate_pillar_dominance( $supports );
-    if ( ! empty( $dominance['hard_failure'] ) ) return new WP_Error( 'insufficient_independent_evidence', 'A secondary source is the sole support for the central or majority factual pillars.' );
-    foreach ( array( 'sensitive_evidence_ids', 'attribution_evidence_ids', 'essential_context_evidence_ids' ) as $field ) { if ( ! is_array( $brief[ $field ] ?? null ) ) return new WP_Error( 'brief_failed', 'Editorial brief returned invalid final-evidence selections.' ); foreach ( $brief[ $field ] as $id ) if ( ! isset( $provenance[ (string) $id ] ) ) return new WP_Error( 'brief_failed', 'Editorial brief selected unknown final evidence.' ); $brief[ $field ] = array_values( array_unique( array_map( 'strval', $brief[ $field ] ) ) ); }
+    $brief_diagnostics = array_merge( $brief_diagnostics, revelations_editorial_ai_pillar_diagnostics( $supports, $dominance ) );
+    if ( ! empty( $dominance['hard_failure'] ) ) return revelations_editorial_ai_editorial_brief_failure( 'insufficient_independent_evidence', 'A secondary source is the sole support for the central or majority factual pillars.', array_merge( $brief_diagnostics, array( 'failure_stage' => 'editorial_brief_dominance' ) ) );
+    foreach ( array( 'sensitive_evidence_ids', 'attribution_evidence_ids', 'essential_context_evidence_ids' ) as $field ) { if ( ! is_array( $brief[ $field ] ?? null ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief returned invalid final-evidence selections.', $brief_diagnostics ); foreach ( $brief[ $field ] as $id ) if ( ! isset( $provenance[ (string) $id ] ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_failed', 'Editorial brief selected unknown final evidence.', $brief_diagnostics ); $brief[ $field ] = array_values( array_unique( array_map( 'strval', $brief[ $field ] ) ) ); }
     $brief['pillar_support'] = $supports; $brief['dominance'] = $dominance;
-    return array( 'brief' => $brief, 'duration_ms' => (int) round( ( microtime( true ) - $started ) * 1000 ), 'usage' => is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ) );
+    return array( 'brief' => $brief, 'duration_ms' => $duration_ms, 'usage' => is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ) );
 }

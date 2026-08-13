@@ -82,6 +82,12 @@ approval requirement are canonical in
   registry-containing prompt representation. Thus its existing unit parser
   retains the original IDs, while source registry/provenance remains solely a
   compact downstream prompt and public-source-resolution concern.
+- Successful research immediately produces a bounded private registry summary
+  and `pNNN -> sNNN` mapping; a parsed brief records bounded pillar support and
+  dominance before its local checks. The generation failure handler persists
+  these diagnostics, so a research-to-brief failure has research/brief totals
+  without a fabricated final stage. Raw prompts, URLs, excerpts and Responses
+  payloads are excluded.
 - Global Research & Source Policy is shared across every generated section:
   lead classification, independent corroboration, source roles, restricted
   lead safeguards, evidence provenance, sensitive claims, attribution and
