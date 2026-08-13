@@ -621,23 +621,36 @@ function revelations_editorial_ai_format_source_evidence_units(
 /**
  * Resolve model evidence references into server-owned review metadata.
  *
- * The model supplies IDs only. Source evidence and exact quote fragments are
- * reconstructed here from the normalized snapshot units.
+ * The model supplies IDs only. Fact-check source evidence is reconstructed
+ * from the canonical validation units, while exact quote fragments retain the
+ * original normalized snapshot units.
  *
  * @param array<string, mixed> $article Raw structured model output.
  * @param array<int, array{id: string, text: string}> $units Evidence units.
+ * @param array<int, array{id: string, text: string}> $validation_units Canonical fact-check evidence units.
  * @return array<string, mixed>
  */
 function revelations_editorial_ai_resolve_evidence_references(
     array $article,
-    array $units
+    array $units,
+    array $validation_units = array()
 ): array {
     $evidence_map =
         revelations_editorial_ai_source_evidence_map(
             $units
         );
 
-    if ( array() === $evidence_map ) {
+    $validation_evidence_map =
+        revelations_editorial_ai_source_evidence_map(
+            array() !== $validation_units
+                ? $validation_units
+                : $units
+        );
+
+    if (
+        array() === $evidence_map ||
+        array() === $validation_evidence_map
+    ) {
         return revelations_editorial_ai_validation_failure(
             'invalid_fact_check_evidence',
             'Source evidence units are unavailable.'
@@ -985,6 +998,11 @@ function revelations_editorial_ai_resolve_evidence_references(
                 ) ||
                 ! isset(
                     $evidence_map[ $evidence_id ]
+                ) ||
+                ! isset(
+                    $validation_evidence_map[
+                        $evidence_id
+                    ]
                 )
             ) {
                 return revelations_editorial_ai_validation_failure(
@@ -994,7 +1012,9 @@ function revelations_editorial_ai_resolve_evidence_references(
             }
 
             $evidence[] =
-                $evidence_map[ $evidence_id ];
+                $validation_evidence_map[
+                    $evidence_id
+                ];
         }
 
         $claim_kind =
@@ -1148,13 +1168,13 @@ function revelations_editorial_ai_resolve_evidence_references(
         ) {
             if (
                 isset(
-                    $evidence_map[
+                    $validation_evidence_map[
                         $merged_evidence_id
                     ]
                 )
             ) {
                 $merged_evidence[] =
-                    $evidence_map[
+                    $validation_evidence_map[
                         $merged_evidence_id
                     ];
             }

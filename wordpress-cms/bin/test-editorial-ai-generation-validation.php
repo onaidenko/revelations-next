@@ -308,6 +308,84 @@ function revelations_validation_flag(
     );
 }
 
+$internal_whitespace_units = array(
+    array(
+        'id' => 'p001',
+        'text' => "The benchmark reached 95%\naccuracy in the first test.",
+    ),
+    array(
+        'id' => 'p002',
+        'text' => "The second source\nreported the same measurement.",
+    ),
+);
+$internal_whitespace_validation_evidence =
+    revelations_editorial_ai_format_source_evidence_units(
+        $internal_whitespace_units
+    );
+$internal_whitespace_validation_units =
+    revelations_editorial_ai_source_evidence_units(
+        $internal_whitespace_validation_evidence
+    );
+$internal_whitespace_article =
+    revelations_validation_with_claim(
+        revelations_validation_article(),
+        'The benchmark reached 95% accuracy.'
+    );
+$internal_whitespace_article['blocks'][0]['evidence_ids'] = array(
+    'p001',
+    'p002',
+);
+$internal_whitespace_resolution =
+    revelations_editorial_ai_resolve_evidence_references(
+        $internal_whitespace_article,
+        $internal_whitespace_units,
+        $internal_whitespace_validation_units
+    );
+$internal_whitespace_expected = implode(
+    "\n\n",
+    array(
+        'The benchmark reached 95% accuracy in the first test.',
+        'The second source reported the same measurement.',
+    )
+);
+$internal_whitespace_validation =
+    revelations_validation_run(
+        is_array(
+            $internal_whitespace_resolution['article']
+            ?? null
+        )
+            ? $internal_whitespace_resolution['article']
+            : array(),
+        'tech',
+        $internal_whitespace_validation_evidence
+    );
+revelations_validation_test(
+    true === (
+        $internal_whitespace_resolution['valid']
+        ?? false
+    ) &&
+    $internal_whitespace_expected === (
+        $internal_whitespace_resolution['article']['fact_check_flags'][0]['source_evidence']
+        ?? ''
+    ) &&
+    array( 'p001', 'p002' ) === (
+        $internal_whitespace_resolution['article']['fact_check_flags'][0]['evidence_ids']
+        ?? array()
+    ) &&
+    hash( 'sha256', $internal_whitespace_expected ) === hash(
+        'sha256',
+        (string) (
+            $internal_whitespace_resolution['article']['fact_check_flags'][0]['source_evidence']
+            ?? ''
+        )
+    ) &&
+    true === (
+        $internal_whitespace_validation['valid']
+        ?? false
+    ),
+    'canonical validation evidence preserves exact multi-ID fact-check equality with internal whitespace'
+);
+
 $result = revelations_validation_run(
     revelations_validation_article()
 );
@@ -1430,7 +1508,19 @@ $validation_position = strpos(
 
 $flat_validation_position = strpos(
     $generation_function,
-    'revelations_editorial_ai_format_source_evidence_units( $evidence_units )'
+    '$validation_evidence ='
+);
+$canonical_validation_units_position = strpos(
+    $generation_function,
+    '$validation_evidence_units ='
+);
+$evidence_resolution_position = strpos(
+    $generation_function,
+    'revelations_editorial_ai_resolve_evidence_references('
+);
+$validation_evidence_argument_position = strrpos(
+    $generation_function,
+    '$validation_evidence'
 );
 $prompt_representation_position = strpos(
     $generation_function,
@@ -1439,10 +1529,16 @@ $prompt_representation_position = strpos(
 
 revelations_validation_test(
     false !== $flat_validation_position &&
+    false !== $canonical_validation_units_position &&
+    false !== $evidence_resolution_position &&
     false !== $validation_position &&
-    $flat_validation_position > $validation_position &&
+    false !== $validation_evidence_argument_position &&
+    $flat_validation_position < $canonical_validation_units_position &&
+    $canonical_validation_units_position < $evidence_resolution_position &&
+    $evidence_resolution_position < $validation_position &&
+    $validation_position < $validation_evidence_argument_position &&
     false !== $prompt_representation_position,
-    'legacy validator receives flat units rather than registry-containing prompt evidence'
+    'fact-check producer and validator share flat canonical units rather than registry prompt evidence'
 );
 
 revelations_validation_test(

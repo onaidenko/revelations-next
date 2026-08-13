@@ -1191,10 +1191,26 @@ function revelations_editorial_generate_draft_with_ai(
         }
     }
 
+    /*
+     * Rehydrate the flat validation-only representation before deriving
+     * server-owned fact-check evidence. The final validator consumes this
+     * exact representation, so producer and strict-equality consumer share
+     * identical pNNN text without changing the compact prompt or quotes.
+     */
+    $validation_evidence =
+        revelations_editorial_ai_format_source_evidence_units(
+            $evidence_units
+        );
+    $validation_evidence_units =
+        revelations_editorial_ai_source_evidence_units(
+            $validation_evidence
+        );
+
     $evidence_resolution =
         revelations_editorial_ai_resolve_evidence_references(
             $article,
-            $evidence_units
+            $evidence_units,
+            $validation_evidence_units
         );
 
     if ( empty( $evidence_resolution['valid'] ) ) {
@@ -1444,7 +1460,7 @@ function revelations_editorial_generate_draft_with_ai(
             ),
             $current_section,
             /* Flat pNNN units only: the registry is prompt-only. */
-            revelations_editorial_ai_format_source_evidence_units( $evidence_units )
+            $validation_evidence
         );
 
     if ( empty( $validation['valid'] ) ) {
