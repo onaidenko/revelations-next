@@ -7,7 +7,7 @@ function revelations_taxonomy_check( bool $condition, string $label ): void { gl
 $map = revelations_taxonomy_import_load( dirname( __DIR__, 2 ) . '/data/seo/editorial-taxonomy-v2.json' );
 $plan = revelations_taxonomy_import_plan( $map );
 revelations_taxonomy_check( $plan['valid'], 'approved map dry-run plan is valid' );
-revelations_taxonomy_check( 52 === $plan['assignments'] && 9 === $plan['topics'] && 3 === $plan['series'] && 6 === $plan['manual_sources'], 'approved map has expected totals' );
+revelations_taxonomy_check( 52 === $plan['assignments'] && 9 === $plan['topics'] && 4 === $plan['series'] && 6 === $plan['manual_sources'], 'approved map has expected totals' );
 $invalid = $map; $invalid['assignments'][0]['primary_topic'] = 'missing';
 revelations_taxonomy_check( ! revelations_taxonomy_import_plan( $invalid )['valid'], 'invalid topic blocks plan' );
 $missing = revelations_taxonomy_import_plan( $map, array( 'only-one' => 1 ) );

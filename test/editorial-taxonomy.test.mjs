@@ -7,7 +7,7 @@ const map = JSON.parse(readFileSync(new URL('../data/seo/editorial-taxonomy-v2.j
 
 test('approved taxonomy map is complete and internally valid', () => {
   assert.equal(map.schema_version, 2); assert.equal(map.status, 'approved_for_implementation');
-  assert.equal(map.topics.length, 9); assert.equal(map.series.length, 3); assert.equal(map.assignments.length, 52); assert.equal(map.manual_related.length, 6);
+  assert.equal(map.topics.length, 9); assert.equal(map.series.length, 4); assert.equal(map.assignments.length, 52); assert.equal(map.manual_related.length, 6);
   const slugs = new Set(map.assignments.map((item) => item.slug)); const topics = new Set(map.topics.map((item) => item.slug)); const series = new Set(map.series.map((item) => item.slug));
   assert.equal(slugs.size, 52);
   for (const item of map.assignments) { assert.ok(topics.has(item.primary_topic)); assert.ok(item.secondary_topics.length <= 2); assert.ok(!item.secondary_topics.includes(item.primary_topic)); assert.equal(new Set(item.secondary_topics).size, item.secondary_topics.length); assert.ok(item.secondary_topics.every((topic) => topics.has(topic))); assert.ok(item.series === null || series.has(item.series)); }

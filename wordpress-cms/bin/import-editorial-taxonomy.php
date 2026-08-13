@@ -18,7 +18,7 @@ function revelations_taxonomy_import_validate( array $map ): array {
     $slugs = array_column( $map['assignments'] ?? array(), 'slug' );
     if ( 2 !== (int) ( $map['schema_version'] ?? 0 ) || 'approved_for_implementation' !== ( $map['status'] ?? '' ) ) { $errors[] = 'invalid_schema'; }
     if ( 9 !== count( $topics ) || count( $topics ) !== count( array_unique( $topics ) ) ) { $errors[] = 'invalid_topics'; }
-    if ( 3 !== count( $series ) || count( $series ) !== count( array_unique( $series ) ) ) { $errors[] = 'invalid_series'; }
+    if ( 4 !== count( $series ) || count( $series ) !== count( array_unique( $series ) ) ) { $errors[] = 'invalid_series'; }
     if ( 52 !== count( $slugs ) || count( $slugs ) !== count( array_unique( $slugs ) ) ) { $errors[] = 'invalid_assignments'; }
     $exclusions = 0;
     foreach ( $map['assignments'] ?? array() as $assignment ) {

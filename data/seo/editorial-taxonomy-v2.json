@@ -374,8 +374,10 @@
       "location": null,
       "primary_topic": "blockchain-fintech-digital-money",
       "public_topic_eligible": true,
-      "secondary_topics": [],
-      "series": null,
+      "secondary_topics": [
+        "startups-founders-investment"
+      ],
+      "series": "revelations-podcast",
       "slug": "new-era-of-digital-money-and-happiness",
       "taxonomy_status": "proposed"
     },
@@ -638,6 +640,10 @@
     {
       "name": "MENA Blockchain Week",
       "slug": "mena-blockchain-week"
+    },
+    {
+      "name": "REVELATIONS Podcast",
+      "slug": "revelations-podcast"
     }
   ],
   "status": "approved_for_implementation",
