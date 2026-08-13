@@ -2202,7 +2202,9 @@ add_action(
                     $draft_id,
                     'failed',
                     $generation_duration_ms,
-                    array(),
+                    is_array( $result->get_error_data( $error_code ) )
+                        ? (array) ( $result->get_error_data( $error_code )['research_diagnostics'] ?? array() )
+                        : array(),
                     $result
                 );
             }

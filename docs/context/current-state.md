@@ -452,6 +452,12 @@ the pre-commit state recorded above.
   при secondary dominance, но primary technical-detail dominance только
   отмечается; sole-secondary support central pillar или большинства pillars
   блокирует generation.
+- Factual research requires Responses `web_search` and requests bounded action
+  source provenance. URL verification accepts only normalized URLs returned by
+  tool provenance or assistant `url_citation` annotations, while preserving
+  lead-host exclusion and all independent-source gates. Failed research logs
+  retain bounded call/query/citation/source counts and a parser/verification
+  stage, never raw responses or prompts.
 - Присвоение `Julia U.` только пустому author уже соответствует
   контракту. Image generation, batch generation и auto-publish
   отсутствуют, что также соответствует контракту.

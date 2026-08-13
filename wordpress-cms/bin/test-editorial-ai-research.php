@@ -22,4 +22,17 @@ $primary_allowed = revelations_editorial_ai_evaluate_pillar_dominance( array( ar
 if ( ! empty( $primary_allowed['hard_failure'] ) || empty( $primary_allowed['primary_source_dominance_note'] ) ) { fwrite( STDERR, "Primary-dominance allowance regression.\n" ); exit( 1 ); }
 $distributed = revelations_editorial_ai_evaluate_pillar_dominance( array( array( 'importance' => 'central', 'sources' => array( $secondary, $other ) ), array( 'importance' => 'supporting', 'sources' => array( $primary ) ), array( 'importance' => 'supporting', 'sources' => array( $other ) ), array( 'importance' => 'supporting', 'sources' => array( $secondary ) ), array( 'importance' => 'supporting', 'sources' => array( $primary ) ) ) );
 if ( ! empty( $distributed['hard_failure'] ) ) { fwrite( STDERR, "Distributed-support allowance regression.\n" ); exit( 1 ); }
+$citation_url = 'https://example.org/report?utm_source=newsletter';
+$payload_both = array( 'output' => array( array( 'type' => 'web_search_call', 'status' => 'completed', 'action' => array( 'type' => 'search', 'query' => 'neurotechnology', 'sources' => array( array( 'url' => 'https://primary.example.org/report' ) ) ) ), array( 'type' => 'message', 'role' => 'assistant', 'content' => array( array( 'type' => 'output_text', 'annotations' => array( array( 'type' => 'url_citation', 'url' => $citation_url ) ) ) ) ) ) );
+$both = revelations_editorial_ai_research_web_provenance( $payload_both );
+if ( 1 !== $both['web_search_call_count'] || 2 !== $both['unique_url_count'] || 1 !== $both['citation_count'] || 1 !== $both['action_source_url_count'] ) { fwrite( STDERR, "Combined web provenance regression.\n" ); exit( 1 ); }
+$annotation_only = revelations_editorial_ai_research_web_provenance( array( 'output' => array( array( 'type' => 'web_search_call', 'status' => 'completed', 'action' => array( 'type' => 'search' ) ), array( 'type' => 'message', 'role' => 'assistant', 'content' => array( array( 'annotations' => array( array( 'type' => 'url_citation', 'url' => 'https://citation.example.org/a' ) ) ) ) ) ) ) );
+if ( 1 !== $annotation_only['unique_url_count'] ) { fwrite( STDERR, "Annotation-only provenance regression.\n" ); exit( 1 ); }
+$action_only = revelations_editorial_ai_research_web_provenance( array( 'output' => array( array( 'type' => 'web_search_call', 'status' => 'completed', 'action' => array( 'type' => 'search', 'sources' => array( array( 'url' => 'https://action.example.org/a' ) ) ) ) ) ) );
+if ( 1 !== $action_only['unique_url_count'] ) { fwrite( STDERR, "Action-source provenance regression.\n" ); exit( 1 ); }
+if ( revelations_editorial_ai_research_url_key( $citation_url ) !== revelations_editorial_ai_research_url_key( 'https://example.org/report/' ) ) { fwrite( STDERR, "Canonical URL normalization regression.\n" ); exit( 1 ); }
+if ( isset( $both['urls'][ revelations_editorial_ai_research_url_key( 'https://invented.example.org/nope' ) ] ) ) { fwrite( STDERR, "Invented URL provenance regression.\n" ); exit( 1 ); }
+$no_tool = revelations_editorial_ai_research_web_provenance( array( 'output' => array( array( 'type' => 'message', 'role' => 'assistant', 'content' => array() ) ) ) );
+if ( 0 !== $no_tool['web_search_call_count'] ) { fwrite( STDERR, "Tool-not-used regression.\n" ); exit( 1 ); }
+if ( revelations_editorial_ai_research_is_independent_url( 'https://www.wired.com/story/x', 'www.wired.com' ) ) { fwrite( STDERR, "Lead-host exclusion regression.\n" ); exit( 1 ); }
 echo "Editorial AI research diagnostics passed.\n";
