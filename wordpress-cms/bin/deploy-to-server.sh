@@ -67,12 +67,12 @@ esac
 
 if [ "$TARGETED" -eq 1 ]; then
     PAIRS=()
-    for file in "${FILES[@]}"; do
+    for file in "${FILES[@]-}"; do
         # Targeted releases deliberately accept only direct plugin filenames.
         # This rejects traversal, directories, bin/docs/tests paths and links.
         [[ "$file" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*\.(php|js)$ ]] || fail "Invalid targeted MU-plugin filename: $file"
         [ -f "$LOCAL_MU/$file" ] && [ ! -L "$LOCAL_MU/$file" ] || fail "Targeted file does not exist as a regular local MU-plugin: $file"
-        for seen in "${PAIRS[@]}"; do
+        for seen in "${PAIRS[@]-}"; do
             [ "${seen%%=*}" != "$file" ] || fail "Duplicate targeted file: $file"
         done
         PAIRS+=( "$file=$(local_sha256 "$LOCAL_MU/$file")" )
@@ -80,7 +80,7 @@ if [ "$TARGETED" -eq 1 ]; then
 fi
 
 remote_target_report() {
-    ssh "$SERVER" bash -s -- "$REMOTE_MU" "${PAIRS[@]}" <<'REMOTE'
+    ssh "$SERVER" bash -s -- "$REMOTE_MU" "${PAIRS[@]-}" <<'REMOTE'
 set -euo pipefail
 REMOTE_MU="$1"
 shift
@@ -106,7 +106,7 @@ targeted_dry_run() {
     echo "Local MU source: $LOCAL_MU"
     echo "Remote MU target: $REMOTE_MU"
     echo "Allowlisted files:"
-    for pair in "${PAIRS[@]}"; do
+    for pair in "${PAIRS[@]-}"; do
         printf '  %s | SHA-256 %s\n' "${pair%%=*}" "${pair#*=}"
     done
     echo
@@ -132,7 +132,7 @@ targeted_deploy() {
     backup_dir="/root/revelations-mu-plugins-targeted-before-deploy-$stamp"
     printf 'Remote staging directory: %s\n' "$stage_dir"
 
-    for pair in "${PAIRS[@]}"; do
+    for pair in "${PAIRS[@]-}"; do
         file="${pair%%=*}"
         if ! scp "$LOCAL_MU/$file" "$SERVER:$stage_dir/$file"; then
             ssh "$SERVER" "rm -rf -- '$stage_dir'" || true
@@ -141,7 +141,7 @@ targeted_deploy() {
     done
 
     echo "===== STAGED PHP SYNTAX AND CHECKSUM VERIFICATION ====="
-    if ! ssh "$SERVER" bash -s -- "$stage_dir" "$REMOTE_MU" "${PAIRS[@]}" <<'REMOTE'
+    if ! ssh "$SERVER" bash -s -- "$stage_dir" "$REMOTE_MU" "${PAIRS[@]-}" <<'REMOTE'
 set -euo pipefail
 STAGE_DIR="$1"
 REMOTE_MU="$2"
@@ -172,7 +172,7 @@ REMOTE
     fi
 
     echo "===== TARGETED BACKUP, INSTALL AND VERIFICATION ====="
-    if ! ssh "$SERVER" bash -s -- "$stage_dir" "$REMOTE_ROOT" "$REMOTE_MU" "$stamp" "${PAIRS[@]}" <<'REMOTE'
+    if ! ssh "$SERVER" bash -s -- "$stage_dir" "$REMOTE_ROOT" "$REMOTE_MU" "$stamp" "${PAIRS[@]-}" <<'REMOTE'
 set -euo pipefail
 STAGE_DIR="$1"
 REMOTE_ROOT="$2"
