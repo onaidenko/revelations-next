@@ -13,6 +13,20 @@
 
 Дата изменения: 2026-08-13.
 
+## Semantic editorial-brief evidence selection
+
+- Factual pillars now have stable `pillar_id` values. Any attribution or
+  essential-context evidence that expands beyond pillar selection must carry
+  an `evidence_id`, related pillar ID and concise necessity reason; server-side
+  validation rejects unlinked plain ID lists before the existing final-pack
+  union is reached.
+- The brief is instructed to choose the minimum sufficient set, while retaining
+  sensitive support and material legal, regulatory, scientific and formal
+  qualifiers. Bounded context diagnostics expose pillar, attribution-only,
+  essential-only, sensitive-only and final evidence counts.
+
+Дата изменения: 2026-08-13.
+
 ## Early generation-failure observability
 
 - A successful research stage now immediately has a bounded private diagnostic

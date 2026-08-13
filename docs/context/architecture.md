@@ -74,7 +74,10 @@ approval requirement are canonical in
 - Research and the editorial brief may inspect the broad evidence pack. The
   final writer receives a pre-writing `final_evidence_pack`: only evidence IDs
   selected by factual pillars, sensitive-claim, attribution or essential
-  context fields in the brief. A shared source registry holds source metadata
+  context fields in the brief. Attribution and essential-context additions
+  carry a required `related_pillar_id` and concise reason, are server-checked
+  before normalizing to the existing ID lists, and follow a minimum-sufficient
+  evidence rule; they are not general-background buckets. A shared source registry holds source metadata
   once and units reference its `sNNN` ID. Before final writing the compact pack
   rechecks independent hosts, restricted-lead primary support and dominance;
   public source resolution still uses the original private provenance.

@@ -90,4 +90,53 @@ $final_usage = revelations_editorial_ai_used_evidence_sources( array( array( 'ev
 if ( 2 !== $final_usage['public_source_count'] || ! in_array( 'p025', $final_usage['used_evidence_ids'], true ) ) { fwrite( STDERR, "Registry provenance public-source regression.\n" ); exit( 1 ); }
 $formal_rule = revelations_editorial_ai_formal_definition_safeguard();
 if ( false === strpos( $formal_rule, 'category boundary' ) || false === strpos( $formal_rule, 'uncertainty level' ) || false !== stripos( $formal_rule, 'Colorado' ) ) { fwrite( STDERR, "Formal-definition safeguard regression.\n" ); exit( 1 ); }
+
+$selection_units = array_slice( $units, 0, 19 );
+$selection_units[5]['text'] = '[s002] Claim: Background legal context. Support: The rule applies only under the stated condition.';
+$selection_provenance = array_slice( $provenance, 0, 19, true );
+$selection_pillars = array(
+    array( 'pillar_id' => 'pillar_1', 'evidence_ids' => array( 'p007', 'p008' ) ),
+    array( 'pillar_id' => 'pillar_2', 'evidence_ids' => array( 'p009', 'p010', 'p011' ) ),
+    array( 'pillar_id' => 'pillar_3', 'evidence_ids' => array( 'p012', 'p013', 'p014' ) ),
+    array( 'pillar_id' => 'pillar_4', 'evidence_ids' => array( 'p015', 'p016', 'p017' ) ),
+    array( 'pillar_id' => 'pillar_5', 'evidence_ids' => array( 'p018', 'p019' ) ),
+);
+$selection_pillar_ids = array_fill_keys( array_column( $selection_pillars, 'pillar_id' ), true );
+$blanket_attribution = revelations_editorial_ai_normalize_brief_evidence_links(
+    array( 'p001', 'p002', 'p003', 'p004', 'p005', 'p006' ),
+    $selection_provenance,
+    $selection_pillar_ids
+);
+$minimum_brief = array(
+    'factual_pillars' => $selection_pillars,
+    'sensitive_evidence_ids' => array( 'p007', 'p008', 'p009' ),
+    'attribution_evidence_ids' => array(),
+    'essential_context_evidence_ids' => array(),
+    'pillar_support' => array(),
+);
+$minimum_final_pack = revelations_editorial_ai_final_evidence_pack(
+    array( 'evidence_units' => $selection_units, 'source_registry' => $registry_data['registry'], 'provenance' => $selection_provenance, 'lead_classification' => array( 'requires_independent_corroboration' => false ) ),
+    $minimum_brief
+);
+$minimum_counts = revelations_editorial_ai_brief_selection_counts( $minimum_brief );
+if ( ! empty( $blanket_attribution['valid'] ) || is_wp_error( $minimum_final_pack ) || 13 !== $minimum_final_pack['evidence_count'] || 13 !== $minimum_counts['pillar_evidence_unique_count'] || 0 !== $minimum_counts['additional_attribution_only_count'] || 0 !== $minimum_counts['additional_essential_only_count'] || 0 !== $minimum_counts['sensitive_only_count'] ) { fwrite( STDERR, "Brief minimum-selection regression.\n" ); exit( 1 ); }
+
+$qualifier_link = revelations_editorial_ai_normalize_brief_evidence_links(
+    array( array( 'evidence_id' => 'p006', 'related_pillar_id' => 'pillar_1', 'reason' => 'Preserves the condition limiting the selected pillar.' ) ),
+    $selection_provenance,
+    $selection_pillar_ids
+);
+$company_attribution_link = revelations_editorial_ai_normalize_brief_evidence_links(
+    array( array( 'evidence_id' => 'p013', 'related_pillar_id' => 'pillar_3', 'reason' => 'The selected pillar depends on a company-reported claim.' ) ),
+    $selection_provenance,
+    $selection_pillar_ids
+);
+$qualifier_brief = $minimum_brief;
+$qualifier_brief['essential_context_evidence_ids'] = $qualifier_link['ids'];
+$qualifier_brief['attribution_evidence_ids'] = $company_attribution_link['ids'];
+$qualifier_final_pack = revelations_editorial_ai_final_evidence_pack(
+    array( 'evidence_units' => $selection_units, 'source_registry' => $registry_data['registry'], 'provenance' => $selection_provenance, 'lead_classification' => array( 'requires_independent_corroboration' => false ) ),
+    $qualifier_brief
+);
+if ( empty( $qualifier_link['valid'] ) || empty( $company_attribution_link['valid'] ) || is_wp_error( $qualifier_final_pack ) || 14 !== $qualifier_final_pack['evidence_count'] || false === strpos( $qualifier_final_pack['evidence_text'], 'only under the stated condition' ) ) { fwrite( STDERR, "Brief qualifier-or-attribution linkage regression.\n" ); exit( 1 ); }
 echo "Editorial AI research diagnostics passed.\n";

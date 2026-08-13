@@ -125,6 +125,12 @@ function revelations_editorial_ai_generation_runtime_diagnostics( array $researc
         'policy_chars' => strlen( $editorial_policy ),
         'brief_chars' => strlen( (string) wp_json_encode( $editorial_brief, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ),
     );
+    $context_sizes = array_merge(
+        $context_sizes,
+        revelations_editorial_ai_brief_selection_counts(
+            $editorial_brief
+        )
+    );
     return array_merge( array(
         'input_tokens' => array_sum( array_column( $stage_usage, 'input_tokens' ) ),
         'output_tokens' => array_sum( array_column( $stage_usage, 'output_tokens' ) ),

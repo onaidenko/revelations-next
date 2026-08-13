@@ -166,6 +166,13 @@ function esc_url_raw( mixed $value ): string {
     return trim( (string) $value );
 }
 
+function wp_parse_url(
+    string $url,
+    int $component = -1
+): array|string|int|null|false {
+    return parse_url( $url, $component );
+}
+
 function wp_json_encode(
     mixed $value,
     int $flags = 0
@@ -805,7 +812,7 @@ function revelations_integration_research(): array {
 
 /** @return array<string, mixed> */
 function revelations_integration_brief(): array {
-    return array( 'what_happened' => 'An AI workflow is used in editorial work.', 'why_revelations_cares' => 'It shows human control around AI.', 'thesis' => 'AI drafting depends on review.', 'factual_pillars' => array( array( 'pillar' => 'AI supports drafting.', 'importance' => 'central', 'evidence_ids' => array( 'p001' ) ), array( 'pillar' => 'Staff compare records.', 'importance' => 'supporting', 'evidence_ids' => array( 'p002' ) ), array( 'pillar' => 'People retain control.', 'importance' => 'supporting', 'evidence_ids' => array( 'p001', 'p002' ) ) ), 'confirmed' => array( 'The workflow exists.' ), 'attributed' => array(), 'interpretation' => array( 'The workflow changes practice.' ), 'do_not_claim' => array( 'Do not claim broad industry adoption.' ), 'pillar_order' => array( 0, 1, 2 ) );
+    return array( 'what_happened' => 'An AI workflow is used in editorial work.', 'why_revelations_cares' => 'It shows human control around AI.', 'thesis' => 'AI drafting depends on review.', 'factual_pillars' => array( array( 'pillar_id' => 'pillar_1', 'pillar' => 'AI supports drafting.', 'importance' => 'central', 'evidence_ids' => array( 'p001' ) ), array( 'pillar_id' => 'pillar_2', 'pillar' => 'Staff compare records.', 'importance' => 'supporting', 'evidence_ids' => array( 'p002' ) ), array( 'pillar_id' => 'pillar_3', 'pillar' => 'People retain control.', 'importance' => 'supporting', 'evidence_ids' => array( 'p001', 'p002' ) ) ), 'confirmed' => array( 'The workflow exists.' ), 'attributed' => array(), 'interpretation' => array( 'The workflow changes practice.' ), 'do_not_claim' => array( 'Do not claim broad industry adoption.' ), 'pillar_order' => array( 0, 1, 2 ), 'sensitive_evidence_ids' => array(), 'attribution_evidence_ids' => array(), 'essential_context_evidence_ids' => array() );
 }
 
 /**
@@ -1142,6 +1149,15 @@ foreach ( $supported_sections as $section ) {
         revelations_editorial_generate_draft_with_ai(
             100
         );
+    if ( is_wp_error( $result ) ) {
+        fwrite(
+            STDERR,
+            "Successful generation regression: " .
+            $result->get_error_code() .
+            "\n"
+        );
+        exit( 1 );
+    }
     $draft = get_post( 100 );
     $request_body =
         revelations_integration_request_body();
@@ -1168,6 +1184,27 @@ foreach ( $supported_sections as $section ) {
         revelations_integration_meta_list(
             100,
             '_revelations_ai_direct_quotes'
+        );
+    $research_fixture =
+        revelations_integration_research();
+    $primary_claim =
+        $research_fixture['sources'][0]['claims'][0];
+    $canonical_evidence_map =
+        revelations_editorial_ai_source_evidence_map(
+            revelations_editorial_ai_source_evidence_units(
+                revelations_editorial_ai_format_source_evidence_units(
+                    array(
+                        array(
+                            'id' => 'p001',
+                            'text' =>
+                                '[s001] Claim: ' .
+                                $primary_claim['claim'] .
+                                "\nSupport: " .
+                                $primary_claim['context'],
+                        ),
+                    )
+                )
+            )
         );
     $review =
         revelations_editorial_review_status( 100 );
@@ -1249,6 +1286,10 @@ foreach ( $supported_sections as $section ) {
         ) &&
         'p001' === (
             $quotes[0]['evidence_id']
+            ?? ''
+        ) &&
+        ( $canonical_evidence_map['p001'] ?? '' ) === (
+            $quotes[0]['source_fragment']
             ?? ''
         ) &&
         str_contains(
@@ -1371,6 +1412,16 @@ $validation_cases = array(
             static function ( array $article ): array {
                 $article['direct_quotes'][0]['quote_text'] =
                     'This quotation is absent from the source.';
+                return $article;
+            },
+    ),
+    'direct quote with unknown evidence ID' => array(
+        'section' => 'news',
+        'error' => 'invalid_direct_quote',
+        'mutate' =>
+            static function ( array $article ): array {
+                $article['direct_quotes'][0]['evidence_id'] =
+                    'p999';
                 return $article;
             },
     ),

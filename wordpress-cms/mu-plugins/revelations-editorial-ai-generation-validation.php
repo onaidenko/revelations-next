@@ -1241,7 +1241,9 @@ function revelations_editorial_ai_resolve_evidence_references(
             'quote_text' => $quote_text,
             'evidence_id' => $evidence_id,
             'source_fragment' =>
-                $evidence_map[ $evidence_id ],
+                $validation_evidence_map[
+                    $evidence_id
+                ],
         );
     }
 

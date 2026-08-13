@@ -45,6 +45,12 @@ cannot override that Constitution without explicit product-owner approval.
   evidence before prose is requested; final writing cannot use other research
   units. The compact set repeats independence, restricted-lead primary and
   dominance checks before it is sent.
+- **Safeguard:** attribution and essential-context additions are not a
+  background bucket. Each has an explicit related factual-pillar ID and a
+  concise necessity reason, then server-side validation normalizes the linked
+  selection to the existing final-pack ID union. The brief selects the minimum
+  sufficient evidence set; no numerical cap substitutes for factual qualifiers
+  or source-diversity requirements.
 - **Safeguard:** shared source metadata is serialized once in a private
   `sNNN` registry. A global factuality instruction preserves material scope,
   qualifiers, conditions, category boundaries and uncertainty in formal legal,
