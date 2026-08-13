@@ -14,6 +14,20 @@ cannot override that Constitution without explicit product-owner approval.
 
 ## Evidence-first AI drafting
 
+## Editorial generation safety and configuration ownership
+
+- **Решение:** factual evidence and provenance checks remain server-owned;
+  runtime Editorial Policy, tone, structure, banned phrases and word limits
+  remain editorial configuration. A UI policy cannot promote a source,
+  weaken evidence integrity or replace a section profile.
+- **Решение:** source authority is derived from verifiable server-side source
+  properties. Model labels are retained as descriptive metadata but never
+  satisfy primary, independence or dominance requirements.
+- **Решение:** final evidence selection is minimum sufficient only when it
+  still preserves central-pillar independence, sensitive support, attribution
+  and material qualifiers. Linked additional evidence retains bounded linkage
+  metadata through final-pack validation.
+
 - **Решение:** RSS lead and its private source snapshot are discovery input,
   not the factual boundary for a generated article. Factual web research gets
   topic, section, lead and evidence requirements only. The saved Editorial

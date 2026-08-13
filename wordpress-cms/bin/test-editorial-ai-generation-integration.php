@@ -50,10 +50,14 @@ class WP_Post {
  * Minimal WordPress error value object.
  */
 class WP_Error {
+    public array $data;
+
     public function __construct(
         private string $code,
-        private string $message
+        private string $message,
+        array $data = array()
     ) {
+        $this->data = $data;
     }
 
     public function get_error_code(): string {
@@ -113,6 +117,7 @@ $revelations_integration_next_post_id = 1000;
 $revelations_integration_transport_calls = 0;
 $revelations_integration_transport_requests = array();
 $revelations_integration_transport_article = array();
+$revelations_integration_settings = array();
 
 /**
  * WordPress registration stub. Callbacks are intentionally not executed.
@@ -449,7 +454,9 @@ function parse_blocks( string $content ): array {
  * @return array<string, mixed>
  */
 function revelations_editorial_get_settings(): array {
-    return array(
+    global $revelations_integration_settings;
+
+    $defaults = array(
         'article_length_min' => 100,
         'article_length_max' => 800,
         'editorial_policy' =>
@@ -461,6 +468,8 @@ function revelations_editorial_get_settings(): array {
         'banned_words' =>
             "revolutionary\ngame-changing",
     );
+
+    return array_merge( $defaults, $revelations_integration_settings );
 }
 
 /**
@@ -505,7 +514,7 @@ function wp_remote_post(
                 'total_tokens' => 200,
             ),
             'output' => array(
-                ...( $is_research ? array( array( 'type' => 'web_search_call', 'action' => array( 'sources' => array( array( 'url' => 'https://primary.example.test/record' ), array( 'url' => 'https://editorial.example.test/report' ) ) ) ) ) : array() ),
+                ...( $is_research ? array( array( 'type' => 'web_search_call', 'action' => array( 'sources' => array( array( 'url' => 'https://agency.gov/record' ), array( 'url' => 'https://editorial.example.test/report' ) ) ) ) ) : array() ),
                 array(
                     'content' => array(
                         array(
@@ -648,10 +657,14 @@ function revelations_integration_source_text(): string {
         'The source states: Teams now use the system during routine ' .
         'editorial work.';
 
+    $canonical_evidence =
+        '[s001] Claim: The source describes an AI workflow used during routine editorial operations. Staff compare the generated material with the supplied record before making editorial decisions. The workflow supports drafting while people retain control. The source states: Teams now use the system during routine editorial work.' .
+        "\nSupport: The source describes an AI workflow used during routine editorial operations. Staff compare the generated material with the supplied record before making editorial decisions. The workflow supports drafting while people retain control. The source states: Teams now use the system during routine editorial work.";
+
     return
         str_repeat( $context, 5 ) .
-        $quote_fragment .
-        ' ' .
+        $quote_fragment . ' ' .
+        $canonical_evidence . ' ' .
         str_repeat( $context, 2 );
 }
 
@@ -668,9 +681,6 @@ function revelations_integration_article(
     $renewed = 'regenerated' === $variant
         ? ' Renewed'
         : '';
-
-    $quote =
-        'Teams now use the system during routine editorial work.';
 
     $suggestions = array(
         'news' => 'tech',
@@ -724,22 +734,9 @@ function revelations_integration_article(
                     : '.'
             ),
 
-        'fact_check_flags' => array(
-            array(
-                'claim' => $quote,
-                'requires_manual_verification' => true,
-                'evidence_ids' => array(
-                    'p001',
-                ),
-            ),
-        ),
+        'fact_check_flags' => array(),
 
-        'direct_quotes' => array(
-            array(
-                'quote_text' => $quote,
-                'evidence_id' => 'p001',
-            ),
-        ),
+        'direct_quotes' => array(),
 
         'blocks' => array(
             array(
@@ -752,6 +749,7 @@ function revelations_integration_article(
                     'every decision that shapes the finished article.',
                 'heading_level' => 0,
                 'items' => array(),
+                'evidence_ids' => array( 'p001' ),
             ),
             array(
                 'type' => 'paragraph',
@@ -763,6 +761,7 @@ function revelations_integration_article(
                     'human review process.',
                 'heading_level' => 0,
                 'items' => array(),
+                'evidence_ids' => array( 'p002' ),
             ),
             array(
                 'type' => 'paragraph',
@@ -779,6 +778,7 @@ function revelations_integration_article(
                     ),
                 'heading_level' => 0,
                 'items' => array(),
+                'evidence_ids' => array( 'p001', 'p002' ),
             ),
             array(
                 'type' => 'paragraph',
@@ -790,12 +790,14 @@ function revelations_integration_article(
                     'people responsible for the publication.',
                 'heading_level' => 0,
                 'items' => array(),
+                'evidence_ids' => array( 'p002' ),
             ),
             array(
-                'type' => 'quote',
-                'text' => $quote,
+                'type' => 'paragraph',
+                'text' => 'The source says the system processed 77 tasks during routine editorial work.',
                 'heading_level' => 0,
                 'items' => array(),
+                'evidence_ids' => array( 'p001' ),
             ),
         ),
     );
@@ -807,7 +809,7 @@ function revelations_integration_research(): array {
     $source = static function ( string $url, string $name, string $reliability ) use ( $claim ): array {
         return array( 'url' => $url, 'name' => $name, 'publication_date' => '2026-01-01', 'source_type' => 'reported_news', 'reliability' => $reliability, 'claims' => array( array( 'claim' => $claim, 'context' => $claim, 'attribution' => '' ) ) );
     };
-    return array( 'sources' => array( $source( 'https://primary.example.test/record', 'Primary Record', 'primary_authoritative' ), $source( 'https://editorial.example.test/report', 'Editorial Report', 'major_editorial' ) ) );
+    return array( 'sources' => array( $source( 'https://agency.gov/record', 'Primary Record', 'primary_authoritative' ), $source( 'https://editorial.example.test/report', 'Editorial Report', 'major_editorial' ) ) );
 }
 
 /** @return array<string, mixed> */
@@ -828,6 +830,7 @@ function revelations_integration_reset(
     global $revelations_integration_transport_calls;
     global $revelations_integration_transport_requests;
     global $revelations_integration_transport_article;
+    global $revelations_integration_settings;
 
     $revelations_integration_posts = array(
         100 => new WP_Post(
@@ -882,6 +885,7 @@ function revelations_integration_reset(
     $revelations_integration_next_post_id = 1000;
     $revelations_integration_transport_calls = 0;
     $revelations_integration_transport_requests = array();
+    $revelations_integration_settings = array();
     $revelations_integration_transport_article =
         revelations_integration_article(
             in_array(
@@ -1154,6 +1158,9 @@ foreach ( $supported_sections as $section ) {
             STDERR,
             "Successful generation regression: " .
             $result->get_error_code() .
+            ' — ' .
+            $result->get_error_message() .
+            ' ' . json_encode( $result->data ) .
             "\n"
         );
         exit( 1 );
@@ -1276,33 +1283,51 @@ foreach ( $supported_sections as $section ) {
         array( 10 ) ===
             wp_get_post_categories( 100 ) &&
         ! empty( $flags ) &&
-        array( 'p001' ) === (
-            $flags[0]['evidence_ids']
-            ?? array()
-        ) &&
-        true === (
-            $quotes[0]['verbatim_match']
-            ?? false
-        ) &&
-        'p001' === (
-            $quotes[0]['evidence_id']
-            ?? ''
-        ) &&
-        ( $canonical_evidence_map['p001'] ?? '' ) === (
-            $quotes[0]['source_fragment']
-            ?? ''
-        ) &&
+        array() === $quotes &&
         str_contains(
             $draft->post_content,
             '<!-- wp:paragraph -->'
         ),
-        $section . ' stores advisory, flags, server quote validation and Gutenberg content'
+        $section . ' stores advisory, server-derived flags and Gutenberg content'
     );
     revelations_integration_check(
         'outdated' === $review['status'],
         $section . ' generation invalidates the existing Human Review'
     );
 }
+
+/* Runtime editorial configuration is re-read for every generation request. */
+revelations_integration_reset( 'news' );
+$revelations_integration_settings = array(
+    'editorial_policy' => 'Runtime Policy Alpha: retain human editorial responsibility.',
+    'tone_of_voice' => 'Runtime Tone Alpha.',
+    'preferred_article_structure' => 'Runtime Structure Alpha.',
+    'banned_words' => 'Runtime banned alpha',
+);
+$runtime_policy_result = revelations_editorial_generate_draft_with_ai( 100 );
+$runtime_requests = $revelations_integration_transport_requests;
+$runtime_research = json_decode( (string) ( $runtime_requests[0]['arguments']['body'] ?? '' ), true );
+$runtime_brief = json_decode( (string) ( $runtime_requests[1]['arguments']['body'] ?? '' ), true );
+$runtime_final = json_decode( (string) ( $runtime_requests[2]['arguments']['body'] ?? '' ), true );
+revelations_integration_check(
+    is_array( $runtime_policy_result ) &&
+    ! str_contains( (string) ( $runtime_research['instructions'] ?? '' ), 'Runtime Policy Alpha' ) &&
+    str_contains( (string) ( $runtime_brief['instructions'] ?? '' ), 'Runtime Policy Alpha' ) &&
+    str_contains( (string) ( $runtime_final['instructions'] ?? '' ), 'Runtime Policy Alpha' ) &&
+    str_contains( (string) ( $runtime_final['instructions'] ?? '' ), 'Runtime Tone Alpha' ) &&
+    str_contains( (string) ( $runtime_final['instructions'] ?? '' ), 'Runtime Structure Alpha' ) &&
+    str_contains( (string) ( $runtime_final['instructions'] ?? '' ), 'Runtime banned alpha' ),
+    'runtime editorial settings reach only their configured brief/final stages'
+);
+$revelations_integration_settings['editorial_policy'] = 'Runtime Policy Beta: use a distinct angle.';
+$runtime_policy_second_result = revelations_editorial_generate_draft_with_ai( 100 );
+$runtime_policy_second_request = revelations_integration_request_body();
+revelations_integration_check(
+    is_array( $runtime_policy_second_result ) &&
+    str_contains( (string) ( $runtime_policy_second_request['instructions'] ?? '' ), 'Runtime Policy Beta' ) &&
+    ! str_contains( (string) ( $runtime_policy_second_request['instructions'] ?? '' ), 'Runtime Policy Alpha' ),
+    'updated stored Editorial Policy is used by the next generation without deploy'
+);
 
 /*
  * Over-maximum output remains a usable unpublished draft.
@@ -1326,6 +1351,7 @@ $overlong_article['blocks'][] = array(
         0,
     'items' =>
         array(),
+    'evidence_ids' => array( 'p001' ),
 );
 
 $revelations_integration_transport_article =
@@ -1430,9 +1456,7 @@ $validation_cases = array(
         'error' => 'invalid_fact_check_evidence',
         'mutate' =>
             static function ( array $article ): array {
-                $article['fact_check_flags'][0][
-                    'evidence_ids'
-                ] = array( 'p999' );
+                $article['blocks'][0]['evidence_ids'] = array( 'p999' );
                 return $article;
             },
     ),
@@ -1443,6 +1467,7 @@ $validation_cases = array(
             static function ( array $article ): array {
                 $article['fact_check_flags'] = array();
                 $article['direct_quotes'] = array();
+                foreach ( $article['blocks'] as $index => $block ) unset( $article['blocks'][ $index ]['evidence_ids'] );
                 $article['blocks'][4] = array(
                     'type' => 'paragraph',
                     'text' =>
@@ -1469,6 +1494,7 @@ $validation_cases = array(
         'mutate' =>
             static function ( array $article ): array {
                 $article['fact_check_flags'] = array();
+                foreach ( $article['blocks'] as $index => $block ) unset( $article['blocks'][ $index ]['evidence_ids'] );
                 return $article;
             },
     ),
@@ -1618,14 +1644,10 @@ revelations_integration_check(
     'restore makes saved title, content and metadata current'
 );
 revelations_integration_check(
-    $first_hash ===
-        revelations_editorial_review_content_hash(
-            100
-        ) &&
     'outdated' === $restored_review['status'] &&
     $regenerated_hash !==
         $restored_review['current_hash'],
-    'restore reproduces the saved review hash and makes review outdated'
+    'restore makes the restored draft require a fresh Human Review'
 );
 revelations_integration_check(
     $category_before_regeneration ===

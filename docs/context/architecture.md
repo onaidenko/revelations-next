@@ -14,6 +14,26 @@ approval requirement are canonical in
   delete operation; `snapshot-live.sh` remains the separate reverse snapshot
   operation.
 
+## AI generation evidence and configuration ownership
+
+- Editorial behaviour is runtime-configurable: the saved Editorial Policy is
+  loaded for each run and is injected only into the editorial brief and final
+  writing stages. Tone, preferred structure, banned phrases and word limits
+  retain their existing runtime settings contracts. Research, source authority,
+  provenance, dominance and section profiles do not consume or duplicate the
+  policy.
+- Factual and provenance safeguards are server-owned. A model reliability label
+  is descriptive only; server classification determines primary, first-party
+  and secondary roles used for lead, central-pillar and dominance checks.
+- A central factual pillar requires server-verified primary support or support
+  from at least two independent hosts. The final evidence pack reconstructs
+  support from selected pNNN IDs and repeats provenance, independence,
+  dominance and linked qualifier checks before final writing.
+- Strict fact-check and direct-quote comparisons use the same flat canonical
+  validation evidence map. The compact source registry remains prompt-only.
+  Public Sources are derived from actually used evidence, including validated
+  direct-quote evidence, never from the discovery pack.
+
 ## Scanner subsystem
 
 - `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, глобальная дедупликация, strict AI or future-tech gate и section scorer. News/Places/Tech future-tech branch требует family signal, action и независимый implementation/corroboration signal. People/Unspoken используют тот же common family layer без deployment requirement и затем применяют собственные gates: central significant person или evidenced Unspoken angle.

@@ -13,6 +13,17 @@
 
 Дата изменения: 2026-08-13.
 
+## Generation architecture remediation (pending commit/deploy)
+
+- The local generation remediation separates runtime editorial settings from
+  server-owned factual safeguards. No production change has been made.
+- The synthetic generation fixture exercises research, brief, final validation
+  and simulated draft write without a network/API call; it also verifies that
+  a changed saved Editorial Policy is read by the next brief/final request and
+  never reaches factual research.
+
+Дата изменения: 2026-08-13.
+
 ## Semantic editorial-brief evidence selection
 
 - Factual pillars now have stable `pillar_id` values. Any attribution or

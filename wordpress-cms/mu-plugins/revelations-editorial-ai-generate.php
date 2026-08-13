@@ -150,12 +150,18 @@ function revelations_editorial_ai_generation_validation_error( string $code, str
     return new WP_Error( $code, $message, array( 'generation_diagnostics' => $diagnostics ) );
 }
 
+/** @return WP_Error */
+function revelations_editorial_ai_generation_runtime_failure( string $code, string $message, array $diagnostics ): WP_Error {
+    return revelations_editorial_ai_generation_validation_error( $code, $message, $diagnostics );
+}
+
 /**
  * Structured editorial response schema.
  *
  * @return array<string, mixed>
  */
 function revelations_editorial_ai_article_schema(): array {
+    $evidence_id = array( 'type' => 'string', 'pattern' => '^p[0-9]{3,}$' );
     return array(
         'type' => 'object',
 
@@ -265,7 +271,7 @@ function revelations_editorial_ai_article_schema(): array {
                         'evidence_ids' => array(
                             'type' => 'array',
                             'items' => array(
-                                'type' => 'string',
+                                'type' => 'string', 'pattern' => '^p[0-9]{3,}$',
                             ),
                             'minItems' => 1,
                             'description' =>
@@ -297,9 +303,7 @@ function revelations_editorial_ai_article_schema(): array {
                             'type' => 'string',
                         ),
 
-                        'evidence_id' => array(
-                            'type' => 'string',
-                        ),
+                        'evidence_id' => $evidence_id,
                     ),
 
                     'required' => array(
@@ -368,11 +372,10 @@ function revelations_editorial_ai_article_schema(): array {
                         'evidence_ids' => array(
                             'type' => 'array',
 
-                            'items' => array(
-                                'type' => 'string',
-                            ),
+                            'items' => $evidence_id,
 
                             'minItems' => 1,
+                            'uniqueItems' => true,
 
                             'description' =>
                                 'One or more supplied source paragraph IDs supporting this complete block.',
@@ -1074,10 +1077,19 @@ function revelations_editorial_generate_draft_with_ai(
         ( microtime( true ) - $started ) * 1000
     );
 
+    $decoded = is_wp_error( $http_response ) ? array() : json_decode( wp_remote_retrieve_body( $http_response ), true );
+    $usage = is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array();
+    $final_status = is_wp_error( $http_response ) ? 'transport_failed' : ( is_array( $decoded ) ? sanitize_key( (string) ( $decoded['status'] ?? 'response_error' ) ) : 'invalid_response' );
+    $runtime_diagnostics = revelations_editorial_ai_generation_runtime_diagnostics(
+        $research, $brief_result, $final_evidence, $editorial_brief,
+        $usage, $duration_ms, $final_status, $editorial_policy
+    );
+
     if ( is_wp_error( $http_response ) ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_runtime_failure(
             'http_error',
-            $http_response->get_error_message()
+            $http_response->get_error_message(),
+            $runtime_diagnostics
         );
     }
 
@@ -1086,17 +1098,11 @@ function revelations_editorial_generate_draft_with_ai(
             $http_response
         );
 
-    $decoded = json_decode(
-        wp_remote_retrieve_body(
-            $http_response
-        ),
-        true
-    );
-
     if ( ! is_array( $decoded ) ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_runtime_failure(
             'invalid_api_json',
-            'OpenAI returned invalid JSON.'
+            'OpenAI returned invalid JSON.',
+            $runtime_diagnostics
         );
     }
 
@@ -1108,11 +1114,12 @@ function revelations_editorial_generate_draft_with_ai(
             $decoded['error']['message']
             ?? 'OpenAI request failed.';
 
-        return new WP_Error(
+        return revelations_editorial_ai_generation_runtime_failure(
             'api_error',
             sanitize_text_field(
                 (string) $message
-            )
+            ),
+            $runtime_diagnostics
         );
     }
 
@@ -1125,26 +1132,15 @@ function revelations_editorial_generate_draft_with_ai(
             $decoded['incomplete_details']['reason']
             ?? 'unknown';
 
-        return new WP_Error(
+        return revelations_editorial_ai_generation_runtime_failure(
             'incomplete_response',
             'OpenAI response was incomplete: ' .
             sanitize_text_field(
                 (string) $incomplete_reason
-            )
+            ),
+            $runtime_diagnostics
         );
     }
-
-    $usage = is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array();
-    $runtime_diagnostics = revelations_editorial_ai_generation_runtime_diagnostics(
-        $research,
-        $brief_result,
-        $final_evidence,
-        $editorial_brief,
-        $usage,
-        $duration_ms,
-        (string) ( $decoded['status'] ?? '' ),
-        $editorial_policy
-    );
 
     $output_text =
         revelations_editorial_ai_generation_extract_text(
@@ -1207,9 +1203,18 @@ function revelations_editorial_generate_draft_with_ai(
         revelations_editorial_ai_format_source_evidence_units(
             $evidence_units
         );
+    $canonical_validation_map =
+        revelations_editorial_ai_canonical_validation_evidence_map(
+            $evidence_units
+        );
     $validation_evidence_units =
-        revelations_editorial_ai_source_evidence_units(
-            $validation_evidence
+        array_map(
+            static fn( string $id, string $text ): array => array(
+                'id' => $id,
+                'text' => $text,
+            ),
+            array_keys( $canonical_validation_map ),
+            array_values( $canonical_validation_map )
         );
 
     $evidence_resolution =
@@ -1220,6 +1225,8 @@ function revelations_editorial_generate_draft_with_ai(
         );
 
     if ( empty( $evidence_resolution['valid'] ) ) {
+        $failure_diagnostics = $runtime_diagnostics;
+        if ( is_array( $evidence_resolution['fact_check_evidence_diagnostics'] ?? null ) ) $failure_diagnostics['fact_check_evidence_diagnostics'] = $evidence_resolution['fact_check_evidence_diagnostics'];
         return revelations_editorial_ai_generation_validation_error(
             sanitize_key(
                 (string) (
@@ -1233,7 +1240,7 @@ function revelations_editorial_generate_draft_with_ai(
                     ?? 'Generated evidence references are invalid.'
                 )
             ),
-            $runtime_diagnostics
+            $failure_diagnostics
         );
     }
 
@@ -1244,9 +1251,10 @@ function revelations_editorial_generate_draft_with_ai(
         : array();
 
     if ( ! function_exists( 'revelations_editorial_ai_normalize_generated_editorial_text' ) ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_runtime_failure(
             'generation_validation_unavailable',
-            'Editorial generation validation is unavailable.'
+            'Editorial generation validation is unavailable.',
+            $runtime_diagnostics
         );
     }
 
@@ -1273,9 +1281,10 @@ function revelations_editorial_generate_draft_with_ai(
     }
 
     if ( 2 !== count( $alternative_titles ) ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_runtime_failure(
             'invalid_alternative_titles',
-            'OpenAI must return exactly two alternative titles.'
+            'OpenAI must return exactly two alternative titles.',
+            $runtime_diagnostics
         );
     }
 
@@ -1421,9 +1430,10 @@ function revelations_editorial_generate_draft_with_ai(
         '' === $seo_description ||
         $blocks === array()
     ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_runtime_failure(
             'empty_article_fields',
-            'One or more generated article fields are empty.'
+            'One or more generated article fields are empty.',
+            $runtime_diagnostics
         );
     }
 
@@ -1432,9 +1442,10 @@ function revelations_editorial_generate_draft_with_ai(
             'revelations_editorial_ai_validate_generated_article'
         )
     ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_runtime_failure(
             'generation_validation_unavailable',
-            'Editorial generation validation is unavailable.'
+            'Editorial generation validation is unavailable.',
+            $runtime_diagnostics
         );
     }
 
@@ -1524,11 +1535,12 @@ function revelations_editorial_generate_draft_with_ai(
         $blocks,
         $fact_check_flags,
         is_array( $research['provenance'] ?? null ) ? $research['provenance'] : array(),
-        is_array( $research['sources'] ?? null ) ? $research['sources'] : array()
+        is_array( $research['sources'] ?? null ) ? $research['sources'] : array(),
+        $direct_quotes
     );
 
     if ( 0 === absint( $source_usage['used_evidence_source_count'] ?? 0 ) ) {
-        return new WP_Error( 'invalid_evidence_source_usage', 'Generated article contains no resolvable used evidence sources.' );
+        return revelations_editorial_ai_generation_runtime_failure( 'invalid_evidence_source_usage', 'Generated article contains no resolvable used evidence sources.', $runtime_diagnostics );
     }
 
     $word_count =
@@ -1540,13 +1552,14 @@ function revelations_editorial_generate_draft_with_ai(
     $word_count_warning = '';
 
     if ( $word_count < $minimum_words ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_runtime_failure(
             'invalid_word_count',
             sprintf(
                 'Generated article contains %d words; minimum is %d.',
                 $word_count,
                 $minimum_words
-            )
+            ),
+            $runtime_diagnostics
         );
     }
 
@@ -1574,9 +1587,10 @@ function revelations_editorial_generate_draft_with_ai(
             parse_blocks( $content )
         ) < 2
     ) {
-        return new WP_Error(
+        return revelations_editorial_ai_generation_runtime_failure(
             'invalid_blocks',
-            'Generated Gutenberg content is invalid.'
+            'Generated Gutenberg content is invalid.',
+            $runtime_diagnostics
         );
     }
 
