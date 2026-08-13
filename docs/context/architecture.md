@@ -8,6 +8,12 @@ approval requirement are canonical in
 
 Редакционная CMS реализована набором WordPress MU plugins в `wordpress-cms/mu-plugins/`. Файлы хранятся в Git как снимок исходников; live-каталог WordPress не является Git-репозиторием.
 
+- `wordpress-cms/bin/deploy-to-server.sh` is the canonical executable CMS
+  deployment procedure. Its targeted mode accepts direct allowlisted files
+  from `mu-plugins`, stages and lints them before mutation, and never uses a
+  delete operation; `snapshot-live.sh` remains the separate reverse snapshot
+  operation.
+
 ## Scanner subsystem
 
 - `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, глобальная дедупликация, strict AI or future-tech gate и section scorer. News/Places/Tech future-tech branch требует family signal, action и независимый implementation/corroboration signal. People/Unspoken используют тот же common family layer без deployment requirement и затем применяют собственные gates: central significant person или evidenced Unspoken angle.

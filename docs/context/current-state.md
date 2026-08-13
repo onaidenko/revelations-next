@@ -1,5 +1,18 @@
 # Текущее состояние
 
+## Canonical CMS deployment procedure
+
+- `wordpress-cms/bin/deploy-to-server.sh` is the executable production CMS
+  procedure. It uses only the `revelations-prod` SSH alias. Explicit full mode
+  retains the existing whole-MU-plugin sync safeguards; explicit `--files`
+  mode deploys only direct allowlisted PHP/JS MU-plugin files.
+- Targeted mode stages copies remotely before live mutation, verifies staged
+  SHA-256 and PHP syntax, writes a per-file timestamped backup and manifest,
+  then verifies the installed checksum, PHP syntax, owner/group/mode and the
+  existing bounded CMS sanity checks. It never runs rsync or a delete path.
+
+Дата изменения: 2026-08-13.
+
 ## Early generation-failure observability
 
 - A successful research stage now immediately has a bounded private diagnostic

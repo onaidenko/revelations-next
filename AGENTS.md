@@ -28,6 +28,12 @@ editorial content.
   согласованного технического этапа, который соответствует всем
   условиям автономного цикла ниже.
 - Для разрешённых удалённых технических проверок использовать только SSH-алиас `revelations-prod`, никогда не сырой IP.
+- CMS production deploy выполнять только через canonical procedure
+  `wordpress-cms/bin/deploy-to-server.sh` и только после явного разрешения
+  пользователя. Для targeted CMS changes использовать его `--files` mode;
+  полный sync разрешён только при явном разрешении full CMS deployment.
+  Не заменять эту procedure ручным `scp`/`rsync`, кроме отдельно разрешённых
+  forensic или recovery действий.
 - Не запрашивать и не сохранять SSH-пароли.
 - Передавать проверяемые файлы только в новую уникальную директорию внутри удалённого `/tmp`; не изменять рабочий WordPress, базу или серверную конфигурацию.
 - Не считать проверку выполненной, если command pipeline оборвался до её запуска.
@@ -81,5 +87,7 @@ editorial content.
 - Не выполнять OpenAI generation/test connection, scanner runs, публикацию
   или WordPress/DB writes во время технического deploy/audit, если это не
   разрешено отдельно.
+- Generation, research, RSS scans и другие пользовательские runtime actions
+  не являются частью CMS deploy procedure.
 - Staging — самостоятельный контур: не менять его build, service, Nginx,
   TLS или `noindex` при production deploy без отдельного разрешения.

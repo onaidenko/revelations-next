@@ -4,6 +4,14 @@ The permanent conflict and staging-first rules live in
 [`../PROJECT_CONSTITUTION.md`](../PROJECT_CONSTITUTION.md). This decision log
 cannot override that Constitution without explicit product-owner approval.
 
+## CMS deployment procedure
+
+- **Решение:** `wordpress-cms/bin/deploy-to-server.sh` is the canonical
+  executable CMS production procedure. Full synchronization is an explicitly
+  selected mode; targeted MU-plugin releases use an explicit `--files`
+  allowlist, remote staged syntax/checksum verification and a per-file backup
+  manifest. Manual file copy is not a routine release mechanism.
+
 ## Evidence-first AI drafting
 
 - **Решение:** RSS lead and its private source snapshot are discovery input,
