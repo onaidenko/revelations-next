@@ -14,28 +14,6 @@ cannot override that Constitution without explicit product-owner approval.
 
 ## Evidence-first AI drafting
 
-## Editorial generation safety and configuration ownership
-
-- **Решение:** factual evidence and provenance checks remain server-owned;
-  runtime Editorial Policy, tone, structure, banned phrases and word limits
-  remain editorial configuration. A UI policy cannot promote a source,
-  weaken evidence integrity or replace a section profile.
-- **Решение:** source authority is derived from verifiable server-side source
-  properties. Model labels are retained as descriptive metadata but never
-  satisfy primary, independence or dominance requirements.
-- **Решение:** final evidence selection is minimum sufficient only when it
-  still preserves central-pillar independence, sensitive support and every
-  material attribution or qualifier within the owning factual pillar. The
-  final pack is the union of pillar evidence only.
-- **Decision:** Responses transport observability is server-owned and has no
-  retry behaviour. Each stage persists only bounded technical metadata needed
-  to classify a failure; prompts, raw response bodies and model prose remain
-  private and unrecorded.
-- **Decision:** OpenAI Structured Outputs compatibility is an outbound-schema
-  concern, not an editorial invariant. The offline allowlist rejects unsupported
-  strict-schema keywords before a request; all uniqueness guarantees remain
-  enforced by PHP validation.
-
 - **Решение:** RSS lead and its private source snapshot are discovery input,
   not the factual boundary for a generated article. Factual web research gets
   topic, section, lead and evidence requirements only. The saved Editorial
@@ -51,7 +29,7 @@ cannot override that Constitution without explicit product-owner approval.
   detail dominance is logged as a note. A secondary source dominating more
   than 70% of pillars is a warning; it blocks when it is the sole substantive
   support for a central pillar or a majority of pillars. Lead support is excluded from evidence
-  and the server derives canonical pillar order from the Brief array.
+  and a brief must supply its own complete pillar order.
 
 ## Global research source usage
 
@@ -63,16 +41,10 @@ cannot override that Constitution without explicit product-owner approval.
   and ordered by source role. Sensitive claim provenance is retained; unused
   research sources stay private. This selection never rewrites article facts.
 - **Решение:** the brief is the boundary between broad corroboration and final
-  writing. It selects ordered factual pillars and their evidence before prose
-  is requested; final writing cannot use other research units. Model-owned
-  fields are semantic only; pillar IDs and order are server-derived. The compact
-  set repeats independence, restricted-lead primary and dominance checks.
-- **Safeguard:** every material attribution, qualifier, scope, condition,
-  uncertainty and category boundary needed for a pillar belongs in that
-  pillar's evidence IDs. There are no model-owned additional-evidence buckets;
-  server validation and final factual validators remain mandatory. The brief
-  selects the minimum sufficient evidence set; no numerical cap substitutes for
-  factual qualifiers or source-diversity requirements.
+  writing. It selects pillar, sensitive, attribution and essential-context
+  evidence before prose is requested; final writing cannot use other research
+  units. The compact set repeats independence, restricted-lead primary and
+  dominance checks before it is sent.
 - **Safeguard:** shared source metadata is serialized once in a private
   `sNNN` registry. A global factuality instruction preserves material scope,
   qualifiers, conditions, category boundaries and uncertainty in formal legal,
@@ -421,15 +393,6 @@ cannot override that Constitution without explicit product-owner approval.
 - **Причина:** systemd может отметить unit активным раньше, чем дочерний
   standalone Next.js process войдёт в cgroup и откроет порт. Одноразовый
   socket lookup дважды вызывал безопасный rollback исправного candidate.
-
-## Bounded Editorial Brief replanning
-
-- **Решение:** a semantic brief support failure may use exactly one replan from
-  the completed research pack, and only when server-owned provenance shows an
-  eligible primary or independently hosted secondary alternative. It is not a
-  retry of Research and cannot relax central-pillar independence or dominance.
-- **Диагностика:** the run stores IDs, source roles/hosts, attempt usage and
-  bounded Responses status only; it never stores the rejected model prose.
 
 ## CMS failure semantics for ISR
 

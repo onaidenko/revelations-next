@@ -115,34 +115,6 @@ function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
     );
 }
 
-/** @return array<int, array<string, mixed>> */
-function revelations_editorial_sanitize_responses_diagnostics( array $records ): array {
-    $safe = array();
-    foreach ( array_slice( $records, -3 ) as $record ) {
-        if ( ! is_array( $record ) ) continue;
-        $safe[] = array(
-            'stage' => sanitize_key( (string) ( $record['stage'] ?? '' ) ),
-            'transport_error' => ! empty( $record['transport_error'] ),
-            'transport_error_code' => sanitize_key( (string) ( $record['transport_error_code'] ?? '' ) ),
-            'http_status' => absint( $record['http_status'] ?? 0 ),
-            'responses_status' => sanitize_key( (string) ( $record['responses_status'] ?? '' ) ),
-            'request_id' => sanitize_text_field( (string) ( $record['request_id'] ?? '' ) ),
-            'incomplete_reason' => sanitize_key( (string) ( $record['incomplete_reason'] ?? '' ) ),
-            'api_error_type' => sanitize_key( (string) ( $record['api_error_type'] ?? '' ) ),
-            'api_error_code' => sanitize_key( (string) ( $record['api_error_code'] ?? '' ) ),
-            'body_chars' => absint( $record['body_chars'] ?? 0 ),
-            'body_sha256' => preg_match( '/^[a-f0-9]{64}$/', (string) ( $record['body_sha256'] ?? '' ) ) ? (string) $record['body_sha256'] : '',
-            'output_chars' => absint( $record['output_chars'] ?? 0 ),
-            'output_sha256' => preg_match( '/^[a-f0-9]{64}$/', (string) ( $record['output_sha256'] ?? '' ) ) ? (string) $record['output_sha256'] : '',
-            'duration_ms' => absint( $record['duration_ms'] ?? 0 ),
-            'input_tokens' => absint( $record['input_tokens'] ?? 0 ),
-            'output_tokens' => absint( $record['output_tokens'] ?? 0 ),
-            'total_tokens' => absint( $record['total_tokens'] ?? 0 ),
-        );
-    }
-    return $safe;
-}
-
 /**
  * Create a private editorial run log.
  *
@@ -206,19 +178,12 @@ function revelations_editorial_create_run_log(
         'evidence_source_mapping' => array(),
         'source_role_counts' => array(),
         'pillar_support_summary' => array(),
-        'pillar_prevalidation_summary' => array(),
         'dominant_source_id' => '',
         'dominant_source_host' => '',
         'sole_support_central_pillar' => false,
         'sole_support_majority_pillars' => false,
         'dominance_reason' => '',
-        'brief_attempt_count' => 1,
-        'brief_initial_failure_reason' => '',
-        'brief_invalid_pillar_ids' => array(),
-        'brief_replan_attempted' => false,
-        'brief_replan_validation_result' => '',
         'fact_check_evidence_diagnostics' => array(),
-        'responses_diagnostics' => array(),
         'source_results'     => array(),
         'rejection_counts'   => array(),
         'closest_rejected'   => array(),
@@ -440,19 +405,12 @@ function revelations_editorial_create_run_log(
         '_rev_research_evidence_source_mapping' => wp_json_encode( is_array( $data['evidence_source_mapping'] ) ? $data['evidence_source_mapping'] : array(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_research_source_role_counts' => wp_json_encode( is_array( $data['source_role_counts'] ) ? $data['source_role_counts'] : array(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_pillar_support_summary' => wp_json_encode( is_array( $data['pillar_support_summary'] ) ? $data['pillar_support_summary'] : array(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
-        '_rev_pillar_prevalidation_summary' => wp_json_encode( is_array( $data['pillar_prevalidation_summary'] ) ? $data['pillar_prevalidation_summary'] : array(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_dominant_source_id' => sanitize_key( (string) $data['dominant_source_id'] ),
         '_rev_dominant_source_host' => sanitize_text_field( (string) $data['dominant_source_host'] ),
         '_rev_sole_support_central_pillar' => ! empty( $data['sole_support_central_pillar'] ) ? 1 : 0,
         '_rev_sole_support_majority_pillars' => ! empty( $data['sole_support_majority_pillars'] ) ? 1 : 0,
         '_rev_dominance_reason' => sanitize_key( (string) $data['dominance_reason'] ),
-        '_rev_brief_attempt_count' => absint( $data['brief_attempt_count'] ),
-        '_rev_brief_initial_failure_reason' => sanitize_key( (string) $data['brief_initial_failure_reason'] ),
-        '_rev_brief_invalid_pillar_ids' => wp_json_encode( is_array( $data['brief_invalid_pillar_ids'] ) ? $data['brief_invalid_pillar_ids'] : array(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
-        '_rev_brief_replan_attempted' => ! empty( $data['brief_replan_attempted'] ) ? 1 : 0,
-        '_rev_brief_replan_validation_result' => sanitize_key( (string) $data['brief_replan_validation_result'] ),
         '_rev_fact_check_evidence_diagnostics' => wp_json_encode( is_array( $data['fact_check_evidence_diagnostics'] ) ? $data['fact_check_evidence_diagnostics'] : array(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
-        '_rev_ai_responses_diagnostics' => wp_json_encode( revelations_editorial_sanitize_responses_diagnostics( is_array( $data['responses_diagnostics'] ) ? $data['responses_diagnostics'] : array() ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
 
         '_rev_source_results' => wp_json_encode( $scan_diagnostics['source_results'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
@@ -706,19 +664,12 @@ function revelations_editorial_log_ai_generation(
             'evidence_source_mapping' => is_array( $result['evidence_source_mapping'] ?? null ) ? $result['evidence_source_mapping'] : array(),
             'source_role_counts' => is_array( $result['source_role_counts'] ?? null ) ? $result['source_role_counts'] : array(),
             'pillar_support_summary' => is_array( $result['pillar_support_summary'] ?? null ) ? $result['pillar_support_summary'] : array(),
-            'pillar_prevalidation_summary' => is_array( $result['pillar_prevalidation_summary'] ?? null ) ? $result['pillar_prevalidation_summary'] : array(),
             'dominant_source_id' => sanitize_key( (string) ( $result['dominant_source_id'] ?? '' ) ),
             'dominant_source_host' => sanitize_text_field( (string) ( $result['dominant_source_host'] ?? '' ) ),
             'sole_support_central_pillar' => ! empty( $result['sole_support_central_pillar'] ),
             'sole_support_majority_pillars' => ! empty( $result['sole_support_majority_pillars'] ),
             'dominance_reason' => sanitize_key( (string) ( $result['dominance_reason'] ?? '' ) ),
-            'brief_attempt_count' => absint( $result['brief_attempt_count'] ?? 1 ),
-            'brief_initial_failure_reason' => sanitize_key( (string) ( $result['brief_initial_failure_reason'] ?? '' ) ),
-            'brief_invalid_pillar_ids' => is_array( $result['brief_invalid_pillar_ids'] ?? null ) ? $result['brief_invalid_pillar_ids'] : array(),
-            'brief_replan_attempted' => ! empty( $result['brief_replan_attempted'] ),
-            'brief_replan_validation_result' => sanitize_key( (string) ( $result['brief_replan_validation_result'] ?? '' ) ),
             'fact_check_evidence_diagnostics' => is_array( $result['fact_check_evidence_diagnostics'] ?? null ) ? $result['fact_check_evidence_diagnostics'] : array(),
-            'responses_diagnostics' => is_array( $result['responses_diagnostics'] ?? null ) ? $result['responses_diagnostics'] : array(),
         )
     );
 }

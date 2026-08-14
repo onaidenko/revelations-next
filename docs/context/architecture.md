@@ -14,43 +14,6 @@ approval requirement are canonical in
   delete operation; `snapshot-live.sh` remains the separate reverse snapshot
   operation.
 
-## AI generation evidence and configuration ownership
-
-- Editorial behaviour is runtime-configurable: the saved Editorial Policy is
-  loaded for each run and is injected only into the editorial brief and final
-  writing stages. Tone, preferred structure, banned phrases and word limits
-  retain their existing runtime settings contracts. Research, source authority,
-  provenance, dominance and section profiles do not consume or duplicate the
-  policy.
-- Factual and provenance safeguards are server-owned. A model reliability label
-  is descriptive only; server classification determines primary, first-party
-  and secondary roles used for lead, central-pillar and dominance checks.
-- All outbound Research, Editorial Brief and Final Generation Structured
-  Outputs schemas are constrained by an offline allowlist for OpenAI's strict
-  supported subset. Unsupported API-only constraints stay out of the request;
-  uniqueness remains an explicit server-side validation invariant.
-- A central factual pillar requires server-verified primary support or support
-  from at least two independent hosts. The final evidence pack reconstructs
-  support from selected pNNN IDs and repeats provenance, independence,
-  dominance and linked qualifier checks before final writing.
-- Strict fact-check and direct-quote comparisons use the same flat canonical
-  validation evidence map. The compact source registry remains prompt-only.
-  Public Sources are derived from actually used evidence, including validated
-  direct-quote evidence, never from the discovery pack.
-- Every Responses boundary records a bounded private technical result on
-  failure: stage, transport/HTTP/Responses status, safe request ID and API
-  fields, body/output lengths and SHA-256, duration and returned token usage.
-  Raw prompts and model/API bodies are never stored. Research, brief and final
-  use distinct internal failure codes; later-stage failure retains completed
-  earlier-stage diagnostics.
-- A completed research pack may receive exactly one server-controlled Editorial
-  Brief replan only after a semantic central-pillar independence or secondary
-  dominance failure and only when the existing pack has eligible primary or
-  independently hosted secondary support. The replan reuses the same runtime
-  policy, section profile and evidence pack, receives ID-only validator
-  feedback, never repeats research or reaches final writing before validation,
-  and preserves both brief attempts in bounded private diagnostics.
-
 ## Scanner subsystem
 
 - `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, глобальная дедупликация, strict AI or future-tech gate и section scorer. News/Places/Tech future-tech branch требует family signal, action и независимый implementation/corroboration signal. People/Unspoken используют тот же common family layer без deployment requirement и затем применяют собственные gates: central significant person или evidenced Unspoken angle.
@@ -109,14 +72,10 @@ approval requirement are canonical in
   secondary-source rewrite risk. Private draft/run metadata stores compact provenance and counts;
   public content receives a multi-source footer only.
 - Research and the editorial brief may inspect the broad evidence pack. The
-  final writer receives a pre-writing `final_evidence_pack`: the union of
-  evidence IDs on the ordered factual pillars only. The model chooses each
-  pillar's semantics, importance and minimum sufficient evidence; it must keep
-  every material attribution, qualifier, scope, condition, uncertainty and
-  category boundary on that pillar. The server derives `pillar_1...N` from
-  array order and owns duplicate rejection, provenance, source authority and
-  independence validation. A shared source registry holds source metadata once
-  and units reference its `sNNN` ID. Before final writing the compact pack
+  final writer receives a pre-writing `final_evidence_pack`: only evidence IDs
+  selected by factual pillars, sensitive-claim, attribution or essential
+  context fields in the brief. A shared source registry holds source metadata
+  once and units reference its `sNNN` ID. Before final writing the compact pack
   rechecks independent hosts, restricted-lead primary support and dominance;
   public source resolution still uses the original private provenance.
 - A single global final-writing factuality safeguard preserves material scope,

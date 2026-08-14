@@ -619,21 +619,6 @@ function revelations_editorial_ai_format_source_evidence_units(
 }
 
 /**
- * Canonical map for every strict server-owned evidence comparison.
- * Prompt registry serialization must never be used as validator input.
- *
- * @param array<int, array{id: string, text: string}> $units
- * @return array<string, string>
- */
-function revelations_editorial_ai_canonical_validation_evidence_map( array $units ): array {
-    return revelations_editorial_ai_source_evidence_map(
-        revelations_editorial_ai_source_evidence_units(
-            revelations_editorial_ai_format_source_evidence_units( $units )
-        )
-    );
-}
-
-/**
  * Resolve model evidence references into server-owned review metadata.
  *
  * The model supplies IDs only. Fact-check source evidence is reconstructed
@@ -656,9 +641,11 @@ function revelations_editorial_ai_resolve_evidence_references(
         );
 
     $validation_evidence_map =
-        array() !== $validation_units
-            ? revelations_editorial_ai_source_evidence_map( $validation_units )
-            : revelations_editorial_ai_canonical_validation_evidence_map( $units );
+        revelations_editorial_ai_source_evidence_map(
+            array() !== $validation_units
+                ? $validation_units
+                : $units
+        );
 
     if (
         array() === $evidence_map ||
@@ -1254,9 +1241,7 @@ function revelations_editorial_ai_resolve_evidence_references(
             'quote_text' => $quote_text,
             'evidence_id' => $evidence_id,
             'source_fragment' =>
-                $validation_evidence_map[
-                    $evidence_id
-                ],
+                $evidence_map[ $evidence_id ],
         );
     }
 

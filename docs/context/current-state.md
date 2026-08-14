@@ -11,65 +11,7 @@
   then verifies the installed checksum, PHP syntax, owner/group/mode and the
   existing bounded CMS sanity checks. It never runs rsync or a delete path.
 
-Дата изменения: 2026-08-14.
-
-## Structured Outputs schema compatibility (pending commit/deploy)
-
-- Strict Responses schemas no longer send unsupported `uniqueItems`: the three
-  Editorial Brief lists and Final block evidence IDs are checked for uniqueness
-  by PHP instead. A network-free allowlist validates the actual Research,
-  Brief and Final schema builders before the generation regression suite.
-
-Дата изменения: 2026-08-14.
-
-## Bounded Editorial Brief replan (pending commit/deploy)
-
-- A semantic Brief support failure can make one replan from the completed
-  research pack when server-owned provenance proves an eligible alternative is
-  already available. It never retries transport, schema or research failures,
-  never repeats web research and never starts final writing before a valid
-  second Brief.
-- Run diagnostics retain attempt count, initial reason, invalid pillar IDs,
-  bounded Responses records and aggregate Brief usage without prompts or prior
-  model prose.
-
-Дата изменения: 2026-08-14.
-
-## Generation architecture remediation (pending commit/deploy)
-
-- The local generation remediation separates runtime editorial settings from
-  server-owned factual safeguards. No production change has been made.
-- The synthetic generation fixture exercises research, brief, final validation
-  and simulated draft write without a network/API call; it also verifies that
-  a changed saved Editorial Policy is read by the next brief/final request and
-  never reaches factual research.
-- Responses failures now persist bounded stage-specific transport, HTTP,
-  completion, API and hash/size diagnostics while never storing prompts or raw
-  model/API bodies. This local change is pending commit and deploy.
-
 Дата изменения: 2026-08-13.
-
-## Minimal editorial-brief contract
-
-- The model returns only semantic editorial choices: `angle`, editorial
-  guidance and an ordered 3–5-item factual-pillar array containing `pillar`,
-  `importance` and `evidence_ids`. It does not return `what_happened`, pillar
-  IDs/order, sensitive IDs or attribution/essential side buckets.
-- Array order is canonical. The server assigns `pillar_1...N`, rejects duplicate
-  evidence IDs, resolves provenance and validates source authority,
-  independence and dominance. The final evidence pack is exactly the union of
-  factual-pillar evidence IDs; each pillar must retain its material attribution,
-  qualifier, scope, condition, uncertainty and category boundary.
-- Sensitive-claim and final factual validators remain server-owned defensive
-  safeguards. A sensitive claim still fails without sufficient final evidence;
-  it no longer receives a model-owned selection side channel.
-- Corrected forensic chronology: run 401 was `brief_failed` before Brief
-  diagnostics were retained and is not evidence-support evidence; run 398 and
-  run 412 were actual editorial-brief dominance failures; run 411 was the
-  outbound JSON-schema HTTP 400; run 413 was a structural Brief failure after
-  replan.
-
-Дата изменения: 2026-08-14.
 
 ## Early generation-failure observability
 
@@ -105,8 +47,9 @@
 ## Compact evidence boundary for AI generation
 
 - Research remains broad and retains the existing independent-source and
-  primary-authoritative safeguards. The editorial brief returns only its 3–5
-  factual pillars, and final writing receives their selected evidence union.
+  primary-authoritative safeguards. The editorial brief now returns its
+  3-5 factual pillars plus explicit sensitive, attribution and essential
+  context evidence IDs. Final writing receives only that selected set.
 - A request-local source registry carries each source's URL, publisher,
   type, reliability, host and date once. Claim units reference `sNNN`; their
   support text is not uniformly truncated, so formal qualifiers remain intact.

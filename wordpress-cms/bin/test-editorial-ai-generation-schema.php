@@ -22,10 +22,6 @@ $generation_file =
     $plugin_dir .
     '/revelations-editorial-ai-generate.php';
 
-$research_file =
-    $plugin_dir .
-    '/revelations-editorial-ai-research.php';
-
 $validation_file =
     $plugin_dir .
     '/revelations-editorial-ai-generation-validation.php';
@@ -39,7 +35,6 @@ $logs_file =
     '/revelations-editorial-logs.php';
 
 require_once $generation_file;
-require_once $research_file;
 require_once $validation_file;
 
 $generation_source =
@@ -118,200 +113,8 @@ function revelations_schema_function_source(
     );
 }
 
-/**
- * Offline allowlist for the OpenAI Structured Outputs subset used here.
- *
- * It intentionally rejects JSON-Schema keywords that strict Responses
- * schemas do not support, before a production request can reach the API.
- *
- * @param array<string, mixed> $schema
- * @return array<int, string>
- */
-function revelations_schema_structured_outputs_errors(
-    array $schema,
-    string $path = '$',
-    bool $root = true
-): array {
-    $errors = array();
-    $approved = array(
-        'type',
-        'enum',
-        'description',
-        'properties',
-        'required',
-        'additionalProperties',
-        'items',
-        'minItems',
-        'maxItems',
-        'pattern',
-        'anyOf',
-    );
-    $unsupported = array(
-        'uniqueItems',
-        'contains',
-        'minContains',
-        'maxContains',
-        'allOf',
-        'not',
-        'if',
-        'then',
-        'else',
-        'dependentRequired',
-        'dependentSchemas',
-    );
-
-    foreach ( array_keys( $schema ) as $keyword ) {
-        if ( in_array( $keyword, $unsupported, true ) ) {
-            $errors[] = $path . ': unsupported ' . $keyword;
-        } elseif ( ! in_array( $keyword, $approved, true ) ) {
-            $errors[] = $path . ': unapproved ' . $keyword;
-        }
-    }
-
-    if ( $root && ( 'object' !== ( $schema['type'] ?? null ) || isset( $schema['anyOf'] ) ) ) {
-        $errors[] = $path . ': root must be an object without anyOf';
-    }
-
-    $type = $schema['type'] ?? null;
-    $types = is_array( $type ) ? $type : array( $type );
-    $allowed_types = array( 'string', 'number', 'boolean', 'integer', 'object', 'array', 'null' );
-    foreach ( $types as $item_type ) {
-        if ( ! is_string( $item_type ) || ! in_array( $item_type, $allowed_types, true ) ) {
-            $errors[] = $path . ': unsupported type';
-        }
-    }
-
-    if ( in_array( 'object', $types, true ) ) {
-        $properties = $schema['properties'] ?? null;
-        $required = $schema['required'] ?? null;
-        if ( ! is_array( $properties ) || ! is_array( $required ) ) {
-            $errors[] = $path . ': object properties and required are mandatory';
-        } else {
-            $property_names = array_keys( $properties );
-            if ( array_diff( $property_names, $required ) || array_diff( $required, $property_names ) ) {
-                $errors[] = $path . ': every object property must be required';
-            }
-            foreach ( $properties as $name => $property_schema ) {
-                if ( ! is_array( $property_schema ) ) {
-                    $errors[] = $path . '.properties.' . $name . ': schema must be an object';
-                    continue;
-                }
-                $errors = array_merge(
-                    $errors,
-                    revelations_schema_structured_outputs_errors(
-                        $property_schema,
-                        $path . '.properties.' . $name,
-                        false
-                    )
-                );
-            }
-        }
-        if ( false !== ( $schema['additionalProperties'] ?? null ) ) {
-            $errors[] = $path . ': object must set additionalProperties false';
-        }
-    }
-
-    if ( in_array( 'array', $types, true ) && isset( $schema['items'] ) ) {
-        if ( ! is_array( $schema['items'] ) ) {
-            $errors[] = $path . '.items: schema must be an object';
-        } else {
-            $errors = array_merge(
-                $errors,
-                revelations_schema_structured_outputs_errors(
-                    $schema['items'],
-                    $path . '.items',
-                    false
-                )
-            );
-        }
-    }
-
-    if ( isset( $schema['anyOf'] ) ) {
-        if ( ! is_array( $schema['anyOf'] ) ) {
-            $errors[] = $path . '.anyOf: must be an array';
-        } else {
-            foreach ( $schema['anyOf'] as $index => $branch ) {
-                if ( ! is_array( $branch ) ) {
-                    $errors[] = $path . '.anyOf.' . $index . ': schema must be an object';
-                    continue;
-                }
-                $errors = array_merge(
-                    $errors,
-                    revelations_schema_structured_outputs_errors(
-                        $branch,
-                        $path . '.anyOf.' . $index,
-                        false
-                    )
-                );
-            }
-        }
-    }
-
-    return $errors;
-}
-
 $schema =
     revelations_editorial_ai_article_schema();
-
-$structured_output_schemas = array(
-    'Research' => revelations_editorial_ai_research_schema(),
-    'Editorial Brief' => revelations_editorial_ai_editorial_brief_schema(),
-    'Final Generation' => $schema,
-);
-
-foreach ( $structured_output_schemas as $stage => $structured_output_schema ) {
-    revelations_schema_test(
-        array() === revelations_schema_structured_outputs_errors(
-            $structured_output_schema
-        ),
-        $stage . ' schema uses only the approved Structured Outputs subset'
-    );
-}
-
-$schema_with_unique_items = array(
-    'type' => 'object',
-    'properties' => array(
-        'ids' => array(
-            'type' => 'array',
-            'items' => array( 'type' => 'string' ),
-            'uniqueItems' => true,
-        ),
-    ),
-    'required' => array( 'ids' ),
-    'additionalProperties' => false,
-);
-$schema_with_nested_unsupported = array(
-    'type' => 'object',
-    'properties' => array(
-        'ids' => array(
-            'type' => 'array',
-            'items' => array( 'type' => 'string', 'contains' => array( 'type' => 'string' ) ),
-        ),
-    ),
-    'required' => array( 'ids' ),
-    'additionalProperties' => false,
-);
-$root_anyof_schema = array(
-    'anyOf' => array(
-        array( 'type' => 'object', 'properties' => array(), 'required' => array(), 'additionalProperties' => false ),
-    ),
-);
-$missing_required_schema = array(
-    'type' => 'object',
-    'properties' => array( 'one' => array( 'type' => 'string' ), 'two' => array( 'type' => 'string' ) ),
-    'required' => array( 'one' ),
-    'additionalProperties' => false,
-);
-$open_object_schema = array(
-    'type' => 'object',
-    'properties' => array( 'one' => array( 'type' => 'string' ) ),
-    'required' => array( 'one' ),
-);
-revelations_schema_test( array() !== revelations_schema_structured_outputs_errors( $schema_with_unique_items ), 'offline schema gate rejects uniqueItems' );
-revelations_schema_test( array() !== revelations_schema_structured_outputs_errors( $schema_with_nested_unsupported ), 'offline schema gate rejects nested unsupported keywords' );
-revelations_schema_test( array() !== revelations_schema_structured_outputs_errors( $root_anyof_schema ), 'offline schema gate rejects root anyOf' );
-revelations_schema_test( array() !== revelations_schema_structured_outputs_errors( $missing_required_schema ), 'offline schema gate rejects object properties absent from required' );
-revelations_schema_test( array() !== revelations_schema_structured_outputs_errors( $open_object_schema ), 'offline schema gate rejects objects without additionalProperties false' );
 
 $properties =
     $schema['properties'] ?? array();
