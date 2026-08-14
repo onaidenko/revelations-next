@@ -830,7 +830,7 @@ function revelations_integration_research(): array {
 
 /** @return array<string, mixed> */
 function revelations_integration_brief(): array {
-    return array( 'what_happened' => 'An AI workflow is used in editorial work.', 'why_revelations_cares' => 'It shows human control around AI.', 'thesis' => 'AI drafting depends on review.', 'factual_pillars' => array( array( 'pillar_id' => 'pillar_1', 'pillar' => 'AI supports drafting.', 'importance' => 'central', 'evidence_ids' => array( 'p001' ) ), array( 'pillar_id' => 'pillar_2', 'pillar' => 'Staff compare records.', 'importance' => 'supporting', 'evidence_ids' => array( 'p002' ) ), array( 'pillar_id' => 'pillar_3', 'pillar' => 'People retain control.', 'importance' => 'supporting', 'evidence_ids' => array( 'p001', 'p002' ) ) ), 'confirmed' => array( 'The workflow exists.' ), 'attributed' => array(), 'interpretation' => array( 'The workflow changes practice.' ), 'do_not_claim' => array( 'Do not claim broad industry adoption.' ), 'pillar_order' => array( 0, 1, 2 ), 'sensitive_evidence_ids' => array(), 'attribution_evidence_ids' => array(), 'essential_context_evidence_ids' => array() );
+    return array( 'angle' => array( 'why_revelations_cares' => 'It shows human control around AI.', 'thesis' => 'AI drafting depends on review.' ), 'editorial_guidance' => array( 'confirmed' => array( 'The workflow exists.' ), 'attributed' => array(), 'interpretation' => array( 'The workflow changes practice.' ), 'do_not_claim' => array( 'Do not claim broad industry adoption.' ) ), 'factual_pillars' => array( array( 'pillar' => 'AI supports drafting.', 'importance' => 'central', 'evidence_ids' => array( 'p001' ) ), array( 'pillar' => 'Staff compare records.', 'importance' => 'supporting', 'evidence_ids' => array( 'p002' ) ), array( 'pillar' => 'People retain control.', 'importance' => 'supporting', 'evidence_ids' => array( 'p001', 'p002' ) ) ) );
 }
 
 /** @return array<string, mixed> */
@@ -1240,11 +1240,18 @@ foreach ( $supported_sections as $section ) {
         );
     $review =
         revelations_editorial_review_status( 100 );
+    $stored_brief = json_decode( (string) get_post_meta( 100, '_revelations_ai_editorial_brief', true ), true );
 
     revelations_integration_check(
         is_array( $result ) &&
         3 === $revelations_integration_transport_calls,
         $section . ' completes through the fake structured transport'
+    );
+    revelations_integration_check(
+        is_array( $stored_brief ) &&
+        array( 'pillar_1', 'pillar_2', 'pillar_3' ) === array_column( (array) ( $stored_brief['factual_pillars'] ?? array() ), 'pillar_id' ) &&
+        ! isset( $stored_brief['what_happened'], $stored_brief['pillar_order'], $stored_brief['sensitive_evidence_ids'], $stored_brief['attribution_evidence_ids'], $stored_brief['essential_context_evidence_ids'] ),
+        $section . ' derives deterministic pillar IDs without model-owned selection side channels'
     );
     revelations_integration_check(
         str_contains(
@@ -1480,12 +1487,8 @@ $duplicate_brief_cases = array(
         $brief['factual_pillars'][0]['evidence_ids'] = array( 'p001', 'p001' );
         return $brief;
     },
-    'duplicate pillar order' => static function( array $brief ): array {
-        $brief['pillar_order'] = array( 0, 0, 2 );
-        return $brief;
-    },
-    'duplicate sensitive evidence IDs' => static function( array $brief ): array {
-        $brief['sensitive_evidence_ids'] = array( 'p001', 'p001' );
+    'unknown pillar evidence ID' => static function( array $brief ): array {
+        $brief['factual_pillars'][1]['evidence_ids'] = array( 'p999' );
         return $brief;
     },
 );

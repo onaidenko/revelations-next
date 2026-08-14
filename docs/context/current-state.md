@@ -11,7 +11,7 @@
   then verifies the installed checksum, PHP syntax, owner/group/mode and the
   existing bounded CMS sanity checks. It never runs rsync or a delete path.
 
-Дата изменения: 2026-08-13.
+Дата изменения: 2026-08-14.
 
 ## Structured Outputs schema compatibility (pending commit/deploy)
 
@@ -49,24 +49,27 @@
 
 Дата изменения: 2026-08-13.
 
-## Semantic editorial-brief evidence selection
+## Minimal editorial-brief contract
 
-- Factual pillars now have stable `pillar_id` values. Any attribution or
-  essential-context evidence that expands beyond pillar selection must carry
-  an `evidence_id`, related pillar ID and concise necessity reason; server-side
-  validation rejects unlinked plain ID lists before the existing final-pack
-  union is reached.
-- The brief is instructed to choose the minimum sufficient set, while retaining
-  sensitive support and material legal, regulatory, scientific and formal
-  qualifiers. Bounded context diagnostics expose pillar, attribution-only,
-  essential-only, sensitive-only and final evidence counts.
-- The structured brief schema now restricts `pillar_id` to `pillar_1` through
-  `pillar_5`, matching the server contract. Before structural pillar
-  validation, private run diagnostics retain only each pillar's bounded ID and
-  importance values/types, evidence-ID count/types, presence flag and failed
-  condition; they never retain pillar prose or raw model output.
+- The model returns only semantic editorial choices: `angle`, editorial
+  guidance and an ordered 3–5-item factual-pillar array containing `pillar`,
+  `importance` and `evidence_ids`. It does not return `what_happened`, pillar
+  IDs/order, sensitive IDs or attribution/essential side buckets.
+- Array order is canonical. The server assigns `pillar_1...N`, rejects duplicate
+  evidence IDs, resolves provenance and validates source authority,
+  independence and dominance. The final evidence pack is exactly the union of
+  factual-pillar evidence IDs; each pillar must retain its material attribution,
+  qualifier, scope, condition, uncertainty and category boundary.
+- Sensitive-claim and final factual validators remain server-owned defensive
+  safeguards. A sensitive claim still fails without sufficient final evidence;
+  it no longer receives a model-owned selection side channel.
+- Corrected forensic chronology: run 401 was `brief_failed` before Brief
+  diagnostics were retained and is not evidence-support evidence; run 398 and
+  run 412 were actual editorial-brief dominance failures; run 411 was the
+  outbound JSON-schema HTTP 400; run 413 was a structural Brief failure after
+  replan.
 
-Дата изменения: 2026-08-13.
+Дата изменения: 2026-08-14.
 
 ## Early generation-failure observability
 
@@ -102,9 +105,8 @@
 ## Compact evidence boundary for AI generation
 
 - Research remains broad and retains the existing independent-source and
-  primary-authoritative safeguards. The editorial brief now returns its
-  3-5 factual pillars plus explicit sensitive, attribution and essential
-  context evidence IDs. Final writing receives only that selected set.
+  primary-authoritative safeguards. The editorial brief returns only its 3–5
+  factual pillars, and final writing receives their selected evidence union.
 - A request-local source registry carries each source's URL, publisher,
   type, reliability, host and date once. Claim units reference `sNNN`; their
   support text is not uniformly truncated, so formal qualifiers remain intact.

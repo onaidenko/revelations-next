@@ -56,33 +56,16 @@ function revelations_editorial_ai_research_schema(): array {
 /** @return array<string, mixed> */
 function revelations_editorial_ai_editorial_brief_schema(): array {
     $evidence_id = array( 'type' => 'string', 'pattern' => '^p[0-9]{3,}$' );
-    $pillar = array( 'type' => 'object', 'additionalProperties' => false, 'properties' => array( 'pillar_id' => array( 'type' => 'string', 'enum' => array( 'pillar_1', 'pillar_2', 'pillar_3', 'pillar_4', 'pillar_5' ) ), 'pillar' => array( 'type' => 'string' ), 'importance' => array( 'type' => 'string', 'enum' => array( 'central', 'supporting' ) ), 'evidence_ids' => array( 'type' => 'array', 'minItems' => 1, 'items' => $evidence_id ) ), 'required' => array( 'pillar_id', 'pillar', 'importance', 'evidence_ids' ) );
-    $linked_evidence = array( 'type' => 'object', 'additionalProperties' => false, 'properties' => array( 'evidence_id' => $evidence_id, 'related_pillar_id' => array( 'type' => 'string', 'enum' => array( 'pillar_1', 'pillar_2', 'pillar_3', 'pillar_4', 'pillar_5' ) ), 'reason' => array( 'type' => 'string' ) ), 'required' => array( 'evidence_id', 'related_pillar_id', 'reason' ) );
-    return array( 'type' => 'object', 'additionalProperties' => false, 'properties' => array( 'what_happened' => array( 'type' => 'string' ), 'why_revelations_cares' => array( 'type' => 'string' ), 'thesis' => array( 'type' => 'string' ), 'factual_pillars' => array( 'type' => 'array', 'minItems' => 3, 'maxItems' => 5, 'items' => $pillar ), 'confirmed' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ), 'attributed' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ), 'interpretation' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ), 'do_not_claim' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ), 'pillar_order' => array( 'type' => 'array', 'minItems' => 3, 'maxItems' => 5, 'items' => array( 'type' => 'integer', 'enum' => array( 0, 1, 2, 3, 4 ) ) ), 'sensitive_evidence_ids' => array( 'type' => 'array', 'items' => $evidence_id ), 'attribution_evidence_ids' => array( 'type' => 'array', 'items' => $linked_evidence ), 'essential_context_evidence_ids' => array( 'type' => 'array', 'items' => $linked_evidence ) ), 'required' => array( 'what_happened', 'why_revelations_cares', 'thesis', 'factual_pillars', 'confirmed', 'attributed', 'interpretation', 'do_not_claim', 'pillar_order', 'sensitive_evidence_ids', 'attribution_evidence_ids', 'essential_context_evidence_ids' ) );
-}
-
-/** @return array{valid: bool, ids: array<int, string>, links: array<int, array<string, string>>} */
-function revelations_editorial_ai_normalize_brief_evidence_links( mixed $links, array $provenance, array $pillar_ids, string $category = '' ): array {
-    if ( ! is_array( $links ) ) return array( 'valid' => false, 'ids' => array(), 'links' => array() );
-    $ids = array(); $normalized = array();
-    foreach ( $links as $link ) {
-        if ( ! is_array( $link ) ) return array( 'valid' => false, 'ids' => array(), 'links' => array() );
-        $id = (string) ( $link['evidence_id'] ?? '' ); $pillar_id = (string) ( $link['related_pillar_id'] ?? '' ); $reason = sanitize_text_field( (string) ( $link['reason'] ?? '' ) );
-        if ( ! isset( $provenance[ $id ] ) || ! isset( $pillar_ids[ $pillar_id ] ) || '' === $reason || isset( $ids[ $id ] ) ) return array( 'valid' => false, 'ids' => array(), 'links' => array() );
-        $ids[ $id ] = true; $normalized[] = array( 'evidence_id' => $id, 'related_pillar_id' => $pillar_id, 'reason' => $reason, 'category' => sanitize_key( $category ) );
-    }
-    return array( 'valid' => true, 'ids' => array_keys( $ids ), 'links' => $normalized );
+    $pillar = array( 'type' => 'object', 'additionalProperties' => false, 'properties' => array( 'pillar' => array( 'type' => 'string' ), 'importance' => array( 'type' => 'string', 'enum' => array( 'central', 'supporting' ) ), 'evidence_ids' => array( 'type' => 'array', 'minItems' => 1, 'items' => $evidence_id ) ), 'required' => array( 'pillar', 'importance', 'evidence_ids' ) );
+    $angle = array( 'type' => 'object', 'additionalProperties' => false, 'properties' => array( 'why_revelations_cares' => array( 'type' => 'string' ), 'thesis' => array( 'type' => 'string' ) ), 'required' => array( 'why_revelations_cares', 'thesis' ) );
+    $guidance = array( 'type' => 'object', 'additionalProperties' => false, 'properties' => array( 'confirmed' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ), 'attributed' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ), 'interpretation' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ), 'do_not_claim' => array( 'type' => 'array', 'items' => array( 'type' => 'string' ) ) ), 'required' => array( 'confirmed', 'attributed', 'interpretation', 'do_not_claim' ) );
+    return array( 'type' => 'object', 'additionalProperties' => false, 'properties' => array( 'angle' => $angle, 'editorial_guidance' => $guidance, 'factual_pillars' => array( 'type' => 'array', 'minItems' => 3, 'maxItems' => 5, 'items' => $pillar ) ), 'required' => array( 'angle', 'editorial_guidance', 'factual_pillars' ) );
 }
 
 /** @return array<string, int> */
 function revelations_editorial_ai_brief_selection_counts( array $brief ): array {
-    $set = static function( array $ids ): array { $result = array(); foreach ( $ids as $id ) { $id = is_array( $id ) ? (string) ( $id['evidence_id'] ?? '' ) : $id; if ( is_string( $id ) && '' !== $id ) $result[ $id ] = true; } return $result; };
     $pillar = array(); foreach ( (array) ( $brief['factual_pillars'] ?? array() ) as $entry ) foreach ( is_array( $entry['evidence_ids'] ?? null ) ? $entry['evidence_ids'] : array() as $id ) if ( is_string( $id ) ) $pillar[ $id ] = true;
-    $sensitive = $set( is_array( $brief['sensitive_evidence_ids'] ?? null ) ? $brief['sensitive_evidence_ids'] : array() );
-    $attribution = $set( is_array( $brief['attribution_evidence_ids'] ?? null ) ? $brief['attribution_evidence_ids'] : array() );
-    $essential = $set( is_array( $brief['essential_context_evidence_ids'] ?? null ) ? $brief['essential_context_evidence_ids'] : array() );
-    $final = $pillar + $sensitive + $attribution + $essential;
-    return array( 'pillar_evidence_unique_count' => count( $pillar ), 'additional_attribution_only_count' => count( array_diff_key( $attribution, $pillar, $sensitive ) ), 'additional_essential_only_count' => count( array_diff_key( $essential, $pillar, $sensitive, $attribution ) ), 'sensitive_only_count' => count( array_diff_key( $sensitive, $pillar ) ), 'final_evidence_count' => count( $final ) );
+    return array( 'pillar_evidence_unique_count' => count( $pillar ), 'final_evidence_count' => count( $pillar ) );
 }
 
 /**
@@ -100,14 +83,11 @@ function revelations_editorial_ai_brief_pillar_prevalidation_diagnostics(
     $pillars = is_array( $brief['factual_pillars'] ?? null )
         ? $brief['factual_pillars']
         : array();
-    $seen_ids = array();
     $summary = array();
 
     foreach ( array_slice( $pillars, 0, 5, true ) as $index => $pillar ) {
         $entry = array(
             'index' => absint( $index ),
-            'pillar_id_value' => '',
-            'pillar_id_type' => get_debug_type( null ),
             'importance_value' => '',
             'importance_type' => get_debug_type( null ),
             'evidence_ids_count' => 0,
@@ -122,19 +102,10 @@ function revelations_editorial_ai_brief_pillar_prevalidation_diagnostics(
             continue;
         }
 
-        $raw_pillar_id = $pillar['pillar_id'] ?? null;
         $raw_importance = $pillar['importance'] ?? null;
         $raw_evidence_ids = $pillar['evidence_ids'] ?? null;
         $pillar_text = $pillar['pillar'] ?? null;
-        $pillar_id = is_string( $raw_pillar_id )
-            ? sanitize_key( $raw_pillar_id )
-            : '';
-
-        $entry['pillar_id_type'] = get_debug_type( $raw_pillar_id );
         $entry['importance_type'] = get_debug_type( $raw_importance );
-        $entry['pillar_id_value'] = is_scalar( $raw_pillar_id )
-            ? mb_substr( sanitize_text_field( (string) $raw_pillar_id ), 0, 80, 'UTF-8' )
-            : '';
         $entry['importance_value'] = is_scalar( $raw_importance )
             ? mb_substr( sanitize_text_field( (string) $raw_importance ), 0, 32, 'UTF-8' )
             : '';
@@ -154,10 +125,6 @@ function revelations_editorial_ai_brief_pillar_prevalidation_diagnostics(
 
         if ( ! $entry['pillar_present_non_empty'] ) {
             $entry['failed_condition'] = 'pillar_text_empty';
-        } elseif ( ! preg_match( '/^pillar_[1-5]$/', $pillar_id ) ) {
-            $entry['failed_condition'] = 'pillar_id_invalid';
-        } elseif ( isset( $seen_ids[ $pillar_id ] ) ) {
-            $entry['failed_condition'] = 'pillar_id_duplicate';
         } elseif ( ! in_array( $raw_importance, array( 'central', 'supporting' ), true ) ) {
             $entry['failed_condition'] = 'importance_invalid';
         } elseif ( ! is_array( $raw_evidence_ids ) ) {
@@ -166,10 +133,6 @@ function revelations_editorial_ai_brief_pillar_prevalidation_diagnostics(
             $entry['failed_condition'] = 'evidence_ids_empty';
         } elseif ( count( $raw_evidence_ids ) !== count( array_unique( $raw_evidence_ids, SORT_REGULAR ) ) ) {
             $entry['failed_condition'] = 'evidence_ids_duplicate';
-        }
-
-        if ( '' !== $pillar_id && ! isset( $seen_ids[ $pillar_id ] ) ) {
-            $seen_ids[ $pillar_id ] = true;
         }
 
         $summary[] = $entry;
@@ -337,7 +300,6 @@ function revelations_editorial_ai_final_evidence_pack( array $research, array $b
     $by_id = array(); foreach ( $units as $unit ) if ( is_array( $unit ) && ! empty( $unit['id'] ) && isset( $unit['text'] ) ) $by_id[ (string) $unit['id'] ] = $unit;
     $selected = array();
     foreach ( (array) ( $brief['factual_pillars'] ?? array() ) as $pillar ) foreach ( is_array( $pillar['evidence_ids'] ?? null ) ? $pillar['evidence_ids'] : array() as $id ) $selected[ (string) $id ] = true;
-    foreach ( array( 'sensitive_evidence_ids', 'attribution_evidence_ids', 'essential_context_evidence_ids' ) as $field ) foreach ( is_array( $brief[ $field ] ?? null ) ? $brief[ $field ] : array() as $id ) $selected[ (string) $id ] = true;
     if ( array() === $selected ) return new WP_Error( 'insufficient_independent_evidence', 'Editorial brief selected no final evidence.' );
     foreach ( array_keys( $selected ) as $id ) if ( ! isset( $by_id[ $id ] ) ) return new WP_Error( 'brief_failed', 'Editorial brief selected unknown final evidence.' );
     $final_units = array(); foreach ( $units as $unit ) if ( isset( $selected[ (string) ( $unit['id'] ?? '' ) ] ) ) $final_units[] = $unit;
@@ -346,11 +308,6 @@ function revelations_editorial_ai_final_evidence_pack( array $research, array $b
     foreach ( $final_units as $unit ) { $origin = $provenance[ $unit['id'] ] ?? array(); if ( '' !== (string) ( $origin['host'] ?? '' ) ) $hosts[ (string) $origin['host'] ] = true; if ( 'primary' === ( $origin['role'] ?? '' ) ) ++$primary_count; if ( '' !== (string) ( $origin['source_id'] ?? '' ) ) $source_ids[ (string) $origin['source_id'] ] = true; }
     if ( count( $hosts ) < 2 ) return new WP_Error( 'insufficient_independent_evidence', 'Final evidence selection lost independent source support.' );
     if ( ! empty( $research['lead_classification']['requires_independent_corroboration'] ) && $primary_count < 1 ) return new WP_Error( 'insufficient_independent_evidence', 'Final evidence selection lost required primary authoritative support.' );
-    foreach ( array( 'attribution_evidence', 'essential_context_evidence' ) as $prefix ) {
-        $ids = (array) ( $brief[ $prefix . '_ids'] ?? array() ); $links = (array) ( $brief[ $prefix . '_links'] ?? array() );
-        $linked = array(); foreach ( $links as $link ) if ( is_array( $link ) && isset( $link['evidence_id'], $link['related_pillar_id'] ) && '' !== trim( (string) ( $link['reason'] ?? '' ) ) ) $linked[ (string) $link['evidence_id'] ] = $link;
-        foreach ( $ids as $id ) if ( ! isset( $linked[ (string) $id ] ) ) return new WP_Error( 'brief_failed', 'Final evidence selection lost required additional-evidence linkage.' );
-    }
     $supports = revelations_editorial_ai_pillar_support_from_brief( $brief, $provenance );
     if ( is_wp_error( $supports ) ) return $supports;
     $dominance = revelations_editorial_ai_evaluate_pillar_dominance( $supports );
@@ -530,7 +487,13 @@ function revelations_editorial_ai_pillar_support_from_brief( array $brief, array
     $supports = array();
     foreach ( (array) ( $brief['factual_pillars'] ?? array() ) as $index => $pillar ) {
         if ( ! is_array( $pillar ) || ! is_array( $pillar['evidence_ids'] ?? null ) ) return new WP_Error( 'brief_failed', 'A factual pillar has invalid evidence references.' );
-        $sources = array(); $ids = array_values( array_unique( array_map( 'strval', $pillar['evidence_ids'] ) ) );
+        $sources = array();
+        if ( count( $pillar['evidence_ids'] ) !== count( array_unique( $pillar['evidence_ids'], SORT_REGULAR ) ) ) return new WP_Error( 'brief_failed', 'A factual pillar contains duplicate evidence references.' );
+        $ids = array();
+        foreach ( $pillar['evidence_ids'] as $id ) {
+            if ( ! is_string( $id ) || ! preg_match( '/^p[0-9]{3,}$/', $id ) ) return new WP_Error( 'brief_failed', 'A factual pillar has invalid evidence references.' );
+            $ids[] = $id;
+        }
         foreach ( $ids as $id ) {
             if ( ! isset( $provenance[ $id ] ) ) return new WP_Error( 'brief_failed', 'A factual pillar references unknown evidence.' );
             $origin = $provenance[ $id ]; $source_id = (string) ( $origin['source_id'] ?? '' );
@@ -632,7 +595,7 @@ function revelations_editorial_ai_brief_replan_feedback( array $research, array 
 function revelations_editorial_ai_format_brief_replan_feedback( array $feedback ): string {
     $lines = array(
         'The previous brief was rejected by server-owned evidence validation: ' . sanitize_key( (string) ( $feedback['initial_failure_reason'] ?? 'insufficient_independent_evidence' ) ) . '.',
-        'Invalid central pillar IDs: ' . implode( ', ', array_map( 'sanitize_key', (array) ( $feedback['invalid_pillar_ids'] ?? array() ) ) ) . '.',
+        'Server-derived invalid central pillar references: ' . implode( ', ', array_map( 'sanitize_key', (array) ( $feedback['invalid_pillar_ids'] ?? array() ) ) ) . '.',
         'Choose a different central pillar or add already supplied evidence that gives primary support or two independent hosts. Do not add sources or evidence IDs that are not in the supplied pack.',
         'Previous bounded pillar support (IDs and source roles only):',
     );
@@ -762,7 +725,7 @@ function revelations_editorial_ai_editorial_brief_attempt( array $config, string
     if ( array() === $units ) return revelations_editorial_ai_editorial_brief_failure( 'insufficient_independent_evidence', 'No evidence is available for an editorial brief.', $research_diagnostics );
     $policy = trim( (string) ( $settings['editorial_policy'] ?? '' ) ); $profile_prompt = revelations_editorial_ai_generation_profile_prompt( $section, $profile );
     $stage = $attempt > 1 ? 'editorial_brief_replan' : 'editorial_brief';
-    $instructions = 'You are the REVELATIONS editorial brief editor. Use the saved editorial policy and the section profile to form an original angle and a factual-pillar order from the supplied evidence only. Do not use lead narrative order or source prose as a structure template. Return three to five factual pillars with unique stable pillar_id values; every pillar must cite supplied evidence IDs. Select the minimum sufficient evidence set that preserves factual accuracy, source diversity, required attribution, sensitive-claim support and every material qualifier. A central pillar is allowed only when its selected evidence has substantive primary-authoritative support or support from at least two independent publisher hosts. Do not retain evidence merely because it may be useful. Sensitive evidence IDs may be selected independently when required for sensitive-claim validation. For attribution_evidence_ids and essential_context_evidence_ids, return only linked objects with evidence_id, related_pillar_id and a concise reason. Attribution is valid only when the selected pillar needs explicit source status, uncertainty or claim ownership. Essential context is valid only when it preserves that pillar’s factual qualifier, scope, condition, uncertainty or category boundary. Do not use either field for general background or a blanket research-pack selection. Those selections are the complete boundary for final writing, so retain all material qualifiers for legal, regulatory, scientific and formal technical claims. Distinguish confirmed facts, attributed claims, REVELATIONS interpretation and claims not to make. This is planning, not an article.\n\nEditorial policy:\n' . $policy . "\n\n" . $profile_prompt;
+    $instructions = 'You are the REVELATIONS editorial brief editor. Use the saved editorial policy and the section profile to form an original angle and an ordered factual-pillar plan from the supplied evidence only. Do not use lead narrative order or source prose as a structure template. Return three to five factual pillars; their array order is the canonical editorial order and the server assigns identifiers. Every pillar must cite supplied evidence IDs. Select the minimum sufficient evidence for that pillar: include every material source status, attribution, claim ownership, qualifier, scope, condition, uncertainty and category boundary required to write it accurately. Do not retain general background or evidence merely because it may be useful. A central pillar is allowed only when its selected evidence has substantive primary-authoritative support or support from at least two independent publisher hosts. All final-writing evidence comes from factual-pillar evidence_ids, so sensitive factual claims must be represented by a pillar with all required supporting evidence. Distinguish confirmed facts, attributed claims, REVELATIONS interpretation and claims not to make. This is planning, not an article.\n\nEditorial policy:\n' . $policy . "\n\n" . $profile_prompt;
     if ( array() !== $replan_feedback ) {
         $instructions .= "\n\nSERVER-OWNED BRIEF VALIDATION FEEDBACK\n" . revelations_editorial_ai_format_brief_replan_feedback( $replan_feedback );
     }
@@ -791,7 +754,6 @@ function revelations_editorial_ai_editorial_brief_attempt( array $config, string
         ? $research['provenance']
         : array();
     $supports = array();
-    $pillar_ids = array();
     $central_count = 0;
 
     foreach ( $brief['factual_pillars'] as $index => $pillar ) {
@@ -802,10 +764,7 @@ function revelations_editorial_ai_editorial_brief_attempt( array $config, string
             ?? ''
         );
 
-        if (
-            '' !== $failed_condition &&
-            'evidence_ids_empty' !== $failed_condition
-        ) {
+        if ( '' !== $failed_condition ) {
             return revelations_editorial_ai_editorial_brief_failure(
                 'brief_schema_validation_failed',
                 'A factual pillar has no valid identity, importance or evidence references.',
@@ -821,14 +780,8 @@ function revelations_editorial_ai_editorial_brief_attempt( array $config, string
             );
         }
 
-        $pillar_id = sanitize_key(
-            (string) ( $pillar['pillar_id'] ?? '' )
-        );
-
         if (
             '' === trim( (string) ( $pillar['pillar'] ?? '' ) ) ||
-            ! preg_match( '/^pillar_[1-5]$/', $pillar_id ) ||
-            isset( $pillar_ids[ $pillar_id ] ) ||
             ! in_array(
                 $pillar['importance'] ?? '',
                 array( 'central', 'supporting' ),
@@ -843,20 +796,17 @@ function revelations_editorial_ai_editorial_brief_attempt( array $config, string
             );
         }
 
-        $pillar_ids[ $pillar_id ] = true;
-        $brief['factual_pillars'][ $index ]['pillar_id'] = $pillar_id;
+        $brief['factual_pillars'][ $index ]['pillar_id'] = 'pillar_' . ( absint( $index ) + 1 );
         if ( 'central' === $pillar['importance'] ) {
             ++$central_count;
         }
     }
     $supports = revelations_editorial_ai_pillar_support_from_brief( $brief, $provenance );
     if ( is_wp_error( $supports ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', $supports->get_error_message(), $brief_diagnostics );
-    $pillar_count = count( $supports ); $order = $brief['pillar_order'] ?? array(); $order_has_duplicates = is_array( $order ) && count( $order ) !== count( array_unique( $order, SORT_REGULAR ) ); $valid_order = is_array( $order ) && ! $order_has_duplicates && array_values( $order ) === range( 0, $pillar_count - 1 ); if ( $pillar_count < 3 || $pillar_count > 5 || $central_count < 1 || ! $valid_order ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', 'Editorial brief does not provide a complete independent pillar order.', array_merge( $brief_diagnostics, revelations_editorial_ai_pillar_diagnostics( $supports ) ) );
+    $pillar_count = count( $supports ); if ( $pillar_count < 3 || $pillar_count > 5 || $central_count < 1 ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', 'Editorial brief does not provide a complete independent pillar plan.', array_merge( $brief_diagnostics, revelations_editorial_ai_pillar_diagnostics( $supports ) ) );
     $dominance = revelations_editorial_ai_evaluate_pillar_dominance( $supports );
     $brief_diagnostics = array_merge( $brief_diagnostics, revelations_editorial_ai_pillar_diagnostics( $supports, $dominance ) );
     if ( ! empty( $dominance['hard_failure'] ) ) return revelations_editorial_ai_editorial_brief_failure( 'insufficient_independent_evidence', 'A secondary source is the sole support for the central or majority factual pillars.', array_merge( $brief_diagnostics, array( 'failure_stage' => 'editorial_brief_dominance', 'central_pillar_independence_failure' => ! empty( $dominance['central_pillar_independence_failure'] ) ) ) );
-    if ( ! is_array( $brief['sensitive_evidence_ids'] ?? null ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', 'Editorial brief returned invalid sensitive-evidence selections.', $brief_diagnostics ); if ( count( $brief['sensitive_evidence_ids'] ) !== count( array_unique( $brief['sensitive_evidence_ids'], SORT_REGULAR ) ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', 'Editorial brief selected duplicate sensitive evidence.', $brief_diagnostics ); foreach ( $brief['sensitive_evidence_ids'] as $id ) if ( ! isset( $provenance[ (string) $id ] ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', 'Editorial brief selected unknown sensitive evidence.', $brief_diagnostics ); $brief['sensitive_evidence_ids'] = array_values( array_map( 'strval', $brief['sensitive_evidence_ids'] ) );
-    foreach ( array( 'attribution_evidence_ids' => 'attribution', 'essential_context_evidence_ids' => 'essential_context' ) as $field => $category ) { $links = revelations_editorial_ai_normalize_brief_evidence_links( $brief[ $field ] ?? null, $provenance, $pillar_ids, $category ); if ( empty( $links['valid'] ) ) return revelations_editorial_ai_editorial_brief_failure( 'brief_schema_validation_failed', 'Editorial brief selected unlinked additional evidence.', $brief_diagnostics ); $brief[ $field ] = $links['ids']; $brief[ str_replace( '_ids', '_links', $field ) ] = $links['links']; }
     $brief['pillar_support'] = $supports; $brief['dominance'] = $dominance; $brief['evidence_selection_counts'] = revelations_editorial_ai_brief_selection_counts( $brief );
     return array( 'brief' => $brief, 'duration_ms' => $duration_ms, 'usage' => is_array( $decoded['usage'] ?? null ) ? $decoded['usage'] : array(), 'response_status' => sanitize_key( (string) ( $decoded['status'] ?? '' ) ), 'responses_diagnostics' => $brief_diagnostics['responses_diagnostics'], 'generation_diagnostics' => $brief_diagnostics, 'brief_attempt' => $attempt );
 }
