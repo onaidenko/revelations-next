@@ -14,9 +14,9 @@
     "abort_on_current_tag_drift": true
   },
   "summary": {
-    "articles": 52,
+    "articles": 45,
     "articles_with_tags": 43,
-    "articles_without_entity_tags": 9,
+    "articles_without_entity_tags": 2,
     "tag_assignments": 98,
     "unique_tags": 88,
     "existing_tags_preserved": [
@@ -514,13 +514,6 @@
       ]
     },
     {
-      "id": 103,
-      "slug": "burnout-doesnt-look-like-burnout",
-      "title": "Burnout Doesn’t Look Like Burnout",
-      "expected_current_tags": [],
-      "target_tags": []
-    },
-    {
       "id": 75,
       "slug": "bwiga-will-be-held-in-montenegro-again-in-september",
       "title": "BWiGA will be held in Montenegro again in September",
@@ -636,8 +629,8 @@
     },
     {
       "id": 92,
-      "slug": "how-openxai-will-change-the-worlds-perceptions",
-      "title": "How OpenxAI Will Change the World’s Perceptions?",
+      "slug": "ashton-hettiarachi-how-openxai-will-change-the-worlds-perceptions",
+      "title": "Ashton Hettiarachi: How OpenxAI Will Change the World’s Perceptions?",
       "expected_current_tags": [],
       "target_tags": [
         "OpenxAI"
@@ -651,13 +644,6 @@
       "target_tags": [
         "Genesis"
       ]
-    },
-    {
-      "id": 113,
-      "slug": "i-raised-8m-and-still-failed",
-      "title": "I Raised $8M and Still Failed",
-      "expected_current_tags": [],
-      "target_tags": []
     },
     {
       "id": 82,
@@ -774,13 +760,6 @@
       ]
     },
     {
-      "id": 111,
-      "slug": "the-board-that-betrayed-its-founder",
-      "title": "The Board That Betrayed Its Founder",
-      "expected_current_tags": [],
-      "target_tags": []
-    },
-    {
       "id": 73,
       "slug": "the-brands-and-speakers-you-dont-want-to-miss-at-global-tech-weekend-tbilisi-2026",
       "title": "Google, Nike, Meta, Monday.com, Dolce & Gabbana: The Brands and Speakers You Don’t Want to Miss at Global Tech Weekend Tbilisi 2026",
@@ -792,13 +771,6 @@
         "Monday.com",
         "Dolce & Gabbana"
       ]
-    },
-    {
-      "id": 104,
-      "slug": "the-co-founder-divorce-nobody-talks-about",
-      "title": "The Co-Founder Divorce Nobody Talks About",
-      "expected_current_tags": [],
-      "target_tags": []
     },
     {
       "id": 115,
@@ -833,13 +805,6 @@
       ]
     },
     {
-      "id": 116,
-      "slug": "the-toxic-culture-we-accidentally-built",
-      "title": "The Toxic Culture We Accidentally Built",
-      "expected_current_tags": [],
-      "target_tags": []
-    },
-    {
       "id": 110,
       "slug": "treehotel-the-future-can-be-a-mirror-cube-in-a-swedish-forest",
       "title": "Treehotel: The Future Can Be a Mirror Cube in a Swedish Forest",
@@ -850,13 +815,6 @@
         "UFO Room",
         "Bertil Harström"
       ]
-    },
-    {
-      "id": 107,
-      "slug": "what-investors-dont-tell-you-after-they-pass",
-      "title": "What Investors Don’t Tell You After They Pass",
-      "expected_current_tags": [],
-      "target_tags": []
     },
     {
       "id": 106,
@@ -879,13 +837,6 @@
         "Self Inspection",
         "Stellantis"
       ]
-    },
-    {
-      "id": 105,
-      "slug": "why-we-killed-our-best-product",
-      "title": "Why We Killed Our Best Product",
-      "expected_current_tags": [],
-      "target_tags": []
     }
   ]
 }

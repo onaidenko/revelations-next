@@ -17,38 +17,30 @@ const bySlug = new Map(
   taxonomy.assignments.map((assignment) => [assignment.slug, assignment]),
 );
 
-test("approved SEO 2C taxonomy corrections are canonical", () => {
-  const cofounder = bySlug.get(
-    "the-co-founder-divorce-nobody-talks-about",
-  );
+test("approved taxonomy map reflects the current production CMS state", () => {
+  const sergei = bySlug.get("33-qs-for-sergei-medvedev");
   assert.equal(
-    cofounder.primary_topic,
-    "startups-founders-investment",
+    sergei.primary_topic,
+    "blockchain-fintech-digital-money",
   );
   assert.deepEqual(
-    cofounder.secondary_topics,
-    ["future-work-leadership"],
+    sergei.secondary_topics,
+    ["startups-founders-investment"],
   );
 
-  const quantum = bySlug.get(
-    "quantum-computing-is-finally-trying-to-be-useful-starting-with-medicine",
+  const ashton = bySlug.get(
+    "ashton-hettiarachi-how-openxai-will-change-the-worlds-perceptions",
   );
   assert.equal(
-    quantum.primary_topic,
-    "health-longevity-medtech",
+    ashton.series,
+    "revelations-podcast",
   );
-  assert.deepEqual(quantum.secondary_topics, []);
+  assert.equal(bySlug.has("burnout-doesnt-look-like-burnout"), false);
 });
 
-test("reviewed semantic exception is explicit and narrow", () => {
-  assert.deepEqual(
-    decisions.reviewed_semantic_assignments.map((item) => item.slug),
-    ["burnout-doesnt-look-like-burnout"],
-  );
-  assert.deepEqual(
-    decisions.manual_review.map((item) => item.slug),
-    ["33-qs-for-sergei-medvedev"],
-  );
+test("superseded taxonomy review exceptions are absent", () => {
+  assert.deepEqual(decisions.reviewed_semantic_assignments, []);
+  assert.deepEqual(decisions.manual_review, []);
 });
 
 test("taxonomy audit has a stable package command", () => {

@@ -19,7 +19,7 @@ function revelations_taxonomy_import_validate( array $map ): array {
     if ( 2 !== (int) ( $map['schema_version'] ?? 0 ) || 'approved_for_implementation' !== ( $map['status'] ?? '' ) ) { $errors[] = 'invalid_schema'; }
     if ( 9 !== count( $topics ) || count( $topics ) !== count( array_unique( $topics ) ) ) { $errors[] = 'invalid_topics'; }
     if ( 4 !== count( $series ) || count( $series ) !== count( array_unique( $series ) ) ) { $errors[] = 'invalid_series'; }
-    if ( 52 !== count( $slugs ) || count( $slugs ) !== count( array_unique( $slugs ) ) ) { $errors[] = 'invalid_assignments'; }
+    if ( 45 !== count( $slugs ) || count( $slugs ) !== count( array_unique( $slugs ) ) ) { $errors[] = 'invalid_assignments'; }
     $exclusions = 0;
     foreach ( $map['assignments'] ?? array() as $assignment ) {
         $secondary = $assignment['secondary_topics'] ?? array();
@@ -30,7 +30,7 @@ function revelations_taxonomy_import_validate( array $map ): array {
     }
     if ( 2 !== $exclusions ) { $errors[] = 'invalid_review_exclusions'; }
     $overrides = $map['manual_related'] ?? array();
-    if ( 6 !== count( $overrides ) ) { $errors[] = 'invalid_manual_sources'; }
+    if ( 5 !== count( $overrides ) ) { $errors[] = 'invalid_manual_sources'; }
     foreach ( $overrides as $override ) {
         $source = $override['source_slug'] ?? ''; $targets = $override['target_slugs'] ?? array();
         if ( ! in_array( $source, $slugs, true ) || ! is_array( $targets ) || count( $targets ) > 3 || count( $targets ) !== count( array_unique( $targets ) ) || in_array( $source, $targets, true ) || array_diff( $targets, $slugs ) ) { $errors[] = 'invalid_manual_related'; }

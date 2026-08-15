@@ -48,7 +48,7 @@
     },
     {
       "location": null,
-      "primary_topic": "ai-data",
+      "primary_topic": "blockchain-fintech-digital-money",
       "public_topic_eligible": false,
       "secondary_topics": [
         "startups-founders-investment"
@@ -159,17 +159,6 @@
       "taxonomy_status": "proposed"
     },
     {
-      "location": null,
-      "primary_topic": "future-work-leadership",
-      "public_topic_eligible": true,
-      "secondary_topics": [
-        "health-longevity-medtech"
-      ],
-      "series": null,
-      "slug": "burnout-doesnt-look-like-burnout",
-      "taxonomy_status": "proposed"
-    },
-    {
       "location": "Budva, Montenegro",
       "primary_topic": "events-innovation-ecosystems",
       "public_topic_eligible": true,
@@ -208,7 +197,7 @@
       "secondary_topics": [
         "future-work-leadership"
       ],
-      "series": null,
+      "series": "revelations-podcast",
       "slug": "dariush-soudi-whats-really-behind-this-success",
       "taxonomy_status": "proposed"
     },
@@ -299,8 +288,8 @@
       "secondary_topics": [
         "startups-founders-investment"
       ],
-      "series": null,
-      "slug": "how-openxai-will-change-the-worlds-perceptions",
+      "series": "revelations-podcast",
+      "slug": "ashton-hettiarachi-how-openxai-will-change-the-worlds-perceptions",
       "taxonomy_status": "proposed"
     },
     {
@@ -312,17 +301,6 @@
       ],
       "series": null,
       "slug": "humanoid-robots-are-learning-to-use-their-hands-this-is-where-it-gets-personal",
-      "taxonomy_status": "proposed"
-    },
-    {
-      "location": null,
-      "primary_topic": "startups-founders-investment",
-      "public_topic_eligible": true,
-      "secondary_topics": [
-        "future-work-leadership"
-      ],
-      "series": null,
-      "slug": "i-raised-8m-and-still-failed",
       "taxonomy_status": "proposed"
     },
     {
@@ -444,17 +422,6 @@
       "taxonomy_status": "proposed"
     },
     {
-      "location": null,
-      "primary_topic": "future-work-leadership",
-      "public_topic_eligible": true,
-      "secondary_topics": [
-        "startups-founders-investment"
-      ],
-      "series": null,
-      "slug": "the-board-that-betrayed-its-founder",
-      "taxonomy_status": "proposed"
-    },
-    {
       "location": "Tbilisi, Georgia",
       "primary_topic": "events-innovation-ecosystems",
       "public_topic_eligible": true,
@@ -464,17 +431,6 @@
       ],
       "series": "global-tech-weekend-tbilisi",
       "slug": "the-brands-and-speakers-you-dont-want-to-miss-at-global-tech-weekend-tbilisi-2026",
-      "taxonomy_status": "proposed"
-    },
-    {
-      "location": null,
-      "primary_topic": "startups-founders-investment",
-      "public_topic_eligible": true,
-      "secondary_topics": [
-        "future-work-leadership"
-      ],
-      "series": null,
-      "slug": "the-co-founder-divorce-nobody-talks-about",
       "taxonomy_status": "proposed"
     },
     {
@@ -511,17 +467,6 @@
       "taxonomy_status": "proposed"
     },
     {
-      "location": null,
-      "primary_topic": "future-work-leadership",
-      "public_topic_eligible": true,
-      "secondary_topics": [
-        "startups-founders-investment"
-      ],
-      "series": null,
-      "slug": "the-toxic-culture-we-accidentally-built",
-      "taxonomy_status": "proposed"
-    },
-    {
       "location": "Harads, Sweden",
       "primary_topic": "future-places-architecture-hospitality",
       "public_topic_eligible": true,
@@ -530,17 +475,6 @@
       ],
       "series": null,
       "slug": "treehotel-the-future-can-be-a-mirror-cube-in-a-swedish-forest",
-      "taxonomy_status": "proposed"
-    },
-    {
-      "location": null,
-      "primary_topic": "startups-founders-investment",
-      "public_topic_eligible": true,
-      "secondary_topics": [
-        "future-work-leadership"
-      ],
-      "series": null,
-      "slug": "what-investors-dont-tell-you-after-they-pass",
       "taxonomy_status": "proposed"
     },
     {
@@ -564,17 +498,6 @@
       "series": null,
       "slug": "why-sheryl-sandberg-is-betting-on-smartphone-vehicle-inspections",
       "taxonomy_status": "proposed"
-    },
-    {
-      "location": null,
-      "primary_topic": "future-work-leadership",
-      "public_topic_eligible": true,
-      "secondary_topics": [
-        "startups-founders-investment"
-      ],
-      "series": null,
-      "slug": "why-we-killed-our-best-product",
-      "taxonomy_status": "proposed"
     }
   ],
   "manual_related": [
@@ -590,8 +513,7 @@
       "source_slug": "david-lolaev-if-the-future-is-a-track-i-want-to-drive-first",
       "target_slugs": [
         "why-sheryl-sandberg-is-betting-on-smartphone-vehicle-inspections",
-        "dariush-soudi-whats-really-behind-this-success",
-        "i-raised-8m-and-still-failed"
+        "dariush-soudi-whats-really-behind-this-success"
       ]
     },
     {
@@ -606,7 +528,7 @@
       "source_slug": "openai-offers-europe-cybersecurity-tools-ai-diplomacy-has-entered-the-chat",
       "target_slugs": [
         "ai-is-done-being-a-toy-now-it-wants-a-desk-in-your-office",
-        "how-openxai-will-change-the-worlds-perceptions",
+        "ashton-hettiarachi-how-openxai-will-change-the-worlds-perceptions",
         "softbank-wants-to-build-the-future-in-france-and-it-looks-like-a-data-center"
       ]
     },
@@ -616,14 +538,6 @@
         "arman-mamyan-in-a-world-built-for-distraction-discipline-becomes-power",
         "andreii-bruiaka-everyone-owns-an-app-almost-nobody-owns-the-engine",
         "new-era-of-digital-money-and-happiness"
-      ]
-    },
-    {
-      "source_slug": "the-toxic-culture-we-accidentally-built",
-      "target_slugs": [
-        "why-we-killed-our-best-product",
-        "the-board-that-betrayed-its-founder",
-        "burnout-doesnt-look-like-burnout"
       ]
     }
   ],
