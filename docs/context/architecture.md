@@ -14,6 +14,17 @@ approval requirement are canonical in
   delete operation; `snapshot-live.sh` remains the separate reverse snapshot
   operation.
 
+## CMS-authoritative public article catalog
+
+- When `REVELATIONS_CMS_API_URL` is configured, published CMS API results are
+  the sole source for public article lists, slug routes, sitemaps and legacy-ID
+  redirects. `data/articles.json` is used only in explicit local/legacy mode
+  when no CMS URL is configured.
+- A CMS fetch failure remains a failure and never becomes JSON article content.
+  A legacy-ID redirect resolves only from a current published CMS article's
+  `revelations_legacy_id`; Trash, unpublished and permanently deleted posts
+  fail closed.
+
 ## Scanner subsystem
 
 - `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, глобальная дедупликация, strict AI or future-tech gate и section scorer. News/Places/Tech future-tech branch требует family signal, action и независимый implementation/corroboration signal. People/Unspoken используют тот же common family layer без deployment requirement и затем применяют собственные gates: central significant person или evidenced Unspoken angle.
@@ -55,6 +66,13 @@ approval requirement are canonical in
   shared save handler не зависит от загрузки Tech preview.
 
 ## AI generation
+
+- Production generation currently uses known stable baseline `2051799`, restored
+  by rollback commit `09cb32cd5c92a8dc664e8e968756a8679fe7ec24`. Its correctness
+  architecture is stable and is not a hardening experiment; any further change
+  requires separately approved staging/experimental validation. Permitted
+  future optimization scope is research token cost and source-footer
+  compactness only, without modifying factual gates.
 
 - `revelations-editorial-ai-research.php` separates factual research from
   editorial judgment. It classifies a private lead snapshot and uses the

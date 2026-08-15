@@ -13,6 +13,39 @@
 
 Дата изменения: 2026-08-13.
 
+## Known stable production generation baseline
+
+- Production generation runtime is restored to the content baseline `2051799`
+  by rollback commit `09cb32cd5c92a8dc664e8e968756a8679fe7ec24`.
+- The first production Regenerate after that rollback completed successfully:
+  article body `533` words, `53,687` input tokens, `5,314` output tokens and
+  `54.74` seconds.
+- Treat the current correctness architecture as stable. Further generation
+  hardening is prohibited until a separately approved staging/experimental
+  validation phase. Future work is limited to research token cost and
+  source-footer compactness, without changing factual gates.
+
+Дата изменения: 2026-08-14.
+
+## CMS-authoritative public article catalog
+
+- One-time read-only migration audit compared all `50` entries in
+  `data/articles.json` with CMS `revelations_legacy_id` and slugs: `43` match
+  published CMS posts, `6` match Trash and none are otherwise unpublished.
+  The only absent record is the deliberately permanently deleted former post
+  `103`, `burnout-doesnt-look-like-burnout`; genuinely unmigrated intended live
+  articles: `0`.
+- When `REVELATIONS_CMS_API_URL` is configured, public article lists and slug
+  routes use only published CMS API records. JSON remains an explicit
+  local/legacy mode only when that URL is absent. A CMS fetch failure is not a
+  production-content fallback to the snapshot.
+- Legacy `/article/<legacy_id>` redirects are derived only from current
+  published CMS articles and `revelations_legacy_id`. Trashed, unpublished and
+  permanently deleted articles therefore fail closed rather than reappearing
+  from `data/articles.json`.
+
+Дата изменения: 2026-08-15.
+
 ## Early generation-failure observability
 
 - A successful research stage now immediately has a bounded private diagnostic

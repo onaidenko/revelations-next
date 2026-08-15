@@ -1,14 +1,6 @@
 import { NextResponse } from 'next/server';
-import fallbackArticles from '@/data/articles.json';
-
-const articles = fallbackArticles.filter(
-  (article) => article?.id && article?.slug
-);
-
-const legacyIdToSlug = new Map(
-  articles.map((article) => [String(article.id), article.slug])
-);
-const canonicalSlugs = new Set(articles.map((article) => article.slug));
+import { getPublishedArticles } from '@/lib/cms-articles';
+import { legacyArticleRedirectSlug } from '@/lib/article-catalog-policy';
 
 function redirectToCanonical(request, slug) {
   const url = new URL(request.url);
@@ -23,12 +15,12 @@ function redirectToCanonical(request, slug) {
 
 async function handleLegacyArticle(request, { params }) {
   const { legacy } = await params;
-  const slug = legacyIdToSlug.get(legacy);
+  const slug = legacyArticleRedirectSlug(
+    legacy,
+    await getPublishedArticles()
+  );
 
   if (slug) return redirectToCanonical(request, slug);
-  if (canonicalSlugs.has(legacy)) {
-    return redirectToCanonical(request, legacy);
-  }
 
   return new NextResponse(null, { status: 404 });
 }

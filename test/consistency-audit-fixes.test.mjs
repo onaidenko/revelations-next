@@ -27,17 +27,13 @@ test('section and author templates emit their dedicated breadcrumbs', async () =
   assert.doesNotMatch(authorPage, /title: `\$\{author\.name\} - REVELATIONS`/);
 });
 
-test('legacy article route has unique mappings and fails closed for unknown values', async () => {
-  const articles = JSON.parse(await read('../data/articles.json'));
-  const ids = articles.map((article) => String(article.id));
-  const slugs = articles.map((article) => article.slug);
+test('legacy article route resolves only the current published catalog and fails closed', async () => {
   const route = await read('../app/article/[legacy]/route.js');
   const config = await read('../next.config.mjs');
 
-  assert.equal(new Set(ids).size, ids.length);
-  assert.ok(slugs.every(Boolean));
-  assert.match(route, /legacyIdToSlug/);
-  assert.match(route, /canonicalSlugs/);
+  assert.match(route, /getPublishedArticles/);
+  assert.match(route, /legacyArticleRedirectSlug/);
+  assert.doesNotMatch(route, /data\/articles\.json/);
   assert.match(route, /export async function GET/);
   assert.match(route, /export async function HEAD/);
   assert.match(route, /new NextResponse\(null, \{ status: 404 \}\)/);

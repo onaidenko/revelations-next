@@ -12,7 +12,26 @@ cannot override that Constitution without explicit product-owner approval.
   allowlist, remote staged syntax/checksum verification and a per-file backup
   manifest. Manual file copy is not a routine release mechanism.
 
+## CMS article authority
+
+- **Решение:** a configured CMS is authoritative for every public article
+  catalog and route. Legacy JSON is not merged into a healthy CMS result and is
+  not a production failure fallback. It remains an explicit local/legacy mode
+  only when the CMS URL is absent.
+- **Причина:** a Trash or permanent deletion must remove the public article and
+  its legacy-ID redirect automatically. Migration provenance is represented by
+  the current CMS post's `revelations_legacy_id`, not by per-deletion
+  tombstones.
+
 ## Evidence-first AI drafting
+
+- **Решение:** commit `09cb32cd5c92a8dc664e8e968756a8679fe7ec24` restores
+  production generation runtime to known stable baseline `2051799`. The first
+  subsequent production Regenerate completed successfully. Correctness
+  architecture is frozen: no further generation hardening may proceed without
+  separate staging/experimental validation. Future work may address only
+  research token cost and public source-footer compactness, without changing
+  factual gates.
 
 - **Решение:** RSS lead and its private source snapshot are discovery input,
   not the factual boundary for a generated article. Factual web research gets
