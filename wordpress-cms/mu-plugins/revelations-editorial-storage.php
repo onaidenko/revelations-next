@@ -92,6 +92,35 @@ function revelations_editorial_sanitize_score(
 }
 
 /**
+ * Preserve bounded fetched-item diagnostics as valid JSON.
+ *
+ * Generic textarea sanitization treats title characters as markup and can
+ * corrupt an otherwise valid JSON document. The scanner already restricts
+ * this payload to bounded scalar diagnostics; this callback only validates
+ * and re-serializes that existing payload.
+ */
+function revelations_editorial_sanitize_fetched_items_meta(
+    mixed $value
+): string {
+    if ( ! is_string( $value ) ) {
+        return '';
+    }
+
+    $decoded = json_decode( $value, true );
+
+    if ( ! is_array( $decoded ) ) {
+        return '';
+    }
+
+    $encoded = wp_json_encode(
+        $decoded,
+        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+    );
+
+    return is_string( $encoded ) ? $encoded : '';
+}
+
+/**
  * Register non-public internal record types.
  */
 add_action(
@@ -318,7 +347,11 @@ add_action(
                     'sanitize_callback' =>
                         'integer' === $type
                             ? 'absint'
-                            : 'sanitize_textarea_field',
+                            : (
+                                '_rev_fetched_items' === $key
+                                    ? 'revelations_editorial_sanitize_fetched_items_meta'
+                                    : 'sanitize_textarea_field'
+                            ),
 
                     'auth_callback' =>
                         static fn (): bool =>

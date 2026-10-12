@@ -27,7 +27,7 @@ approval requirement are canonical in
 
 ## Scanner subsystem
 
-- `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, глобальная дедупликация, strict AI or future-tech gate и section scorer. News/Places/Tech future-tech branch требует family signal, action и независимый implementation/corroboration signal. People/Unspoken используют тот же common family layer без deployment requirement и затем применяют собственные gates: central significant person или evidenced Unspoken angle.
+- `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, глобальная дедупликация, high-recall AI/future-tech prefilter и section scorer. Prefilter принимает explicit AI или recognised future-tech family только с material action; technical corroboration остаётся diagnostic, но не является discovery blocker. Он recognises autonomy/driverless freight, robotics/cobots, smart infrastructure, advanced construction, future mobility и human-machine systems. Section gates по-прежнему решают central person, place, evidence, significance и Unspoken angle.
 - `revelations-editorial-{news,people,tech,places,unspoken}-scanner.php` — источники, ключевые слова, пороги и scoring соответствующего раздела. News separates product/deployment, concrete-research, major-capital and strategic-company events; only exceptional capital events use their impact-and-scale path instead of implementation maturity. Каждый scanner вызывает общий engine.
 - `revelations-editorial-scanner-settings.php` — профили News, People, Tech, Places и Unspoken: включение, preview limit, активные и отключённые источники, keyword groups и thresholds. Active source carries discovery-only `priority` and `volume`; neither value is a factual authority, reliability or evidence role.
 - Runtime settings выполняют pure-нормализацию Unspoken и source coverage:
@@ -51,7 +51,10 @@ approval requirement are canonical in
   и bounded qualified items, а также complete bounded fetched-item metadata
   for only the latest RSS run in each section. Fetched metadata is source,
   title, canonical URL, timestamp, stage and rejection codes; RSS summary,
-  article body и source snapshot не сохраняются.
+  article body и source snapshot не сохраняются. `_rev_fetched_items`
+  validates and re-serializes that existing bounded JSON payload rather than
+  applying generic textarea sanitization, preserving decodable diagnostics
+  without expanding its schema.
 - People scorer до scoring отклоняет generic leadership advice без
   нового события, но сохраняет новости о решении, назначении,
   заявлении или действии конкретного человека.

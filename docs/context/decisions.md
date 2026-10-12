@@ -127,18 +127,25 @@ cannot override that Constitution without explicit product-owner approval.
 - **Safeguard:** the latest RSS run per section retains only bounded
   fetched-item metadata and stage/rejection codes. No RSS summary, article
   body or source snapshot is retained; an incoming RSS run clears that list
-  from older runs in the same section.
+  from older runs in the same section. Its JSON meta is validated and
+  re-serialized rather than passed through generic text sanitization, so a
+  title cannot make the persisted diagnostic document malformed.
 - **Compatibility:** only a source list that exactly matches a former shipped
   default is replaced in memory. Operator-edited lists, factual source
   classifications, global relevance logic, section scorers and thresholds are
   not modified by the coverage update.
 
-- **Решение:** все editorial sections принимают material через strict
-  `AI OR meaningful future-tech` global relevance. Existing AI branch
-  сохраняется без изменений. News/Places/Tech future-tech branch требует
-  family signal, действие и независимое technical/implementation
-  corroboration; People/Unspoken используют common future-tech families без
-  deployment requirement, но только после собственных строгих section gates.
+- **Решение:** global relevance gate является high-recall prefilter, а не
+  финальным editorial classifier. Он пропускает explicit AI или recognised
+  future-tech family только вместе с concrete material action (deployment,
+  trial/operations, authorization/regulation, partnership, appointment,
+  rollout или governance/accountability development). Future-tech family
+  включает autonomy/driverless mobility, robotics/cobots, smart
+  infrastructure, advanced construction, future mobility и human-machine
+  systems. Техническое corroboration остаётся diagnostic signal и не
+  блокирует discovery; factual independent corroboration проверяется позже
+  в research/evidence pipeline. Unchanged section scorers определяют
+  News/People/Places/Unspoken fit и qualification.
 - **Причина:** REVELATIONS освещает AI и доказуемые future-facing
   technological transformations, не превращая scanner в общий фильтр
   по словам technology, smart или futuristic.

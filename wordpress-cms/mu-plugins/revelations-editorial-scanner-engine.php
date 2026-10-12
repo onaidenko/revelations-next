@@ -391,6 +391,97 @@ function revelations_editorial_scanner_ai_signals(): array {
                 'approved',
                 'approve',
             ),
+
+            /*
+             * The global gate is a discovery prefilter. These actions do
+             * not qualify a story editorially on their own; they only let
+             * an otherwise explicit AI or future-tech subject reach its
+             * section scorer.
+             */
+            'trial_or_pilot' => array(
+                'trial',
+                'trials',
+                'pilot',
+                'pilots',
+                'piloting',
+            ),
+
+            'operations' => array(
+                'begin operations',
+                'begins operations',
+                'began operations',
+                'start operations',
+                'starts operations',
+                'started operations',
+                'daily operations',
+                'commercial operations',
+                'commercial operation',
+            ),
+
+            'authorization' => array(
+                'authorization',
+                'authorisation',
+                'authorized',
+                'authorised',
+                'exemption',
+                'exemptions',
+                'exempt',
+            ),
+
+            'governance_change' => array(
+                'regulation',
+                'regulations',
+                'regulatory approval',
+                'rule change',
+                'rule changes',
+                'policy change',
+                'policy changes',
+            ),
+
+            'partnership_or_contract' => array(
+                'partnership',
+                'partnerships',
+                'contract',
+                'contracts',
+            ),
+
+            'rollout' => array(
+                'rolling out',
+                'rolls out',
+                'rolled out',
+                'rollout',
+            ),
+
+            'appointment' => array(
+                'appointing',
+                'appoints',
+                'appointed',
+                'appointment',
+                'named',
+                'names',
+            ),
+
+            'governance_or_safety_proposal' => array(
+                'proposal',
+                'proposals',
+                'proposes',
+                'proposed',
+                'emergency brake',
+                'safety measure',
+                'safety measures',
+            ),
+
+            'accountability_or_disclosure' => array(
+                'accountability',
+                'disclosure',
+                'disclosures',
+                'disclose',
+                'disclosed',
+                'nda',
+                'ndas',
+                'non-disclosure agreement',
+                'non-disclosure agreements',
+            ),
         ),
     );
 }
@@ -613,36 +704,41 @@ function revelations_editorial_scanner_future_tech_signals(): array {
             'humanoid robot', 'humanoid robots', 'service robot',
             'service robots', 'industrial robot', 'industrial robots',
             'embodied system', 'embodied systems', 'robotic', 'robotics',
-            'robots', 'robot', 'humanoid',
+            'robots', 'robot', 'humanoid', 'cobot', 'cobots',
         ),
         'autonomous_mobility' => array(
             'autonomous shuttle', 'autonomous transport',
             'autonomous delivery', 'autonomous vehicle',
             'autonomous vehicles', 'autonomous system',
             'autonomous systems', 'self-driving', 'driverless', 'robotaxi',
-            'robotaxis', 'unmanned system', 'unmanned systems', 'autonomous',
+            'robotaxis', 'unmanned system', 'unmanned systems',
+            'autonomous trucking', 'autonomous truck', 'autonomous trucks',
+            'av truck', 'av trucks', 'av freight', 'autonomy', 'autonomous',
         ),
         'smart_physical_infrastructure' => array(
             'intelligent transport system', 'intelligent infrastructure',
             'connected infrastructure', 'automated infrastructure',
             'smart building', 'smart airport', 'smart transport',
-            'smart city', 'digital twin',
+            'smart city', 'smart cities', 'smart infrastructure', 'digital twin',
         ),
         'advanced_construction' => array(
             'additive construction', 'robotic construction',
             'construction robot', 'construction robots',
             'automated construction', 'autonomous construction',
+            'advanced construction', 'additive manufacturing',
             '3d-printed', '3d printed', '3d printing',
         ),
         'future_mobility' => array(
             'next-generation transport system', 'autonomous transit',
-            'autonomous mobility', 'air taxi', 'evtol',
+            'autonomous mobility', 'future mobility', 'air taxi', 'evtol',
         ),
         'human_machine_environment' => array(
             'robot-operated hotel', 'robot-operated restaurant',
             'robot-operated facility', 'automated physical environment',
             'robotic service environment', 'autonomous facility',
-            'intelligent physical environment',
+            'intelligent physical environment', 'human-machine system',
+            'human-machine systems', 'human machine system',
+            'human machine systems',
         ),
     );
 }
@@ -727,12 +823,11 @@ function revelations_editorial_scanner_future_tech_gate( array $story ): array {
         $text
     ) === 1;
     $qualified = array() !== $family_matches &&
-        array() !== $action_matches &&
-        array() !== $corroboration_matches;
+        array() !== $action_matches;
     $code = $qualified ? '' : (
         array() === $family_matches
             ? ( $generic ? 'generic_futurism_only' : 'no_ai_or_future_tech_signal' )
-            : ( array() === $action_matches ? 'future_tech_without_action' : 'future_tech_without_corroboration' )
+            : 'future_tech_without_action'
     );
 
     return array(
@@ -742,7 +837,7 @@ function revelations_editorial_scanner_future_tech_gate( array $story ): array {
         'future_tech_action_matches' => $action_matches,
         'rejection_code' => $code,
         'reason' => $qualified
-            ? 'Future-tech subject has action and corroboration.'
+            ? 'Future-tech subject has a material action.'
             : $code,
     );
 }
@@ -897,11 +992,7 @@ function revelations_editorial_scanner_ai_gate(
 
     $direct_qualified =
         count( $direct_matches ) >= 1 &&
-        count( $action_matches ) >= 1 &&
-        (
-            count( $technical_matches ) >= 1 ||
-            count( $direct_matches ) >= 2
-        );
+        count( $action_matches ) >= 1;
 
     $contextual_qualified =
         0 === count( $direct_matches ) &&

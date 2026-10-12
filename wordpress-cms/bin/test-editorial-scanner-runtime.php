@@ -168,6 +168,8 @@ require_once $plugin_dir .
     '/revelations-editorial-unspoken-scanner.php';
 require_once $plugin_dir .
     '/revelations-editorial-logs.php';
+require_once $plugin_dir .
+    '/revelations-editorial-storage.php';
 
 $GLOBALS['wpdb'] =
     new RevelationsScannerTestWpdb();
@@ -551,10 +553,6 @@ $gate_cases = array(
         'Gemini launches a model',
         'Gemini launches a model for teams.',
     ),
-    'insufficient_ai_context' => array(
-        'AI launches a service',
-        'AI launches a service for customers.',
-    ),
 );
 
 foreach ( $gate_cases as $expected => $case ) {
@@ -573,6 +571,107 @@ foreach ( $gate_cases as $expected => $case ) {
         'global gate reports ' . $expected
     );
 }
+
+$global_gate_regressions = array(
+    'autonomous trucking exemption' => array(
+        'section' => 'news',
+        'story' => array(
+            'title' => 'AV truck fleets win 5-Year exemption on warning beacons',
+            'summary' => 'Federal regulators granted the five-year exemption.',
+            'source_name' => 'FreightWaves Autonomous Trucking',
+        ),
+        'branch' => 'future_tech',
+    ),
+    'daily driverless freight deployment' => array(
+        'section' => 'places',
+        'story' => array(
+            'title' => 'Einride, EASE begin daily driverless freight runs in Ohio',
+            'summary' => 'The companies begin daily operations on a commercial route.',
+        ),
+        'branch' => 'future_tech',
+    ),
+    'ai safety emergency-brake proposal' => array(
+        'section' => 'people',
+        'story' => array(
+            'title' => 'Satya Nadella says AI models need an emergency brake',
+            'summary' => 'The technical leader proposes a safety measure for AI models.',
+        ),
+        'branch' => 'ai',
+    ),
+    'ai data-center nda accountability change' => array(
+        'section' => 'unspoken',
+        'story' => array(
+            'title' => 'Can the AI industry persuade data center opponents by getting rid of NDAs?',
+            'summary' => 'The accountability proposal would disclose data-center agreements.',
+        ),
+        'branch' => 'ai',
+    ),
+);
+
+foreach ( $global_gate_regressions as $label => $fixture ) {
+    $result = revelations_editorial_scanner_ai_gate(
+        $fixture['story'],
+        $fixture['section']
+    );
+
+    revelations_scanner_runtime_test(
+        true === ( $result['qualified'] ?? false ) &&
+        $fixture['branch'] === ( $result['gate_branch'] ?? '' ),
+        'global gate passes ' . $label
+    );
+}
+
+$global_gate_negative_fixtures = array(
+    'career advice' => array(
+        'Career advice: how to use AI at work',
+        'A columnist shares generic career tips.',
+    ),
+    'hotel opening' => array(
+        'Luxury hotel opens downtown',
+        'The property adds restaurants and a spa.',
+    ),
+    'generic leadership' => array(
+        'The AI leadership playbook for executives',
+        'A generic leadership article offers management advice.',
+    ),
+    'entertainment' => array(
+        'AI film wins at a festival',
+        'An entertainment review discusses the winner.',
+    ),
+    'ordinary construction' => array(
+        'Construction company begins building apartments',
+        'The developer starts ordinary housing work downtown.',
+    ),
+);
+
+foreach ( $global_gate_negative_fixtures as $label => $fixture ) {
+    $result = revelations_editorial_scanner_ai_gate(
+        array(
+            'title' => $fixture[0],
+            'summary' => $fixture[1],
+        ),
+        'news'
+    );
+
+    revelations_scanner_runtime_test(
+        empty( $result['qualified'] ),
+        'global gate still rejects generic ' . $label
+    );
+}
+
+$fetched_items_json = revelations_editorial_sanitize_fetched_items_meta(
+    '[{"source":"People Feed","title":"<Technical> leader joins AI lab","canonical_url":"https://example.test/item","published_at":"2026-10-13T00:00:00+00:00","stage":"scored","global_rejection_code":"","section_rejection_code":""}]'
+);
+
+revelations_scanner_runtime_test(
+    is_array( json_decode( $fetched_items_json, true ) ) &&
+    str_contains( $fetched_items_json, '<Technical> leader joins AI lab' ) &&
+    str_contains(
+        (string) file_get_contents( $plugin_dir . '/revelations-editorial-storage.php' ),
+        "'_rev_fetched_items' === \$key"
+    ),
+    'fetched-item diagnostics retain valid JSON without textarea sanitization'
+);
 
 $people_advice =
     revelations_editorial_score_people_story(

@@ -15,7 +15,32 @@
   20/14d. The latest RSS run per section retains a bounded fetched-item list
   with source, title, canonical URL, timestamp, stage and rejection codes;
   RSS summaries and bodies are not stored, and older run lists are removed.
-- No production scan, deploy, database setting write, commit or push was run.
+- The source-coverage release was subsequently deployed through the canonical
+  targeted CMS procedure. The follow-up global-gate work below uses only
+  isolated diagnostics; it does not deploy, write the database or run feeds.
+
+Дата изменения: 2026-10-13.
+
+## Global relevance high-recall prefilter
+
+- The global relevance gate now passes an explicit AI or future-tech family
+  only when it also sees a bounded material action. It recognizes deployment,
+  trials, operations, authorization/regulation, partnerships, appointments,
+  rollouts and concrete safety, governance or accountability developments.
+  It does not decide editorial fit; the unchanged section scorer does that.
+- Future-tech discovery recognizes autonomy/driverless freight, robotics and
+  cobots, smart infrastructure, advanced construction, future mobility and
+  human-machine systems. Technical corroboration remains diagnostic-only at
+  this stage; independent factual corroboration remains a later research
+  requirement.
+- `_rev_fetched_items` now uses a JSON-validating meta callback rather than
+  generic textarea sanitization, so titles containing markup-like characters
+  cannot corrupt the bounded diagnostics payload. Its schema and retained
+  fields are unchanged.
+- Isolated scanner diagnostics: runtime 86/88 with the two known baseline
+  scorer failures; Unspoken 35/39 with its four known baseline failures.
+  The new global-gate fixtures and PHP syntax checks passed. No production
+  scan, deploy, OpenAI request, commit or push was run.
 
 Дата изменения: 2026-10-13.
 
