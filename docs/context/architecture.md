@@ -29,24 +29,29 @@ approval requirement are canonical in
 
 - `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, глобальная дедупликация, strict AI or future-tech gate и section scorer. News/Places/Tech future-tech branch требует family signal, action и независимый implementation/corroboration signal. People/Unspoken используют тот же common family layer без deployment requirement и затем применяют собственные gates: central significant person или evidenced Unspoken angle.
 - `revelations-editorial-{news,people,tech,places,unspoken}-scanner.php` — источники, ключевые слова, пороги и scoring соответствующего раздела. News separates product/deployment, concrete-research, major-capital and strategic-company events; only exceptional capital events use their impact-and-scale path instead of implementation maturity. Каждый scanner вызывает общий engine.
-- `revelations-editorial-scanner-settings.php` — профили News, People, Tech, Places и Unspoken: включение, preview limit, активные и отключённые источники, keyword groups и thresholds.
-- Runtime settings выполняют pure-нормализацию только Unspoken:
-  legacy-пустой профиль получает актуальные default feeds, частичный
-  профиль — только отсутствующие поля. Явные operator values и
-  `enabled=false` сохраняются; обычное чтение option не выполняет
-  запись. Отдельная idempotent migration function доступна только для
-  явного вызова.
+- `revelations-editorial-scanner-settings.php` — профили News, People, Tech, Places и Unspoken: включение, preview limit, активные и отключённые источники, keyword groups и thresholds. Active source carries discovery-only `priority` and `volume`; neither value is a factual authority, reliability or evidence role.
+- Runtime settings выполняют pure-нормализацию Unspoken и source coverage:
+  legacy-пустой профиль получает актуальные default feeds, а exact former
+  shipped source pool получает approved replacement. Частичный профиль,
+  `enabled=false` и любой operator-edited source list сохраняются; обычное
+  чтение option не выполняет запись. Отдельная idempotent migration function
+  доступна только для явного вызова.
 - `revelations-editorial-preview-engine.php` — registry и общий запуск preview для пяти разделов, runtime-настройки, transient preview и run logging.
 - `revelations-editorial-{news,people,tech,places,unspoken}-preview.php` — административные preview-интерфейсы разделов.
-- Unspoken scanner по умолчанию выключен. Его source pool ограничен MIT Technology Review, WIRED, BBC Technology и The Verge.
+- Unspoken scanner по умолчанию выключен. Его discovery pool combines broad
+  technology reporting with accountability sources: TechCrunch, TechCrunch AI,
+  WIRED, The Verge, 404 Media, Rest of World, MIT Technology Review, BBC
+  Technology, The Markup, EFF Deeplinks, Grist and Smart Cities Dive.
 - Unspoken сохраняет legacy tracks `documented_harm`, `failure_or_reversal`, `economic_model_failure`, `legal_or_governance_conflict` и `labor_or_social_cost`, а также принимает evidence-backed hidden-labor, limitation, human-effect, trust/identity, infrastructure-cost, autonomy-gap и second-order angles. Negative sentiment сам по себе не квалифицирует материал.
 - После общего relevance gate Unspoken требует evidence, свежесть и конкретный hidden/overlooked angle либо legacy track. Total threshold равен `5.2`, что выше самого строгого действующего total threshold остальных разделов `4.8`; implementation сохраняется как diagnostic score, но evidence-backed emerging issues не требуют deployment-maturity minimum. Обязательные evidence/angle gates нельзя компенсировать aggregate score.
 - Общий engine агрегирует machine-readable rejection counts отдельно
-  для global gate и section scorer. Постоянный run log хранит только
-  bounded source counts, rejection counts и не более десяти closest
-  rejected items, а также bounded qualified items, с signal/score
-  diagnostics, включая bounded evidence type/signals; RSS summary и source
-  snapshot не сохраняются.
+  для global gate и section scorer. Discovery volume selects bounded source
+  windows: high 50 entries/72h, medium 30/7d and low 20/14d. Постоянный run
+  log хранит source counts, rejection counts, не более десяти closest rejected
+  и bounded qualified items, а также complete bounded fetched-item metadata
+  for only the latest RSS run in each section. Fetched metadata is source,
+  title, canonical URL, timestamp, stage and rejection codes; RSS summary,
+  article body и source snapshot не сохраняются.
 - People scorer до scoring отклоняет generic leadership advice без
   нового события, но сохраняет новости о решении, назначении,
   заявлении или действии конкретного человека.

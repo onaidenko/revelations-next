@@ -142,20 +142,36 @@ $source_names = array_column(
 
 revelations_unspoken_test(
     array(
-        'MIT Technology Review',
+        'TechCrunch',
+        'TechCrunch AI',
         'WIRED',
-        'BBC Technology',
         'The Verge',
+        '404 Media',
+        'Rest of World',
+        'MIT Technology Review',
+        'BBC Technology',
+        'The Markup',
+        'EFF Deeplinks',
+        'Grist',
+        'Smart Cities Dive',
     ) === $source_names,
-    'source pool contains exactly the four approved media'
+    'source pool contains the approved accountability reporting sources'
 );
 
 revelations_unspoken_test(
     array(
-        'https://www.technologyreview.com/feed/',
+        'https://techcrunch.com/feed/',
+        'https://techcrunch.com/category/artificial-intelligence/feed/',
         'https://www.wired.com/feed/rss',
-        'https://feeds.bbci.co.uk/news/technology/rss.xml',
         'https://www.theverge.com/rss/index.xml',
+        'https://www.404media.co/rss/',
+        'https://restofworld.org/feed/latest/',
+        'https://www.technologyreview.com/feed/',
+        'https://feeds.bbci.co.uk/news/technology/rss.xml',
+        'https://themarkup.org/feeds/rss.xml',
+        'https://www.eff.org/rss/updates.xml',
+        'https://grist.org/feed/',
+        'https://www.smartcitiesdive.com/feeds/news/',
     ) === array_column(
         $profile['active_sources'] ?? array(),
         'url'
@@ -206,7 +222,7 @@ $fallback =
 
 revelations_unspoken_test(
     'unspoken' === ( $fallback['section'] ?? '' ) &&
-    4 === count(
+    12 === count(
         $fallback['sources_failed'] ?? array()
     ) &&
     0 === ( $fallback['candidates_created'] ?? -1 ) &&

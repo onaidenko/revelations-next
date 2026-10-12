@@ -119,6 +119,20 @@ cannot override that Constitution without explicit product-owner approval.
 
 ## Общая AI-направленность
 
+- **Решение:** RSS source coverage is a discovery concern, separate from
+  factual research authority. Source `primary`, `secondary` and
+  `supplementary` labels govern discovery priority only and must never become
+  factual-source roles. Feed volumes use bounded high (50/72h), medium
+  (30/7d) and low (20/14d) windows before the unchanged global relevance gate.
+- **Safeguard:** the latest RSS run per section retains only bounded
+  fetched-item metadata and stage/rejection codes. No RSS summary, article
+  body or source snapshot is retained; an incoming RSS run clears that list
+  from older runs in the same section.
+- **Compatibility:** only a source list that exactly matches a former shipped
+  default is replaced in memory. Operator-edited lists, factual source
+  classifications, global relevance logic, section scorers and thresholds are
+  not modified by the coverage update.
+
 - **Решение:** все editorial sections принимают material через strict
   `AI OR meaningful future-tech` global relevance. Existing AI branch
   сохраняется без изменений. News/Places/Tech future-tech branch требует

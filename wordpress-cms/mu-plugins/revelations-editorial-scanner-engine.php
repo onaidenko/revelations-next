@@ -1494,13 +1494,78 @@ function revelations_editorial_scanner_format_story(
 }
 
 /**
+ * Return the bounded RSS window for a discovery source.
+ *
+ * Discovery volume affects only RSS retrieval. It is never a factual-source
+ * authority, reliability, or evidence classification.
+ *
+ * @param array<string, mixed> $source Discovery source configuration.
+ * @return array{item_limit:int,freshness_hours:int}
+ */
+function revelations_editorial_scanner_source_window( array $source ): array {
+    $volume = sanitize_key(
+        (string) ( $source['discovery_volume'] ?? 'medium' )
+    );
+
+    if ( 'high' === $volume ) {
+        return array(
+            'item_limit' => 50,
+            'freshness_hours' => 72,
+        );
+    }
+
+    if ( 'low' === $volume ) {
+        return array(
+            'item_limit' => 20,
+            'freshness_hours' => 336,
+        );
+    }
+
+    return array(
+        'item_limit' => 30,
+        'freshness_hours' => 168,
+    );
+}
+
+/**
+ * Format one bounded RSS discovery diagnostic without retaining feed text.
+ *
+ * @param array<string, mixed> $story Scanner story fields.
+ * @return array<string, string>
+ */
+function revelations_editorial_scanner_fetched_item_diagnostic(
+    array $story,
+    string $stage,
+    string $global_rejection_code = '',
+    string $section_rejection_code = ''
+): array {
+    return array(
+        'source' => sanitize_text_field(
+            (string) ( $story['source_name'] ?? '' )
+        ),
+        'title' => sanitize_text_field(
+            (string) ( $story['title'] ?? '' )
+        ),
+        'canonical_url' => esc_url_raw(
+            (string) ( $story['source_url'] ?? '' )
+        ),
+        'published_at' => sanitize_text_field(
+            (string) ( $story['published_at'] ?? '' )
+        ),
+        'stage' => sanitize_key( $stage ),
+        'global_rejection_code' => sanitize_key( $global_rejection_code ),
+        'section_rejection_code' => sanitize_key( $section_rejection_code ),
+    );
+}
+
+/**
  * Run one section scanner without writing candidates or logs.
  *
  * The scoring callback must return either:
  * - a common score array; or
  * - null when the story should be filtered out.
  *
- * @param array<int, array{name:string,url:string}> $sources
+ * @param array<int, array{name:string,url:string,discovery_priority?:string,discovery_volume?:string}> $sources
  * @param array<int, array{name:string,reason:string}> $disabled_sources
  * @param callable(array<string,mixed>): ?array<string,mixed> $score_story
  * @param array<string, mixed> $thresholds
@@ -1512,8 +1577,7 @@ function revelations_editorial_scanner_run_dry_run(
     array $disabled_sources,
     callable $score_story,
     array $thresholds,
-    int $qualified_limit = 10,
-    int $items_per_source = 20
+    int $qualified_limit = 10
 ): array {
     if ( ! function_exists( 'fetch_feed' ) ) {
         require_once ABSPATH . WPINC . '/feed.php';
@@ -1526,11 +1590,6 @@ function revelations_editorial_scanner_run_dry_run(
     $qualified_limit = max(
         1,
         min( 20, $qualified_limit )
-    );
-
-    $items_per_source = max(
-        1,
-        min( 50, $items_per_source )
     );
 
     $seen_keys =
@@ -1555,6 +1614,7 @@ function revelations_editorial_scanner_run_dry_run(
     );
     $below_threshold_scores = array();
     $closest_rejected = array();
+    $fetched_items = array();
 
     foreach ( $sources as $source ) {
         if ( ! is_array( $source ) ) {
@@ -1581,6 +1641,9 @@ function revelations_editorial_scanner_run_dry_run(
             $invalid_removed++;
             continue;
         }
+
+        $source_window =
+            revelations_editorial_scanner_source_window( $source );
 
         $started = microtime( true );
 
@@ -1625,7 +1688,7 @@ function revelations_editorial_scanner_run_dry_run(
             $source_name;
 
         $quantity = (int) $feed->get_item_quantity(
-            $items_per_source
+            $source_window['item_limit']
         );
 
         $source_results[] = array(
@@ -1637,6 +1700,12 @@ function revelations_editorial_scanner_run_dry_run(
 
             'items' =>
                 $quantity,
+
+                'item_limit' =>
+                    $source_window['item_limit'],
+
+                'freshness_hours' =>
+                    $source_window['freshness_hours'],
 
             'duration_ms' =>
                 $duration_ms,
@@ -1663,6 +1732,16 @@ function revelations_editorial_scanner_run_dry_run(
                 '' === $source_url
             ) {
                 $invalid_removed++;
+
+                $fetched_items[] =
+                    revelations_editorial_scanner_fetched_item_diagnostic(
+                        array(
+                            'source_name' => $source_name,
+                            'title' => $title,
+                            'source_url' => $source_url,
+                        ),
+                        'invalid'
+                    );
                 continue;
             }
 
@@ -1692,6 +1771,28 @@ function revelations_editorial_scanner_run_dry_run(
                     )
                     : '';
 
+            $fetched_story = array(
+                'source_name' => $source_name,
+                'title' => $title,
+                'source_url' => $source_url,
+                'published_at' => $published_at,
+            );
+
+            if (
+                $published_timestamp > 0 &&
+                ( time() - $published_timestamp ) >
+                    ( $source_window['freshness_hours'] * HOUR_IN_SECONDS )
+            ) {
+                $invalid_removed++;
+                $fetched_items[] =
+                    revelations_editorial_scanner_fetched_item_diagnostic(
+                        $fetched_story,
+                        'invalid',
+                        'outside_freshness_horizon'
+                    );
+                continue;
+            }
+
             $duplicate_key = function_exists(
                 'revelations_editorial_duplicate_key'
             )
@@ -1709,6 +1810,11 @@ function revelations_editorial_scanner_run_dry_run(
                 )
             ) {
                 $duplicates_removed++;
+                $fetched_items[] =
+                    revelations_editorial_scanner_fetched_item_diagnostic(
+                        $fetched_story,
+                        'deduplicated'
+                    );
                 continue;
             }
 
@@ -1793,6 +1899,12 @@ function revelations_editorial_scanner_run_dry_run(
                         'gate_branch' => $ai_gate['gate_branch'] ?? '',
                     )
                 );
+                $fetched_items[] =
+                    revelations_editorial_scanner_fetched_item_diagnostic(
+                        $story,
+                        'global_rejected',
+                        $rejection_code
+                    );
                 $closest = revelations_editorial_scanner_format_story(
                     array_merge(
                         $story,
@@ -1832,6 +1944,13 @@ function revelations_editorial_scanner_run_dry_run(
                     'unspecified_section_rejection',
                     $story
                 );
+                $fetched_items[] =
+                    revelations_editorial_scanner_fetched_item_diagnostic(
+                        $story,
+                        'scored',
+                        '',
+                        'unspecified_section_rejection'
+                    );
 
                 continue;
             }
@@ -1851,6 +1970,13 @@ function revelations_editorial_scanner_run_dry_run(
                     'unspecified_section_rejection',
                     $story
                 );
+                $fetched_items[] =
+                    revelations_editorial_scanner_fetched_item_diagnostic(
+                        $story,
+                        'scored',
+                        '',
+                        'unspecified_section_rejection'
+                    );
 
                 continue;
             }
@@ -1878,6 +2004,13 @@ function revelations_editorial_scanner_run_dry_run(
                     $story,
                     $scores
                 );
+                $fetched_items[] =
+                    revelations_editorial_scanner_fetched_item_diagnostic(
+                        $story,
+                        'scored',
+                        '',
+                        $rejection_code
+                    );
 
                 $closest = revelations_editorial_scanner_format_story(
                     array_merge(
@@ -1960,6 +2093,19 @@ function revelations_editorial_scanner_run_dry_run(
                     $below_threshold_story;
                 $below_threshold_story['_diagnostic_depth'] = 3;
                 $closest_rejected[] = $below_threshold_story;
+                $fetched_items[] =
+                    revelations_editorial_scanner_fetched_item_diagnostic(
+                        $story,
+                        'scored',
+                        '',
+                        $rejection_code
+                    );
+            } else {
+                $fetched_items[] =
+                    revelations_editorial_scanner_fetched_item_diagnostic(
+                        $story,
+                        'qualified'
+                    );
             }
 
             $stories[] = array_merge(
@@ -2110,6 +2256,8 @@ function revelations_editorial_scanner_run_dry_run(
             ),
 
         'closest_rejected' => array_slice( $closest_rejected, 0, 10 ),
+
+        'fetched_items' => array_slice( $fetched_items, 0, 1000 ),
 
         'scored_stories' =>
             count( $stories ),

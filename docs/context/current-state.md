@@ -1,5 +1,24 @@
 # Текущее состояние
 
+## RSS source-coverage update
+
+- News, People, Places and Unspoken now use the approved discovery pools for
+  AI, robotics, autonomy, smart infrastructure, technical people and
+  accountability reporting. Fast Company Leadership, Entrepreneur Latest,
+  Sleeper Magazine, Hospitality Design and the production-403 ArchDaily feed
+  are no longer active; Designboom is supplementary discovery only.
+- Each source declares discovery-only priority and volume. These values do not
+  alter factual source authority, reliability or evidence roles. Exact former
+  shipped pools are normalized in memory to the approved lists; an
+  operator-edited source list is preserved without an option write.
+- RSS retrieval uses source-class windows: high 50/72h, medium 30/7d and low
+  20/14d. The latest RSS run per section retains a bounded fetched-item list
+  with source, title, canonical URL, timestamp, stage and rejection codes;
+  RSS summaries and bodies are not stored, and older run lists are removed.
+- No production scan, deploy, database setting write, commit or push was run.
+
+Дата изменения: 2026-10-13.
+
 ## Manual source-draft intake validation
 
 - Manual candidates now require a non-empty title, a valid source URL and an

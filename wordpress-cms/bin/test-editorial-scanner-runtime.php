@@ -216,6 +216,174 @@ function revelations_scanner_runtime_story(
 
 $defaults =
     revelations_editorial_default_scanner_settings();
+
+/** @return string[] */
+function revelations_scanner_runtime_source_names( array $profile ): array {
+    return array_values(
+        array_filter(
+            array_map(
+                static fn ( mixed $source ): string =>
+                    is_array( $source )
+                        ? (string) ( $source['name'] ?? '' )
+                        : '',
+                is_array( $profile['active_sources'] ?? null )
+                    ? $profile['active_sources']
+                    : array()
+            )
+        )
+    );
+}
+
+$news_sources = revelations_scanner_runtime_source_names(
+    $defaults['news']
+);
+$people_sources = revelations_scanner_runtime_source_names(
+    $defaults['people']
+);
+$places_sources = revelations_scanner_runtime_source_names(
+    $defaults['places']
+);
+$unspoken_sources = revelations_scanner_runtime_source_names(
+    $defaults['unspoken']
+);
+
+revelations_scanner_runtime_test(
+    array(
+        'TechCrunch',
+        'TechCrunch AI',
+        'The Robot Report',
+        'Smart Cities Dive',
+        'FreightWaves Autonomous Trucking',
+        'Dubai Media Office',
+        'The Verge',
+        'WIRED',
+        'MIT Technology Review',
+        'BBC Technology',
+        'IEEE Spectrum Robotics',
+        'Global Construction Review',
+    ) === $news_sources &&
+    array(
+        'TechCrunch',
+        'TechCrunch AI',
+        'The Verge',
+        'The Robot Report',
+        'TechCrunch Startups',
+        'WIRED',
+        'MIT Technology Review',
+        'IEEE Spectrum Robotics',
+        'Ars Technica',
+        'Nature Machine Learning',
+        'Quanta Magazine',
+    ) === $people_sources &&
+    array(
+        'Dubai Media Office',
+        'Smart Cities Dive',
+        'Cities Today',
+        'The Robot Report',
+        'FreightWaves Autonomous Trucking',
+        'Construction Dive',
+        'Global Construction Review',
+        'Designboom',
+    ) === $places_sources,
+    'News, People and Places pools match the approved discovery configuration'
+);
+
+revelations_scanner_runtime_test(
+    in_array( 'FreightWaves Autonomous Trucking', $news_sources, true ) &&
+    in_array( 'Smart Cities Dive', $news_sources, true ),
+    'News discovery pool covers autonomous freight and deployment regulation'
+);
+
+revelations_scanner_runtime_test(
+    in_array( 'Dubai Media Office', $places_sources, true ) &&
+    in_array( 'The Robot Report', $places_sources, true ) &&
+    in_array( 'Construction Dive', $places_sources, true ),
+    'Places discovery pool covers smart-city mobility, robotics and infrastructure'
+);
+
+revelations_scanner_runtime_test(
+    in_array( 'TechCrunch AI', $people_sources, true ) &&
+    in_array( 'IEEE Spectrum Robotics', $people_sources, true ) &&
+    in_array( 'Quanta Magazine', $people_sources, true ) &&
+    ! in_array( 'Fast Company Leadership', $people_sources, true ) &&
+    ! in_array( 'Entrepreneur Latest', $people_sources, true ),
+    'People discovery pool is broad technical reporting without leadership feeds'
+);
+
+revelations_scanner_runtime_test(
+    in_array( '404 Media', $unspoken_sources, true ) &&
+    in_array( 'The Markup', $unspoken_sources, true ) &&
+    in_array( 'EFF Deeplinks', $unspoken_sources, true ) &&
+    in_array( 'Grist', $unspoken_sources, true ),
+    'Unspoken discovery pool covers infrastructure, privacy, accountability and community impact'
+);
+
+revelations_scanner_runtime_test(
+    array( 'item_limit' => 50, 'freshness_hours' => 72 ) ===
+        revelations_editorial_scanner_source_window(
+            array( 'discovery_volume' => 'high' )
+        ) &&
+    array( 'item_limit' => 30, 'freshness_hours' => 168 ) ===
+        revelations_editorial_scanner_source_window(
+            array( 'discovery_volume' => 'medium' )
+        ) &&
+    array( 'item_limit' => 20, 'freshness_hours' => 336 ) ===
+        revelations_editorial_scanner_source_window(
+            array( 'discovery_volume' => 'low' )
+        ),
+    'discovery volume uses bounded 72-hour, 7-day and 14-day RSS windows'
+);
+
+$legacy_coverage = array();
+foreach (
+    revelations_editorial_legacy_scanner_source_signatures()
+    as $section => $signatures
+) {
+    $legacy_coverage[ $section ] = array(
+        'active_sources' => array_map(
+            static function ( string $signature ): array {
+                $parts = explode( '|', $signature, 2 );
+                return array(
+                    'name' => $parts[0],
+                    'url' => $parts[1],
+                );
+            },
+            $signatures
+        ),
+    );
+}
+
+$coverage_normalized =
+    revelations_editorial_normalize_scanner_source_coverage_settings(
+        $legacy_coverage,
+        $defaults
+    );
+
+revelations_scanner_runtime_test(
+    12 === count( $coverage_normalized['news']['active_sources'] ?? array() ) &&
+    11 === count( $coverage_normalized['people']['active_sources'] ?? array() ) &&
+    8 === count( $coverage_normalized['places']['active_sources'] ?? array() ) &&
+    12 === count( $coverage_normalized['unspoken']['active_sources'] ?? array() ) &&
+    'primary' === ( $coverage_normalized['news']['active_sources'][0]['discovery_priority'] ?? '' ),
+    'exact legacy source pools receive the approved discovery update in memory'
+);
+
+$coverage_custom = $legacy_coverage;
+$coverage_custom['news']['active_sources'][] = array(
+    'name' => 'Operator Source',
+    'url' => 'https://example.test/feed.xml',
+);
+
+revelations_scanner_runtime_test(
+    $coverage_custom['news']['active_sources'] === (
+        revelations_editorial_normalize_scanner_source_coverage_settings(
+            $coverage_custom,
+            $defaults
+        )['news']['active_sources'] ?? null
+    ),
+    'source-coverage normalization preserves operator-edited pools'
+);
+
 $legacy = array(
     'news' => array( 'sentinel' => 'unchanged' ),
     'unspoken' =>
@@ -228,7 +396,7 @@ $normalized =
     );
 
 revelations_scanner_runtime_test(
-    4 === count(
+    12 === count(
         $normalized['unspoken']['active_sources'] ?? array()
     ),
     'legacy-empty Unspoken profile receives approved feeds'
@@ -346,7 +514,7 @@ $runtime_settings =
     revelations_editorial_get_scanner_settings();
 
 revelations_scanner_runtime_test(
-    4 === count(
+    12 === count(
         $runtime_settings['unspoken']['active_sources']
         ?? array()
     ) &&
@@ -715,8 +883,7 @@ $aggregate = revelations_editorial_scanner_run_dry_run(
         );
     },
     array(),
-    5,
-    20
+    5
 );
 
 revelations_scanner_runtime_test(
@@ -743,6 +910,18 @@ revelations_scanner_runtime_test(
         ]['total'] ?? 0
     ),
     'aggregate report retains below-threshold section score'
+);
+
+$aggregate_stages = array_column(
+    $aggregate['fetched_items'] ?? array(),
+    'stage'
+);
+
+revelations_scanner_runtime_test(
+    array( 'scored', 'scored', 'qualified' ) === $aggregate_stages &&
+    30 === (int) ( $aggregate['source_results'][0]['item_limit'] ?? 0 ) &&
+    168 === (int) ( $aggregate['source_results'][0]['freshness_hours'] ?? 0 ),
+    'fetched diagnostics record every in-window item and its discovery stage'
 );
 
 $safe_diagnostics = wp_json_encode(
@@ -801,6 +980,18 @@ $persisted_diagnostics =
                     'summary' => 'FULL_SOURCE_TEXT_SENTINEL',
                 ),
             ),
+            'fetched_items' => array(
+                array(
+                    'source' => 'Synthetic Source',
+                    'title' => 'Fetched AI infrastructure story',
+                    'canonical_url' => 'https://example.test/fetched',
+                    'published_at' => '2026-10-13T00:00:00+00:00',
+                    'stage' => 'global_rejected',
+                    'global_rejection_code' => 'insufficient_ai_context',
+                    'section_rejection_code' => '',
+                    'summary' => 'FULL_SOURCE_TEXT_SENTINEL',
+                ),
+            ),
         )
     );
 
@@ -855,9 +1046,34 @@ revelations_scanner_runtime_test(
     'permanent diagnostics retain qualified branch and scores without RSS summaries'
 );
 
+revelations_scanner_runtime_test(
+    'Fetched AI infrastructure story' === (
+        $persisted_diagnostics['fetched_items'][0]['title']
+        ?? ''
+    ) &&
+    'global_rejected' === (
+        $persisted_diagnostics['fetched_items'][0]['stage']
+        ?? ''
+    ) &&
+    'insufficient_ai_context' === (
+        $persisted_diagnostics['fetched_items'][0][
+            'global_rejection_code'
+        ] ?? ''
+    ) &&
+    ! str_contains(
+        wp_json_encode( $persisted_diagnostics['fetched_items'] ?? array() ) ?: '',
+        'FULL_SOURCE_TEXT_SENTINEL'
+    ),
+    'permanent fetched diagnostics retain metadata and rejection stage without RSS text'
+);
+
 $preview_engine_source = file_get_contents(
     $plugin_dir .
     '/revelations-editorial-preview-engine.php'
+);
+$logs_source = file_get_contents(
+    $plugin_dir .
+    '/revelations-editorial-logs.php'
 );
 
 revelations_scanner_runtime_test(
@@ -877,8 +1093,26 @@ revelations_scanner_runtime_test(
     str_contains(
         $preview_engine_source,
         "'qualified_items' =>"
+    ) &&
+    str_contains(
+        $preview_engine_source,
+        "'fetched_items' =>"
     ),
-    'persistent run-log mapping stores bounded source, rejection and qualified diagnostics'
+    'persistent run-log mapping stores bounded source, rejection, qualified and fetched diagnostics'
+);
+
+revelations_scanner_runtime_test(
+    is_string( $logs_source ) &&
+    str_contains( $logs_source, "'_rev_fetched_items'" ) &&
+    str_contains(
+        $logs_source,
+        'revelations_editorial_retain_latest_scan_fetched_items'
+    ) &&
+    str_contains(
+        $logs_source,
+        "delete_post_meta( (int) \$run_id, '_rev_fetched_items' )"
+    ),
+    'only the latest RSS run per section retains fetched-item diagnostics'
 );
 
 echo "\nScanner runtime diagnostics: " .

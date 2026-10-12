@@ -1046,7 +1046,6 @@ function revelations_editorial_unspoken_scan_dry_run(
         revelations_editorial_unspoken_disabled_sources(),
         'revelations_editorial_score_unspoken_story',
         revelations_editorial_unspoken_thresholds(),
-        $qualified_limit,
-        20
+        $qualified_limit
     );
 }

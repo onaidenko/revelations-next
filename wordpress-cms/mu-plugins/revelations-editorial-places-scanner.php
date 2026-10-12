@@ -561,7 +561,6 @@ function revelations_editorial_places_scan_dry_run(
         revelations_editorial_places_disabled_sources(),
         'revelations_editorial_score_places_story',
         revelations_editorial_places_thresholds(),
-        $qualified_limit,
-        20
+        $qualified_limit
     );
 }

@@ -732,7 +732,6 @@ function revelations_editorial_news_scan_dry_run(
         revelations_editorial_news_disabled_sources(),
         'revelations_editorial_score_news_story',
         revelations_editorial_news_thresholds(),
-        $qualified_limit,
-        20
+        $qualified_limit
     );
 }

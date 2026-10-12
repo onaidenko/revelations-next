@@ -41,6 +41,8 @@ function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
             'source' => sanitize_text_field( (string) ( $source['source'] ?? '' ) ),
             'success' => ! empty( $source['success'] ),
             'items' => absint( $source['items'] ?? 0 ),
+            'item_limit' => absint( $source['item_limit'] ?? 0 ),
+            'freshness_hours' => absint( $source['freshness_hours'] ?? 0 ),
             'duration_ms' => absint( $source['duration_ms'] ?? 0 ),
             'error' => sanitize_text_field( (string) ( $source['error'] ?? '' ) ),
         );
@@ -107,11 +109,41 @@ function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
         }
     }
 
+    $fetched_items = array();
+    $allowed_stages = array(
+        'invalid',
+        'deduplicated',
+        'global_rejected',
+        'scored',
+        'qualified',
+    );
+    foreach ( array_slice( is_array( $data['fetched_items'] ?? null ) ? $data['fetched_items'] : array(), 0, 1000 ) as $item ) {
+        if ( ! is_array( $item ) ) {
+            continue;
+        }
+
+        $stage = sanitize_key( (string) ( $item['stage'] ?? '' ) );
+        if ( ! in_array( $stage, $allowed_stages, true ) ) {
+            continue;
+        }
+
+        $fetched_items[] = array(
+            'source' => sanitize_text_field( (string) ( $item['source'] ?? '' ) ),
+            'title' => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
+            'canonical_url' => esc_url_raw( (string) ( $item['canonical_url'] ?? '' ) ),
+            'published_at' => sanitize_text_field( (string) ( $item['published_at'] ?? '' ) ),
+            'stage' => $stage,
+            'global_rejection_code' => sanitize_key( (string) ( $item['global_rejection_code'] ?? '' ) ),
+            'section_rejection_code' => sanitize_key( (string) ( $item['section_rejection_code'] ?? '' ) ),
+        );
+    }
+
     return compact(
         'source_results',
         'rejection_counts',
         'closest_rejected',
-        'qualified_items'
+        'qualified_items',
+        'fetched_items'
     );
 }
 
@@ -188,6 +220,7 @@ function revelations_editorial_create_run_log(
         'rejection_counts'   => array(),
         'closest_rejected'   => array(),
         'qualified_items'    => array(),
+        'fetched_items'      => array(),
     );
 
     $data = wp_parse_args( $data, $defaults );
@@ -416,6 +449,7 @@ function revelations_editorial_create_run_log(
         '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_closest_rejected' => wp_json_encode( $scan_diagnostics['closest_rejected'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_qualified_items' => wp_json_encode( $scan_diagnostics['qualified_items'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+        '_rev_fetched_items' => wp_json_encode( $scan_diagnostics['fetched_items'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
     );
 
     foreach ( $meta as $key => $value ) {
@@ -426,7 +460,50 @@ function revelations_editorial_create_run_log(
         );
     }
 
+    if ( 'rss_scan' === $event_type ) {
+        revelations_editorial_retain_latest_scan_fetched_items(
+            $section,
+            (int) $post_id
+        );
+    }
+
     return (int) $post_id;
+}
+
+/**
+ * Retain fetched-item diagnostics for only the latest RSS scan per section.
+ *
+ * Other run-log diagnostics remain historical; this bounded list is the one
+ * intentionally replaced on each subsequent scan to avoid log growth.
+ */
+function revelations_editorial_retain_latest_scan_fetched_items(
+    string $section,
+    int $current_run_id
+): void {
+    $older_run_ids = get_posts(
+        array(
+            'post_type' => 'rev_run_log',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'post__not_in' => array( $current_run_id ),
+            'meta_query' => array(
+                'relation' => 'AND',
+                array(
+                    'key' => '_rev_section',
+                    'value' => $section,
+                ),
+                array(
+                    'key' => '_rev_event_type',
+                    'value' => 'rss_scan',
+                ),
+            ),
+        )
+    );
+
+    foreach ( $older_run_ids as $run_id ) {
+        delete_post_meta( (int) $run_id, '_rev_fetched_items' );
+    }
 }
 
 /**

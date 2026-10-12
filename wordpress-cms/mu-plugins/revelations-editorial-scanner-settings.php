@@ -79,6 +79,28 @@ function revelations_editorial_empty_scanner_profile(): array {
 }
 
 /**
+ * Build discovery-only metadata for one RSS source.
+ *
+ * These fields govern RSS discovery order and bounded fetch windows only.
+ * They are never factual-source authority, reliability or evidence roles.
+ *
+ * @return array{name:string,url:string,discovery_priority:string,discovery_volume:string}
+ */
+function revelations_editorial_discovery_source(
+    string $name,
+    string $url,
+    string $discovery_priority,
+    string $discovery_volume
+): array {
+    return array(
+        'name' => $name,
+        'url' => $url,
+        'discovery_priority' => $discovery_priority,
+        'discovery_volume' => $discovery_volume,
+    );
+}
+
+/**
  * Default scanner profiles.
  *
  * Tech retains its working configuration. Other sections begin
@@ -98,29 +120,9 @@ function revelations_editorial_default_scanner_settings(): array {
                 10,
 
             'active_sources' => array(
-                array(
-                    'name' =>
-                        'TechCrunch AI',
-
-                    'url' =>
-                        'https://techcrunch.com/category/artificial-intelligence/feed/',
-                ),
-
-                array(
-                    'name' =>
-                        'The Robot Report',
-
-                    'url' =>
-                        'https://www.therobotreport.com/feed/',
-                ),
-
-                array(
-                    'name' =>
-                        'MIT Technology Review',
-
-                    'url' =>
-                        'https://www.technologyreview.com/feed/',
-                ),
+                revelations_editorial_discovery_source( 'TechCrunch AI', 'https://techcrunch.com/category/artificial-intelligence/feed/', 'primary', 'high' ),
+                revelations_editorial_discovery_source( 'The Robot Report', 'https://www.therobotreport.com/feed/', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'MIT Technology Review', 'https://www.technologyreview.com/feed/', 'secondary', 'low' ),
             ),
 
             'disabled_sources' => array(
@@ -312,45 +314,18 @@ function revelations_editorial_default_scanner_settings(): array {
                 5,
 
             'active_sources' => array(
-                array(
-                    'name' =>
-                        'The Verge',
-
-                    'url' =>
-                        'https://www.theverge.com/rss/index.xml',
-                ),
-
-                array(
-                    'name' =>
-                        'TechCrunch',
-
-                    'url' =>
-                        'https://techcrunch.com/feed/',
-                ),
-
-                array(
-                    'name' =>
-                        'Wired',
-
-                    'url' =>
-                        'https://www.wired.com/feed/rss',
-                ),
-
-                array(
-                    'name' =>
-                        'MIT Technology Review',
-
-                    'url' =>
-                        'https://www.technologyreview.com/feed/',
-                ),
-
-                array(
-                    'name' =>
-                        'BBC Technology',
-
-                    'url' =>
-                        'https://feeds.bbci.co.uk/news/technology/rss.xml',
-                ),
+                revelations_editorial_discovery_source( 'TechCrunch', 'https://techcrunch.com/feed/', 'primary', 'high' ),
+                revelations_editorial_discovery_source( 'TechCrunch AI', 'https://techcrunch.com/category/artificial-intelligence/feed/', 'primary', 'high' ),
+                revelations_editorial_discovery_source( 'The Robot Report', 'https://www.therobotreport.com/feed/', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'Smart Cities Dive', 'https://www.smartcitiesdive.com/feeds/news/', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'FreightWaves Autonomous Trucking', 'https://www.freightwaves.com/news/tag/autonomous-trucking/feed/', 'primary', 'low' ),
+                revelations_editorial_discovery_source( 'Dubai Media Office', 'https://mediaoffice.ae/rss/news.ashx', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'The Verge', 'https://www.theverge.com/rss/index.xml', 'secondary', 'medium' ),
+                revelations_editorial_discovery_source( 'WIRED', 'https://www.wired.com/feed/rss', 'secondary', 'high' ),
+                revelations_editorial_discovery_source( 'MIT Technology Review', 'https://www.technologyreview.com/feed/', 'secondary', 'low' ),
+                revelations_editorial_discovery_source( 'BBC Technology', 'https://feeds.bbci.co.uk/news/technology/rss.xml', 'secondary', 'low' ),
+                revelations_editorial_discovery_source( 'IEEE Spectrum Robotics', 'https://spectrum.ieee.org/feeds/topic/robotics.rss', 'secondary', 'low' ),
+                revelations_editorial_discovery_source( 'Global Construction Review', 'https://www.globalconstructionreview.com/feed/', 'secondary', 'low' ),
             ),
 
             'disabled_sources' =>
@@ -463,29 +438,17 @@ function revelations_editorial_default_scanner_settings(): array {
                 5,
 
             'active_sources' => array(
-                array(
-                    'name' =>
-                        'Fast Company Leadership',
-
-                    'url' =>
-                        'https://www.fastcompany.com/leadership/rss',
-                ),
-
-                array(
-                    'name' =>
-                        'TechCrunch Startups',
-
-                    'url' =>
-                        'https://techcrunch.com/category/startups/feed/',
-                ),
-
-                array(
-                    'name' =>
-                        'Entrepreneur Latest',
-
-                    'url' =>
-                        'https://www.entrepreneur.com/latest.rss',
-                ),
+                revelations_editorial_discovery_source( 'TechCrunch', 'https://techcrunch.com/feed/', 'primary', 'high' ),
+                revelations_editorial_discovery_source( 'TechCrunch AI', 'https://techcrunch.com/category/artificial-intelligence/feed/', 'primary', 'high' ),
+                revelations_editorial_discovery_source( 'The Verge', 'https://www.theverge.com/rss/index.xml', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'The Robot Report', 'https://www.therobotreport.com/feed/', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'TechCrunch Startups', 'https://techcrunch.com/category/startups/feed/', 'secondary', 'medium' ),
+                revelations_editorial_discovery_source( 'WIRED', 'https://www.wired.com/feed/rss', 'secondary', 'high' ),
+                revelations_editorial_discovery_source( 'MIT Technology Review', 'https://www.technologyreview.com/feed/', 'secondary', 'low' ),
+                revelations_editorial_discovery_source( 'IEEE Spectrum Robotics', 'https://spectrum.ieee.org/feeds/topic/robotics.rss', 'secondary', 'low' ),
+                revelations_editorial_discovery_source( 'Ars Technica', 'https://feeds.arstechnica.com/arstechnica/index', 'secondary', 'high' ),
+                revelations_editorial_discovery_source( 'Nature Machine Learning', 'https://www.nature.com/subjects/machine-learning.rss', 'secondary', 'low' ),
+                revelations_editorial_discovery_source( 'Quanta Magazine', 'https://www.quantamagazine.org/feed/', 'secondary', 'low' ),
             ),
 
             'disabled_sources' => array(
@@ -645,37 +608,14 @@ function revelations_editorial_default_scanner_settings(): array {
                 5,
 
             'active_sources' => array(
-                array(
-                    'name' =>
-                        'ArchDaily',
-
-                    'url' =>
-                        'https://www.archdaily.com/rss',
-                ),
-
-                array(
-                    'name' =>
-                        'Sleeper Magazine',
-
-                    'url' =>
-                        'https://www.sleepermagazine.com/feed/',
-                ),
-
-                array(
-                    'name' =>
-                        'Hospitality Design',
-
-                    'url' =>
-                        'https://hospitalitydesign.com/feed/',
-                ),
-
-                array(
-                    'name' =>
-                        'Designboom',
-
-                    'url' =>
-                        'https://www.designboom.com/feed/',
-                ),
+                revelations_editorial_discovery_source( 'Dubai Media Office', 'https://mediaoffice.ae/rss/news.ashx', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'Smart Cities Dive', 'https://www.smartcitiesdive.com/feeds/news/', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'Cities Today', 'https://cities-today.com/feed/', 'primary', 'low' ),
+                revelations_editorial_discovery_source( 'The Robot Report', 'https://www.therobotreport.com/feed/', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'FreightWaves Autonomous Trucking', 'https://www.freightwaves.com/news/tag/autonomous-trucking/feed/', 'primary', 'low' ),
+                revelations_editorial_discovery_source( 'Construction Dive', 'https://www.constructiondive.com/feeds/news/', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'Global Construction Review', 'https://www.globalconstructionreview.com/feed/', 'primary', 'low' ),
+                revelations_editorial_discovery_source( 'Designboom', 'https://www.designboom.com/feed/', 'supplementary', 'high' ),
             ),
 
             'disabled_sources' => array(
@@ -895,37 +835,18 @@ function revelations_editorial_default_scanner_settings(): array {
                 5,
 
             'active_sources' => array(
-                array(
-                    'name' =>
-                        'MIT Technology Review',
-
-                    'url' =>
-                        'https://www.technologyreview.com/feed/',
-                ),
-
-                array(
-                    'name' =>
-                        'WIRED',
-
-                    'url' =>
-                        'https://www.wired.com/feed/rss',
-                ),
-
-                array(
-                    'name' =>
-                        'BBC Technology',
-
-                    'url' =>
-                        'https://feeds.bbci.co.uk/news/technology/rss.xml',
-                ),
-
-                array(
-                    'name' =>
-                        'The Verge',
-
-                    'url' =>
-                        'https://www.theverge.com/rss/index.xml',
-                ),
+                revelations_editorial_discovery_source( 'TechCrunch', 'https://techcrunch.com/feed/', 'primary', 'high' ),
+                revelations_editorial_discovery_source( 'TechCrunch AI', 'https://techcrunch.com/category/artificial-intelligence/feed/', 'primary', 'high' ),
+                revelations_editorial_discovery_source( 'WIRED', 'https://www.wired.com/feed/rss', 'primary', 'high' ),
+                revelations_editorial_discovery_source( 'The Verge', 'https://www.theverge.com/rss/index.xml', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( '404 Media', 'https://www.404media.co/rss/', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'Rest of World', 'https://restofworld.org/feed/latest/', 'primary', 'low' ),
+                revelations_editorial_discovery_source( 'MIT Technology Review', 'https://www.technologyreview.com/feed/', 'secondary', 'low' ),
+                revelations_editorial_discovery_source( 'BBC Technology', 'https://feeds.bbci.co.uk/news/technology/rss.xml', 'secondary', 'low' ),
+                revelations_editorial_discovery_source( 'The Markup', 'https://themarkup.org/feeds/rss.xml', 'secondary', 'low' ),
+                revelations_editorial_discovery_source( 'EFF Deeplinks', 'https://www.eff.org/rss/updates.xml', 'secondary', 'low' ),
+                revelations_editorial_discovery_source( 'Grist', 'https://grist.org/feed/', 'secondary', 'medium' ),
+                revelations_editorial_discovery_source( 'Smart Cities Dive', 'https://www.smartcitiesdive.com/feeds/news/', 'secondary', 'medium' ),
             ),
 
             'disabled_sources' =>
@@ -1192,6 +1113,127 @@ function revelations_editorial_normalize_unspoken_scanner_settings(
 }
 
 /**
+ * Return name/URL signatures for the source pools replaced by the approved
+ * discovery-coverage update. Exact matches are safe legacy defaults; any
+ * operator-edited pool remains untouched.
+ *
+ * @return array<string, string[]>
+ */
+function revelations_editorial_legacy_scanner_source_signatures(): array {
+    return array(
+        'news' => array(
+            'The Verge|https://www.theverge.com/rss/index.xml',
+            'TechCrunch|https://techcrunch.com/feed/',
+            'Wired|https://www.wired.com/feed/rss',
+            'MIT Technology Review|https://www.technologyreview.com/feed/',
+            'BBC Technology|https://feeds.bbci.co.uk/news/technology/rss.xml',
+        ),
+        'people' => array(
+            'Fast Company Leadership|https://www.fastcompany.com/leadership/rss',
+            'TechCrunch Startups|https://techcrunch.com/category/startups/feed/',
+            'Entrepreneur Latest|https://www.entrepreneur.com/latest.rss',
+        ),
+        'places' => array(
+            'ArchDaily|https://www.archdaily.com/rss',
+            'Sleeper Magazine|https://www.sleepermagazine.com/feed/',
+            'Hospitality Design|https://hospitalitydesign.com/feed/',
+            'Designboom|https://www.designboom.com/feed/',
+        ),
+        'unspoken' => array(
+            'MIT Technology Review|https://www.technologyreview.com/feed/',
+            'WIRED|https://www.wired.com/feed/rss',
+            'BBC Technology|https://feeds.bbci.co.uk/news/technology/rss.xml',
+            'The Verge|https://www.theverge.com/rss/index.xml',
+        ),
+    );
+}
+
+/**
+ * Return stable source signatures from a profile source list.
+ *
+ * @param array<int, mixed> $sources Source rows.
+ * @return string[]
+ */
+function revelations_editorial_scanner_source_signatures(
+    array $sources
+): array {
+    $signatures = array();
+
+    foreach ( $sources as $source ) {
+        if ( ! is_array( $source ) ) {
+            continue;
+        }
+
+        $name = sanitize_text_field(
+            (string) ( $source['name'] ?? '' )
+        );
+        $raw_url = (string) ( $source['url'] ?? '' );
+        $url = function_exists( 'esc_url_raw' )
+            ? esc_url_raw( $raw_url )
+            : trim( $raw_url );
+
+        if ( '' !== $name && '' !== $url ) {
+            $signatures[] = $name . '|' . $url;
+        }
+    }
+
+    sort( $signatures, SORT_STRING );
+
+    return $signatures;
+}
+
+/**
+ * Apply the approved discovery-coverage defaults to an exact legacy pool.
+ *
+ * This is pure runtime normalization. It never writes settings and never
+ * replaces a source list that differs from the former shipped defaults.
+ * Discovery metadata must not be interpreted as factual-source roles.
+ *
+ * @param array<string, mixed> $stored Stored option value.
+ * @param array<string, array<string, mixed>> $defaults Current defaults.
+ * @return array<string, mixed>
+ */
+function revelations_editorial_normalize_scanner_source_coverage_settings(
+    array $stored,
+    array $defaults
+): array {
+    foreach (
+        revelations_editorial_legacy_scanner_source_signatures()
+        as $section => $legacy_signatures
+    ) {
+        $profile = $stored[ $section ] ?? null;
+
+        if ( ! is_array( $profile ) ) {
+            continue;
+        }
+
+        $active_sources = $profile['active_sources'] ?? null;
+
+        if ( ! is_array( $active_sources ) ) {
+            continue;
+        }
+
+        $expected = $legacy_signatures;
+        sort( $expected, SORT_STRING );
+
+        if (
+            revelations_editorial_scanner_source_signatures(
+                $active_sources
+            ) !== $expected ||
+            ! isset( $defaults[ $section ]['active_sources'] ) ||
+            ! is_array( $defaults[ $section ]['active_sources'] )
+        ) {
+            continue;
+        }
+
+        $stored[ $section ]['active_sources'] =
+            $defaults[ $section ]['active_sources'];
+    }
+
+    return $stored;
+}
+
+/**
  * Explicitly persist normalized Unspoken settings when requested.
  *
  * This migration is intentionally not hooked to normal reads.
@@ -1244,6 +1286,12 @@ function revelations_editorial_get_scanner_settings(): array {
 
     $stored =
         revelations_editorial_normalize_unspoken_scanner_settings(
+            $stored,
+            $defaults
+        );
+
+    $stored =
+        revelations_editorial_normalize_scanner_source_coverage_settings(
             $stored,
             $defaults
         );
@@ -1324,7 +1372,8 @@ function revelations_editorial_scanner_parse_lines(
 }
 
 /**
- * Parse active source rows in "Name | URL" format.
+ * Parse active source rows in "Name | URL | discovery priority | volume"
+ * format. The last two values are optional and remain discovery metadata only.
  *
  * @return array<int, array{name:string,url:string}>|WP_Error
  */
@@ -1339,14 +1388,7 @@ function revelations_editorial_scanner_parse_active_sources(
     $sources = array();
 
     foreach ( $lines as $line ) {
-        $parts = array_map(
-            'trim',
-            explode(
-                '|',
-                $line,
-                2
-            )
-        );
+        $parts = array_map( 'trim', explode( '|', $line, 4 ) );
 
         $name = sanitize_text_field(
             (string) (
@@ -1360,20 +1402,39 @@ function revelations_editorial_scanner_parse_active_sources(
             )
         );
 
+        $discovery_priority = sanitize_key(
+            (string) ( $parts[2] ?? 'secondary' )
+        );
+        $discovery_volume = sanitize_key(
+            (string) ( $parts[3] ?? 'medium' )
+        );
+
         if (
             '' === $name ||
             '' === $url ||
-            ! wp_http_validate_url( $url )
+            ! wp_http_validate_url( $url ) ||
+            ! in_array(
+                $discovery_priority,
+                array( 'primary', 'secondary', 'supplementary' ),
+                true
+            ) ||
+            ! in_array(
+                $discovery_volume,
+                array( 'high', 'medium', 'low' ),
+                true
+            )
         ) {
             return new WP_Error(
                 'invalid_active_source',
-                'Every active source must use: Name | valid RSS URL.'
+                'Every active source must use a valid discovery row.'
             );
         }
 
         $sources[] = array(
             'name' => $name,
             'url'  => $url,
+            'discovery_priority' => $discovery_priority,
+            'discovery_volume' => $discovery_volume,
         );
     }
 
@@ -1468,10 +1529,26 @@ function revelations_editorial_scanner_sources_text(
             '' !== $name &&
             '' !== $value
         ) {
-            $rows[] =
+            $row =
                 $name .
                 ' | ' .
                 $value;
+
+            if ( 'url' === $value_key ) {
+                $row .=
+                    ' | ' .
+                    (string) (
+                        $source['discovery_priority']
+                        ?? 'secondary'
+                    ) .
+                    ' | ' .
+                    (string) (
+                        $source['discovery_volume']
+                        ?? 'medium'
+                    );
+            }
+
+            $rows[] = $row;
         }
     }
 
@@ -2298,7 +2375,11 @@ function revelations_editorial_render_scanner_settings(): void {
 
                 <p class="description">
                     One source per line:
-                    Name | RSS URL
+                    Name | RSS URL | discovery priority | volume
+                    <br>
+                    Discovery priority is not a factual-source role.
+                    Allowed values: primary, secondary or supplementary;
+                    then high, medium or low.
                 </p>
             </div>
 

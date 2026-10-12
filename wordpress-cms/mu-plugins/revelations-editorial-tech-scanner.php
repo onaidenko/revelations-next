@@ -849,7 +849,6 @@ function revelations_editorial_tech_scan_dry_run(
         revelations_editorial_tech_disabled_sources(),
         'revelations_editorial_score_tech_story',
         revelations_editorial_tech_thresholds(),
-        $qualified_limit,
-        20
+        $qualified_limit
     );
 }
