@@ -189,8 +189,14 @@ add_action(
 
         if (
             '' === $title ||
-            '' === $summary ||
-            '' === $source_url
+            '' === $source_url ||
+            ! wp_http_validate_url( $source_url ) ||
+            ! function_exists( 'revelations_editorial_sections' ) ||
+            ! in_array(
+                $section,
+                revelations_editorial_sections(),
+                true
+            )
         ) {
             update_post_meta(
                 $candidate_id,
@@ -215,13 +221,18 @@ add_action(
             $source_name = 'Original source';
         }
 
-        $content =
-            "<!-- wp:paragraph -->\n" .
-            '<p>' .
-            esc_html( $summary ) .
-            "</p>\n" .
-            "<!-- /wp:paragraph -->\n\n" .
+        $content = '';
 
+        if ( '' !== $summary ) {
+            $content =
+                "<!-- wp:paragraph -->\n" .
+                '<p>' .
+                esc_html( $summary ) .
+                "</p>\n" .
+                "<!-- /wp:paragraph -->\n\n";
+        }
+
+        $content .=
             "<!-- wp:paragraph -->\n" .
             '<p><em>Source: ' .
             '<a href="' .

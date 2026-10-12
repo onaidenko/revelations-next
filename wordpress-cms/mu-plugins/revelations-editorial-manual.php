@@ -149,18 +149,22 @@ add_action(
             )
         );
 
-        $section = function_exists(
-            'revelations_editorial_sanitize_section'
-        )
-            ? revelations_editorial_sanitize_section(
-                $_POST['section'] ?? 'news'
+        $section = sanitize_key(
+            (string) wp_unslash(
+                $_POST['section'] ?? ''
             )
-            : 'news';
+        );
 
         if (
             $title === '' ||
             $source_url === '' ||
-            ! wp_http_validate_url( $source_url )
+            ! wp_http_validate_url( $source_url ) ||
+            ! function_exists( 'revelations_editorial_sections' ) ||
+            ! in_array(
+                $section,
+                revelations_editorial_sections(),
+                true
+            )
         ) {
             revelations_editorial_manual_redirect(
                 array(

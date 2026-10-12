@@ -1,5 +1,21 @@
 # Текущее состояние
 
+## Manual source-draft intake validation
+
+- Manual candidates now require a non-empty title, a valid source URL and an
+  allowed editorial section. `Summary/notes` is optional: an empty value
+  creates a source-only WordPress draft without synthetic text or an empty
+  paragraph, while a supplied value remains the editor-provided context.
+- The source-draft retry guard applies the same title/URL/section requirements
+  to stored candidates. It no longer blocks a candidate solely because its
+  optional summary is blank; the ordinary source snapshot action can follow.
+- Isolated synthetic diagnostics cover empty and populated summaries, the
+  subsequent fake snapshot-fetch path, and missing URL/title or invalid
+  section. They use in-memory WordPress stubs and a fake reader only - no
+  OpenAI request, live fetch, database write or deploy.
+
+Дата изменения: 2026-10-12.
+
 ## Canonical CMS deployment procedure
 
 - `wordpress-cms/bin/deploy-to-server.sh` is the executable production CMS
