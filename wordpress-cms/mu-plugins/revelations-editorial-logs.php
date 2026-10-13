@@ -459,7 +459,10 @@ function revelations_editorial_create_run_log(
         '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_closest_rejected' => wp_json_encode( $scan_diagnostics['closest_rejected'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_qualified_items' => wp_json_encode( $scan_diagnostics['qualified_items'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
-        '_rev_fetched_items' => $fetched_items_meta['payload'],
+        // update_post_meta() unslashes before it invokes the registered meta
+        // sanitizer. Preserve JSON escape sequences (quotes and backslashes)
+        // across that WordPress write boundary without encoding a second time.
+        '_rev_fetched_items' => wp_slash( $fetched_items_meta['payload'] ),
     );
 
     $fetched_items_persisted = false;

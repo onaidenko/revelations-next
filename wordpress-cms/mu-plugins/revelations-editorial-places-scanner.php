@@ -203,8 +203,8 @@ function revelations_editorial_places_freshness(
 
 /**
  * Recognize a physical deployment environment without treating a passing
- * location mention as a Place. A site must be paired with actual deployment
- * or operation semantics already recognized by the shared gate.
+ * location mention as a Place. A site must be paired with future-mobility
+ * deployment semantics already recognized by the shared gate.
  *
  * @param array<string, mixed> $story
  * @return string[]
@@ -252,6 +252,11 @@ function revelations_editorial_places_physical_deployment_matches(
             $actions,
             array( 'launch' )
         );
+    $has_autonomous_mobility = 1 === preg_match(
+        '~(?<![\p{L}\p{N}])(?:autonomous|driverless|self-driving)' .
+        '(?![\p{L}\p{N}])~iu',
+        $text
+    );
     $has_operational_text = 1 === preg_match(
         '~(?<![\p{L}\p{N}])(?:deploy(?:ed|ment|s|ing)?|' .
         'operat(?:e|es|ed|ing|ion|ions)|runs?|service|' .
@@ -266,6 +271,15 @@ function revelations_editorial_places_physical_deployment_matches(
         '(?![\p{L}\p{N}])~u',
         $raw_text
     );
+    $has_named_route_site = 1 === preg_match(
+        '~(?<![\p{L}\p{N}])(?:' .
+        '(?:I|US|SR)-\d{1,4}|' .
+        '(?:Interstate|Highway|Route|State Route)\s+\d{1,4}|' .
+        '(?:[\p{Lu}][\p{L}\p{M}.’\'\-]{1,}\s+){0,2}' .
+        '(?:highway|route|corridor|lane)' .
+        ')(?![\p{L}\p{N}])~u',
+        $raw_text
+    );
 
     if (
         ( array() !== $environment_matches && $has_environment_action ) ||
@@ -274,12 +288,60 @@ function revelations_editorial_places_physical_deployment_matches(
             $has_operations_action &&
             $has_operational_text
         ) ||
-        ( $has_named_site && $has_operations_action && $has_operational_text )
+        ( $has_named_site && $has_operations_action && $has_operational_text ) ||
+        (
+            $has_named_route_site &&
+            $has_autonomous_mobility &&
+            $has_environment_action
+        )
     ) {
         return array( 'physical deployment environment' );
     }
 
     return array();
+}
+
+/**
+ * Add semantic implementation signals only after the physical deployment
+ * predicate has established that the action is about a Place. This keeps a
+ * generic company launch or deal from becoming Places implementation.
+ *
+ * @param array<string, mixed> $story
+ * @param string[] $physical_deployment_matches
+ * @return string[]
+ */
+function revelations_editorial_places_semantic_implementation_matches(
+    array $story,
+    array $physical_deployment_matches,
+    string $text
+): array {
+    if ( array() === $physical_deployment_matches ) {
+        return array();
+    }
+
+    $actions = isset( $story['scanner_global_action_signals'] ) &&
+        is_array( $story['scanner_global_action_signals'] )
+            ? $story['scanner_global_action_signals']
+            : array();
+    $matches = array();
+
+    if ( array() !== array_intersect( $actions, array( 'deploy', 'operations' ) ) ) {
+        $matches[] = 'confirmed physical operations';
+    }
+
+    // The global gate normalizes this action label, while the Places keyword
+    // list historically only carried inflected forms (launches/launched).
+    if (
+        in_array( 'launch', $actions, true ) &&
+        1 === preg_match(
+            '~(?<![\p{L}\p{N}])launch(?![\p{L}\p{N}])~iu',
+            $text
+        )
+    ) {
+        $matches[] = 'launch';
+    }
+
+    return $matches;
 }
 
 /**
@@ -358,6 +420,18 @@ function revelations_editorial_score_places_story(
             $text,
             $keywords['implementation']
         );
+    $implementation_matches = array_values(
+        array_unique(
+            array_merge(
+                $implementation_matches,
+                revelations_editorial_places_semantic_implementation_matches(
+                    $story,
+                    $physical_deployment_matches,
+                    $text
+                )
+            )
+        )
+    );
 
     $speculative_matches =
         revelations_editorial_places_keyword_matches(

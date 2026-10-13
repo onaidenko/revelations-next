@@ -51,6 +51,14 @@
   read back after persistence; an encode or persistence failure is retained in
   the existing bounded run-error diagnostics rather than silently becoming an
   empty meta value. A 210-item People-shaped regression payload is covered.
+- The write boundary now applies `wp_slash()` to that single encoded JSON
+  payload before `update_post_meta()`, so WordPress unslashing no longer
+  corrupts quoted or backslash-containing titles before the validating meta
+  sanitizer. Places also treats a named route such as I-45 as central only
+  when an autonomous/driverless physical deployment action is present, and
+  carries confirmed global deploy/operations labels into its existing
+  implementation signal. A named route alone remains rejected; planned
+  deployments remain unqualified.
 - Isolated scanner diagnostics: runtime 101/103 with the two known baseline
   scorer failures; Unspoken 35/39 with its four known baseline failures. The
   new focused regressions and PHP syntax checks passed. No production scan,

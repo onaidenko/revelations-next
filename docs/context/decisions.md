@@ -155,6 +155,17 @@ cannot override that Constitution without explicit product-owner approval.
   checks; Places treats a physical deployment environment as central only
   with deployment/operations context. Unspoken and Tech semantics remain
   unchanged.
+- **Решение:** a named route, highway, corridor or lane is a Places signal
+  only when autonomous/driverless physical-deployment context and a recognised
+  deployment action are both present. The Places scorer may reuse confirmed
+  shared `deploy`/`operations` labels as implementation evidence only after
+  that central-place predicate succeeds. This is not an automatic
+  qualification and does not convert generic launches, deals or geographic
+  mentions into implementation.
+- **Safeguard:** `_rev_fetched_items` remains one bounded, once-encoded JSON
+  document. Its write uses WordPress's `wp_slash()` boundary before
+  `update_post_meta()` so core unslashing delivers the original valid JSON to
+  the registered validator; the schema and retained fields do not change.
 - **Причина:** REVELATIONS освещает AI и доказуемые future-facing
   technological transformations, не превращая scanner в общий фильтр
   по словам technology, smart или futuristic.

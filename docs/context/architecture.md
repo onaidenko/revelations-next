@@ -28,6 +28,12 @@ approval requirement are canonical in
 ## Scanner subsystem
 
 - `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, глобальная дедупликация, high-recall AI/future-tech prefilter и section scorer. Prefilter принимает explicit AI или recognised future-tech family только с material action; technical corroboration остаётся diagnostic, но не является discovery blocker. Он recognises autonomy/driverless freight, robotics/cobots, smart infrastructure, advanced construction, future mobility и human-machine systems, including the bounded `begin/start + daily/commercial + autonomous/driverless + run/service/operations` deployment phrase. The engine passes only its recognised action labels to a scorer; section gates по-прежнему решают central person, place, evidence, significance и Unspoken angle.
+- Places accepts a named route/site (for example I-45) as central only when
+  the passed action label and autonomous/driverless context establish a
+  physical deployment. It separately converts confirmed shared `deploy` or
+  `operations` labels into an implementation signal only after that physical
+  predicate succeeds; a bare route or generic company launch remains outside
+  Places implementation semantics.
 - `revelations-editorial-{news,people,tech,places,unspoken}-scanner.php` — источники, ключевые слова, пороги и scoring соответствующего раздела. News separates product/deployment, concrete-research, major-capital and strategic-company events; only exceptional capital events use their impact-and-scale path instead of implementation maturity. Каждый scanner вызывает общий engine.
 - `revelations-editorial-scanner-settings.php` — профили News, People, Tech, Places и Unspoken: включение, preview limit, активные и отключённые источники, keyword groups и thresholds. Active source carries discovery-only `priority` and `volume`; neither value is a factual authority, reliability or evidence role.
 - Runtime settings выполняют pure-нормализацию Unspoken и source coverage:

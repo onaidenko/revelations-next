@@ -64,7 +64,19 @@ function wp_strip_all_tags(
 }
 
 function wp_unslash( mixed $value ): mixed {
-    return $value;
+    if ( is_array( $value ) ) {
+        return array_map( 'wp_unslash', $value );
+    }
+
+    return is_string( $value ) ? stripslashes( $value ) : $value;
+}
+
+function wp_slash( mixed $value ): mixed {
+    if ( is_array( $value ) ) {
+        return array_map( 'wp_slash', $value );
+    }
+
+    return is_string( $value ) ? addslashes( $value ) : $value;
 }
 
 function absint( mixed $value ): int {
@@ -720,6 +732,91 @@ foreach ( $place_positive_regressions as $label => $story ) {
     );
 }
 
+$i45_driverless_story = revelations_scanner_runtime_story(
+    'Kodiak taps IKEA to launch driverless freight on I-45',
+    'The companies announced the autonomous freight route.'
+);
+$i45_driverless_gate = revelations_editorial_scanner_ai_gate(
+    $i45_driverless_story,
+    'places'
+);
+$i45_driverless_score = revelations_editorial_score_places_story(
+    revelations_editorial_scanner_attach_gate_semantics(
+        $i45_driverless_story,
+        $i45_driverless_gate
+    )
+);
+
+revelations_scanner_runtime_test(
+    true === ( $i45_driverless_gate['qualified'] ?? false ) &&
+    'place_not_central' !== ( $i45_driverless_score['rejection_code'] ?? '' ) &&
+    in_array(
+        'physical deployment environment',
+        $i45_driverless_score['section_signals'] ?? array(),
+        true
+    ),
+    'Places recognizes I-45 as central for a driverless freight deployment'
+);
+
+$named_route_without_deployment = revelations_scanner_runtime_story(
+    'Autonomous startup raises funding near I-45',
+    'The company headquarters is close to the interstate.'
+);
+$named_route_without_deployment_score = revelations_editorial_score_places_story(
+    $named_route_without_deployment
+);
+
+revelations_scanner_runtime_test(
+    'place_not_central' === (
+        $named_route_without_deployment_score['rejection_code'] ?? ''
+    ),
+    'Places rejects a named route without deployment context'
+);
+
+$daily_driverless_operations_story = revelations_scanner_runtime_story(
+    'Einride, EASE begin daily driverless freight runs in Ohio',
+    'The companies begin commercial autonomous operations on the route.'
+);
+$daily_driverless_operations_gate = revelations_editorial_scanner_ai_gate(
+    $daily_driverless_operations_story,
+    'places'
+);
+$daily_driverless_operations_score = revelations_editorial_score_places_story(
+    revelations_editorial_scanner_attach_gate_semantics(
+        $daily_driverless_operations_story,
+        $daily_driverless_operations_gate
+    )
+);
+
+revelations_scanner_runtime_test(
+    true === ( $daily_driverless_operations_gate['qualified'] ?? false ) &&
+    (float) (
+        $daily_driverless_operations_score['implementation_score'] ?? 0
+    ) > 0 &&
+    in_array(
+        'confirmed physical operations',
+        $daily_driverless_operations_score['section_signals'] ?? array(),
+        true
+    ),
+    'Places gives daily driverless operations a physical implementation signal'
+);
+
+$planned_route_story = revelations_scanner_runtime_story(
+    'Company announces planned driverless freight on I-45',
+    'The proposed autonomous route may begin later.'
+);
+$planned_route_story['scanner_global_action_signals'] = array( 'launch' );
+$planned_route_score = revelations_editorial_score_places_story(
+    $planned_route_story
+);
+
+revelations_scanner_runtime_test(
+    'planned_not_implemented' === (
+        $planned_route_score['rejection_code'] ?? ''
+    ),
+    'Places keeps a planned named-route announcement unimplemented'
+);
+
 $place_negative_regressions = array(
     'product story merely naming a city' => revelations_scanner_runtime_story(
         'AI company launches a new model in Austin',
@@ -831,7 +928,7 @@ $people_sized_fetched_items = array();
 for ( $index = 0; $index < 210; $index++ ) {
     $people_sized_fetched_items[] = array(
         'source' => 'People Feed ' . ( $index % 11 ),
-        'title' => '<Technical> leader ' . $index . ' joins AI lab',
+        'title' => 'Technical "leader" \\ path 東京 ' . $index . ' joins AI lab',
         'canonical_url' => 'https://example.test/people/' . $index,
         'published_at' => '2026-10-13T00:00:00+00:00',
         'stage' => 'scored',
@@ -843,14 +940,15 @@ $people_sized_payload = revelations_editorial_encode_fetched_items_meta(
     $people_sized_fetched_items
 );
 $people_sized_stored = revelations_editorial_sanitize_fetched_items_meta(
-    $people_sized_payload['payload']
+    wp_unslash( wp_slash( $people_sized_payload['payload'] ) )
 );
 
 revelations_scanner_runtime_test(
     '' === $people_sized_payload['error'] &&
     $people_sized_payload['payload'] === $people_sized_stored &&
-    210 === count( json_decode( $people_sized_stored, true ) ?? array() ),
-    'People-sized fetched diagnostics encode once and survive meta sanitization'
+    210 === count( json_decode( $people_sized_stored, true ) ?? array() ) &&
+    $people_sized_fetched_items === json_decode( $people_sized_stored, true ),
+    'People-sized quoted and escaped fetched diagnostics survive the WordPress meta round-trip'
 );
 
 $invalid_fetched_payload = revelations_editorial_encode_fetched_items_meta(
@@ -1418,8 +1516,12 @@ revelations_scanner_runtime_test(
         $logs_source,
         'fetched_items_meta_persistence_failed'
     ) &&
-    str_contains( $logs_source, 'hash_equals(' ),
-    'run logs encode fetched diagnostics once and report persistence failures'
+    str_contains( $logs_source, 'hash_equals(' ) &&
+    str_contains(
+        $logs_source,
+        "wp_slash( \$fetched_items_meta['payload'] )"
+    ),
+    'run logs preserve fetched diagnostics across meta unslashing and report persistence failures'
 );
 
 echo "\nScanner runtime diagnostics: " .
