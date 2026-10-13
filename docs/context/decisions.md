@@ -127,9 +127,10 @@ cannot override that Constitution without explicit product-owner approval.
 - **Safeguard:** the latest RSS run per section retains only bounded
   fetched-item metadata and stage/rejection codes. No RSS summary, article
   body or source snapshot is retained; an incoming RSS run clears that list
-  from older runs in the same section. Its JSON meta is validated and
-  re-serialized rather than passed through generic text sanitization, so a
-  title cannot make the persisted diagnostic document malformed.
+  from older runs in the same section. Its JSON meta is encoded once,
+  validated without generic text sanitization or re-serialization, and read
+  back after write, so a title cannot make the persisted diagnostic document
+  malformed or silently empty.
 - **Compatibility:** only a source list that exactly matches a former shipped
   default is replaced in memory. Operator-edited lists, factual source
   classifications, global relevance logic, section scorers and thresholds are
@@ -146,6 +147,14 @@ cannot override that Constitution without explicit product-owner approval.
   блокирует discovery; factual independent corroboration проверяется позже
   в research/evidence pipeline. Unchanged section scorers определяют
   News/People/Places/Unspoken fit и qualification.
+- **Решение:** the shared gate may pass already-recognised action labels to a
+  section scorer without passing RSS text or changing aggregate formulas.
+  News treats concrete authorization, policy, named safety/governance and
+  accountability actions as event semantics; People treats a concrete
+  governance/safety proposal as implementation only after central-person
+  checks; Places treats a physical deployment environment as central only
+  with deployment/operations context. Unspoken and Tech semantics remain
+  unchanged.
 - **Причина:** REVELATIONS освещает AI и доказуемые future-facing
   technological transformations, не превращая scanner в общий фильтр
   по словам technology, smart или futuristic.

@@ -320,6 +320,18 @@ function revelations_editorial_create_run_log(
         );
     };
 
+    $run_errors = $sanitize_list( $data['errors'] );
+    $fetched_items_meta =
+        revelations_editorial_encode_fetched_items_meta(
+            $scan_diagnostics['fetched_items']
+        );
+
+    if ( '' !== $fetched_items_meta['error'] ) {
+        $run_errors[] = $fetched_items_meta['error'];
+    }
+
+    $run_errors = array_values( array_unique( $run_errors ) );
+
     $meta = array(
         '_rev_run_date' =>
             sanitize_text_field(
@@ -347,9 +359,7 @@ function revelations_editorial_create_run_log(
 
         '_rev_errors' =>
             wp_json_encode(
-                $sanitize_list(
-                    $data['errors']
-                ),
+                $run_errors,
                 JSON_UNESCAPED_SLASHES
             ),
 
@@ -449,14 +459,40 @@ function revelations_editorial_create_run_log(
         '_rev_rejection_counts' => wp_json_encode( $scan_diagnostics['rejection_counts'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_closest_rejected' => wp_json_encode( $scan_diagnostics['closest_rejected'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
         '_rev_qualified_items' => wp_json_encode( $scan_diagnostics['qualified_items'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
-        '_rev_fetched_items' => wp_json_encode( $scan_diagnostics['fetched_items'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ),
+        '_rev_fetched_items' => $fetched_items_meta['payload'],
     );
 
+    $fetched_items_persisted = false;
     foreach ( $meta as $key => $value ) {
         update_post_meta(
             (int) $post_id,
             $key,
             $value
+        );
+
+        if ( '_rev_fetched_items' === $key ) {
+            $persisted = get_post_meta(
+                (int) $post_id,
+                $key,
+                true
+            );
+            $fetched_items_persisted = is_string( $persisted ) &&
+                hash_equals(
+                    $fetched_items_meta['payload'],
+                    $persisted
+                );
+        }
+    }
+
+    if ( ! $fetched_items_persisted ) {
+        $run_errors[] = 'fetched_items_meta_persistence_failed';
+        update_post_meta(
+            (int) $post_id,
+            '_rev_errors',
+            wp_json_encode(
+                array_values( array_unique( $run_errors ) ),
+                JSON_UNESCAPED_SLASHES
+            )
         );
     }
 

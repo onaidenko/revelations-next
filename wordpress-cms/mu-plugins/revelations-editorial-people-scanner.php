@@ -325,6 +325,36 @@ function revelations_editorial_people_future_tech_significance(
 }
 
 /**
+ * Admit a concrete governance/safety proposal as implementation only when
+ * the existing People rules have already established a named, central person.
+ *
+ * @param array<string, mixed> $story
+ * @return string[]
+ */
+function revelations_editorial_people_governance_implementation_matches(
+    array $story,
+    bool $name_signal,
+    bool $has_explicit_people_signal
+): array {
+    if ( ! $name_signal || ! $has_explicit_people_signal ) {
+        return array();
+    }
+
+    $actions = isset( $story['scanner_global_action_signals'] ) &&
+        is_array( $story['scanner_global_action_signals'] )
+            ? $story['scanner_global_action_signals']
+            : array();
+
+    return in_array(
+        'governance_or_safety_proposal',
+        $actions,
+        true
+    )
+        ? array( 'governance safety proposal' )
+        : array();
+}
+
+/**
  * Calculate story freshness.
  *
  * @return array{score:float,age_hours:float|null}
@@ -478,6 +508,13 @@ function revelations_editorial_score_people_story(
         $name_signal &&
         array() !== $title_action_matches;
 
+    $governance_implementation_matches =
+        revelations_editorial_people_governance_implementation_matches(
+            $story,
+            $name_signal,
+            $has_explicit_people_signal
+        );
+
     if (
         revelations_editorial_people_is_generic_advice(
             $title
@@ -535,7 +572,12 @@ function revelations_editorial_score_people_story(
         10,
         max(
             0,
-            count( $implementation_matches ) * 2 -
+            count(
+                array_merge(
+                    $implementation_matches,
+                    $governance_implementation_matches
+                )
+            ) * 2 -
             count( $speculative_matches ) * 1.5
         )
     );
@@ -661,6 +703,12 @@ function revelations_editorial_score_people_story(
             );
     }
 
+    if ( array() !== $governance_implementation_matches ) {
+        $reasons[] =
+            'Concrete governance action: ' .
+            implode( ', ', $governance_implementation_matches );
+    }
+
     if ( array() !== $impact_matches ) {
         $reasons[] =
             'Impact: ' .
@@ -757,6 +805,8 @@ function revelations_editorial_score_people_story(
             array_unique(
                 array_merge(
                     $relevance_matches,
+                    $implementation_matches,
+                    $governance_implementation_matches,
                     $future_tech_significance
                 )
             )

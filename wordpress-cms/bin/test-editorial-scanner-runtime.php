@@ -586,7 +586,7 @@ $global_gate_regressions = array(
         'section' => 'places',
         'story' => array(
             'title' => 'Einride, EASE begin daily driverless freight runs in Ohio',
-            'summary' => 'The companies begin daily operations on a commercial route.',
+            'summary' => 'The companies announced the new route.',
         ),
         'branch' => 'future_tech',
     ),
@@ -620,6 +620,160 @@ foreach ( $global_gate_regressions as $label => $fixture ) {
         'global gate passes ' . $label
     );
 }
+
+$news_semantic_regressions = array(
+    'autonomous trucking exemption' => revelations_scanner_runtime_story(
+        'AV truck fleets win 5-Year exemption on warning beacons',
+        'Federal regulators granted the five-year exemption for autonomous trucking fleets.'
+    ),
+    'named AI safety proposal' => revelations_scanner_runtime_story(
+        'Microsoft’s Satya Nadella says AI models need an emergency brake',
+        'The Microsoft leader proposed a safety measure for AI models.'
+    ),
+    'AI infrastructure accountability change' => revelations_scanner_runtime_story(
+        'Can the AI industry persuade data center opponents by getting rid of NDAs?',
+        'The disclosure change would make AI data-center agreements public.'
+    ),
+);
+
+foreach ( $news_semantic_regressions as $label => $story ) {
+    $gate = revelations_editorial_scanner_ai_gate( $story, 'news' );
+    $score = revelations_editorial_score_news_story(
+        revelations_editorial_scanner_attach_gate_semantics(
+            $story,
+            $gate
+        )
+    );
+
+    revelations_scanner_runtime_test(
+        true === ( $gate['qualified'] ?? false ) &&
+        'insufficient_section_signal' !== (
+            $score['rejection_code'] ?? ''
+        ) &&
+        (float) ( $score['relevance_score'] ?? 0 ) >= 2.0 &&
+        array() !== ( $score['section_signals'] ?? array() ),
+        'News recognizes ' . $label . ' as a concrete event signal'
+    );
+}
+
+$satya_people_story = revelations_scanner_runtime_story(
+    'Microsoft’s Satya Nadella says AI models need an emergency brake',
+    'The CEO proposed a concrete safety measure for AI models.'
+);
+$satya_people_gate = revelations_editorial_scanner_ai_gate(
+    $satya_people_story,
+    'people'
+);
+$satya_people_score = revelations_editorial_score_people_story(
+    revelations_editorial_scanner_attach_gate_semantics(
+        $satya_people_story,
+        $satya_people_gate
+    )
+);
+
+revelations_scanner_runtime_test(
+    true === ( $satya_people_gate['qualified'] ?? false ) &&
+    (float) ( $satya_people_score['implementation_score'] ?? 0 ) >= 2.0 &&
+    in_array(
+        'governance safety proposal',
+        $satya_people_score['section_signals'] ?? array(),
+        true
+    ),
+    'People gives a central named leader a governance/safety implementation signal'
+);
+
+$place_positive_regressions = array(
+    'named autonomous freight lane' => revelations_scanner_runtime_story(
+        'Kodiak AI launches autonomous freight on the Laredo lane',
+        'The companies launch the autonomous freight deployment.'
+    ),
+    'driverless freight deployment on I-45' => revelations_scanner_runtime_story(
+        'Einride begins daily driverless freight runs on I-45',
+        'The companies begin commercial autonomous operations.'
+    ),
+    'daily autonomous mobility in a named city' => revelations_scanner_runtime_story(
+        'Autonomous shuttle begins daily service in Austin',
+        'The service begins daily autonomous mobility operations.'
+    ),
+);
+
+foreach ( $place_positive_regressions as $label => $story ) {
+    $gate = revelations_editorial_scanner_ai_gate( $story, 'places' );
+    $score = revelations_editorial_score_places_story(
+        revelations_editorial_scanner_attach_gate_semantics(
+            $story,
+            $gate
+        )
+    );
+
+    revelations_scanner_runtime_test(
+        true === ( $gate['qualified'] ?? false ) &&
+        'place_not_central' !== (
+            $score['rejection_code'] ?? ''
+        ) &&
+        in_array(
+            'physical deployment environment',
+            $score['section_signals'] ?? array(),
+            true
+        ),
+        'Places recognizes ' . $label . ' as a physical deployment environment'
+    );
+}
+
+$place_negative_regressions = array(
+    'product story merely naming a city' => revelations_scanner_runtime_story(
+        'AI company launches a new model in Austin',
+        'The company launches its product from a city office.'
+    ),
+    'funding story with headquarters location' => revelations_scanner_runtime_story(
+        'AI startup raises funding for its Austin headquarters',
+        'The company announces an investment round.'
+    ),
+    'exemption without deployment environment' => revelations_scanner_runtime_story(
+        'AV truck fleets win 5-Year exemption on warning beacons',
+        'Federal regulators granted the exemption.'
+    ),
+    'generic robotics without place context' => revelations_scanner_runtime_story(
+        'Robotics company deploys a new robot platform',
+        'The company deploys autonomous robots for customers.'
+    ),
+);
+
+foreach ( $place_negative_regressions as $label => $story ) {
+    $gate = revelations_editorial_scanner_ai_gate( $story, 'places' );
+    $score = revelations_editorial_score_places_story(
+        revelations_editorial_scanner_attach_gate_semantics(
+            $story,
+            $gate
+        )
+    );
+
+    revelations_scanner_runtime_test(
+        'place_not_central' === (
+            $score['rejection_code'] ?? ''
+        ),
+        'Places rejects ' . $label . ' without central deployment environment'
+    );
+}
+
+$generic_runs_gate = revelations_editorial_scanner_ai_gate(
+    array(
+        'title' => 'Driverless company runs a workshop',
+        'summary' => 'The company hosts an internal workshop.',
+    ),
+    'places'
+);
+
+revelations_scanner_runtime_test(
+    array() ===
+        revelations_editorial_scanner_compositional_operations_actions(
+            'Driverless company runs a workshop'
+        ) &&
+    'future_tech_without_action' === (
+        $generic_runs_gate['rejection_code'] ?? ''
+    ),
+    'generic runs remains outside the compositional operations action'
+);
 
 $global_gate_negative_fixtures = array(
     'career advice' => array(
@@ -671,6 +825,46 @@ revelations_scanner_runtime_test(
         "'_rev_fetched_items' === \$key"
     ),
     'fetched-item diagnostics retain valid JSON without textarea sanitization'
+);
+
+$people_sized_fetched_items = array();
+for ( $index = 0; $index < 210; $index++ ) {
+    $people_sized_fetched_items[] = array(
+        'source' => 'People Feed ' . ( $index % 11 ),
+        'title' => '<Technical> leader ' . $index . ' joins AI lab',
+        'canonical_url' => 'https://example.test/people/' . $index,
+        'published_at' => '2026-10-13T00:00:00+00:00',
+        'stage' => 'scored',
+        'global_rejection_code' => '',
+        'section_rejection_code' => 'below_threshold',
+    );
+}
+$people_sized_payload = revelations_editorial_encode_fetched_items_meta(
+    $people_sized_fetched_items
+);
+$people_sized_stored = revelations_editorial_sanitize_fetched_items_meta(
+    $people_sized_payload['payload']
+);
+
+revelations_scanner_runtime_test(
+    '' === $people_sized_payload['error'] &&
+    $people_sized_payload['payload'] === $people_sized_stored &&
+    210 === count( json_decode( $people_sized_stored, true ) ?? array() ),
+    'People-sized fetched diagnostics encode once and survive meta sanitization'
+);
+
+$invalid_fetched_payload = revelations_editorial_encode_fetched_items_meta(
+    array(
+        array(
+            'title' => "Invalid \xB1 UTF-8",
+        ),
+    )
+);
+
+revelations_scanner_runtime_test(
+    '[]' === $invalid_fetched_payload['payload'] &&
+    'fetched_items_json_encode_failed' === $invalid_fetched_payload['error'],
+    'fetched diagnostics report an encoding failure without an empty meta payload'
 );
 
 $people_advice =
@@ -1212,6 +1406,20 @@ revelations_scanner_runtime_test(
         "delete_post_meta( (int) \$run_id, '_rev_fetched_items' )"
     ),
     'only the latest RSS run per section retains fetched-item diagnostics'
+);
+
+revelations_scanner_runtime_test(
+    is_string( $logs_source ) &&
+    str_contains(
+        $logs_source,
+        'revelations_editorial_encode_fetched_items_meta'
+    ) &&
+    str_contains(
+        $logs_source,
+        'fetched_items_meta_persistence_failed'
+    ) &&
+    str_contains( $logs_source, 'hash_equals(' ),
+    'run logs encode fetched diagnostics once and report persistence failures'
 );
 
 echo "\nScanner runtime diagnostics: " .

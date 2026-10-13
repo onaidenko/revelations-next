@@ -228,6 +228,56 @@ function revelations_editorial_news_event_matches( string $text ): array {
 }
 
 /**
+ * Convert only already-confirmed global actions into News event semantics.
+ *
+ * This prevents an ordinary mention of a policy, proposal or NDA from adding
+ * score. The shared gate must first establish AI/future-tech context and a
+ * concrete action; governance/safety proposals additionally require a named
+ * actor in the headline.
+ *
+ * @param array<string, mixed> $story
+ * @return string[]
+ */
+function revelations_editorial_news_global_event_matches(
+    array $story
+): array {
+    $actions = isset( $story['scanner_global_action_signals'] ) &&
+        is_array( $story['scanner_global_action_signals'] )
+            ? $story['scanner_global_action_signals']
+            : array();
+    $matches = array();
+
+    if ( in_array( 'authorization', $actions, true ) ) {
+        $matches[] = 'regulatory authorization';
+    }
+
+    if ( in_array( 'governance_change', $actions, true ) ) {
+        $matches[] = 'policy change';
+    }
+
+    if ( in_array( 'accountability_or_disclosure', $actions, true ) ) {
+        $matches[] = 'accountability disclosure';
+    }
+
+    $title = (string) ( $story['title'] ?? '' );
+    $has_named_actor = 1 === preg_match(
+        '~(?<![\p{L}\p{N}])[\p{Lu}][\p{L}\p{M}.’\'\-]{1,}' .
+        '\s+[\p{Lu}][\p{L}\p{M}.’\'\-]{1,}' .
+        '(?![\p{L}\p{N}])~u',
+        $title
+    );
+
+    if (
+        $has_named_actor &&
+        in_array( 'governance_or_safety_proposal', $actions, true )
+    ) {
+        $matches[] = 'governance safety proposal';
+    }
+
+    return array_values( array_unique( $matches ) );
+}
+
+/**
  * Determine whether a capital event clears the exceptional scale guard.
  */
 function revelations_editorial_news_has_exceptional_capital_scale(
@@ -345,7 +395,10 @@ function revelations_editorial_score_news_story(
         revelations_editorial_news_event_tracks( $text );
     $event_matches = array_values(
         array_unique(
-            array_merge( ...array_values( $event_tracks ) )
+            array_merge(
+                array_merge( ...array_values( $event_tracks ) ),
+                revelations_editorial_news_global_event_matches( $story )
+            )
         )
     );
 

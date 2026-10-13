@@ -202,6 +202,87 @@ function revelations_editorial_places_freshness(
 }
 
 /**
+ * Recognize a physical deployment environment without treating a passing
+ * location mention as a Place. A site must be paired with actual deployment
+ * or operation semantics already recognized by the shared gate.
+ *
+ * @param array<string, mixed> $story
+ * @return string[]
+ */
+function revelations_editorial_places_physical_deployment_matches(
+    array $story,
+    string $text
+): array {
+    $actions = isset( $story['scanner_global_action_signals'] ) &&
+        is_array( $story['scanner_global_action_signals'] )
+            ? $story['scanner_global_action_signals']
+            : array();
+    $environment_matches = revelations_editorial_places_keyword_matches(
+        $text,
+        array(
+            'road',
+            'highway',
+            'corridor',
+            'lane',
+            'route',
+            'transit network',
+            'freight route',
+            'urban mobility',
+            'port',
+            'logistics hub',
+            'logistics facility',
+            'public infrastructure',
+        )
+    );
+    $municipal_matches = revelations_editorial_places_keyword_matches(
+        $text,
+        array( 'city', 'municipality' )
+    );
+    $has_operations_action = array() !== array_intersect(
+        $actions,
+        array(
+            'deploy',
+            'operations',
+            'trial_or_pilot',
+            'rollout',
+        )
+    );
+    $has_environment_action = $has_operations_action ||
+        array() !== array_intersect(
+            $actions,
+            array( 'launch' )
+        );
+    $has_operational_text = 1 === preg_match(
+        '~(?<![\p{L}\p{N}])(?:deploy(?:ed|ment|s|ing)?|' .
+        'operat(?:e|es|ed|ing|ion|ions)|runs?|service|' .
+        'trial|pilot|rollout)(?![\p{L}\p{N}])~iu',
+        $text
+    );
+    $raw_text = (string) ( $story['title'] ?? '' ) . ' ' .
+        (string) ( $story['summary'] ?? '' );
+    $has_named_site = 1 === preg_match(
+        '~(?<![\p{L}\p{N}])(?:in|on|along|across|between)\s+' .
+        '(?:the\s+)?(?:[\p{Lu}][\p{L}\p{M}.’\'\-]{1,}|[A-Z]-\d{1,4})' .
+        '(?![\p{L}\p{N}])~u',
+        $raw_text
+    );
+
+    if (
+        ( array() !== $environment_matches && $has_environment_action ) ||
+        (
+            array() !== $municipal_matches &&
+            $has_operations_action &&
+            $has_operational_text
+        ) ||
+        ( $has_named_site && $has_operations_action && $has_operational_text )
+    ) {
+        return array( 'physical deployment environment' );
+    }
+
+    return array();
+}
+
+/**
  * Score one Places story.
  *
  * Returning null removes the story from consideration.
@@ -251,6 +332,19 @@ function revelations_editorial_score_places_story(
             $text,
             $keywords['relevance']
         );
+    $physical_deployment_matches =
+        revelations_editorial_places_physical_deployment_matches(
+            $story,
+            $text
+        );
+    $relevance_matches = array_values(
+        array_unique(
+            array_merge(
+                $relevance_matches,
+                $physical_deployment_matches
+            )
+        )
+    );
 
     if ( array() === $relevance_matches ) {
         return revelations_editorial_scanner_rejection(
@@ -492,6 +586,16 @@ function revelations_editorial_score_places_story(
                     $reasons
                 )
                 : 'General Places relevance.',
+
+        'section_signals' => array_values(
+            array_unique(
+                array_merge(
+                    $relevance_matches,
+                    $implementation_matches,
+                    $impact_matches
+                )
+            )
+        ),
     );
 }
 

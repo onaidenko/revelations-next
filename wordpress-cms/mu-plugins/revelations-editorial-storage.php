@@ -96,28 +96,53 @@ function revelations_editorial_sanitize_score(
  *
  * Generic textarea sanitization treats title characters as markup and can
  * corrupt an otherwise valid JSON document. The scanner already restricts
- * this payload to bounded scalar diagnostics; this callback only validates
- * and re-serializes that existing payload.
+ * this payload to bounded scalar diagnostics; this callback validates an
+ * already-encoded payload without serializing it again.
  */
 function revelations_editorial_sanitize_fetched_items_meta(
     mixed $value
 ): string {
     if ( ! is_string( $value ) ) {
-        return '';
+        return '[]';
     }
 
     $decoded = json_decode( $value, true );
 
-    if ( ! is_array( $decoded ) ) {
-        return '';
+    if ( ! is_array( $decoded ) || JSON_ERROR_NONE !== json_last_error() ) {
+        return '[]';
     }
 
+    return $value;
+}
+
+/**
+ * Encode bounded fetched-item diagnostics once for run-log persistence.
+ *
+ * @param array<int, array<string, mixed>> $items
+ * @return array{payload:string,error:string}
+ */
+function revelations_editorial_encode_fetched_items_meta(
+    array $items
+): array {
     $encoded = wp_json_encode(
-        $decoded,
+        $items,
         JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
     );
 
-    return is_string( $encoded ) ? $encoded : '';
+    if (
+        ! is_string( $encoded ) ||
+        JSON_ERROR_NONE !== json_last_error()
+    ) {
+        return array(
+            'payload' => '[]',
+            'error' => 'fetched_items_json_encode_failed',
+        );
+    }
+
+    return array(
+        'payload' => $encoded,
+        'error' => '',
+    );
 }
 
 /**

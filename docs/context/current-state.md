@@ -37,10 +37,24 @@
   generic textarea sanitization, so titles containing markup-like characters
   cannot corrupt the bounded diagnostics payload. Its schema and retained
   fields are unchanged.
-- Isolated scanner diagnostics: runtime 86/88 with the two known baseline
-  scorer failures; Unspoken 35/39 with its four known baseline failures.
-  The new global-gate fixtures and PHP syntax checks passed. No production
-  scan, deploy, OpenAI request, commit or push was run.
+- The gate now also recognizes the bounded compositional operations phrase
+  `begin/start + daily/commercial + autonomous/driverless +
+  run/service/operations`; a bare `runs` remains non-actionable. The engine
+  passes already-recognized global action labels—not RSS text—to section
+  scorers. News interprets authorization, policy, named safety/governance and
+  accountability actions as event signals; People recognizes a concrete
+  governance/safety proposal only after its existing named-central-person
+  checks; Places recognizes deployment environments such as lanes, corridors,
+  routes, cities and logistics infrastructure only with deployment/operations
+  context. Unspoken and Tech semantics are unchanged.
+- Fetched-item JSON is encoded once, validated without reserialization, and
+  read back after persistence; an encode or persistence failure is retained in
+  the existing bounded run-error diagnostics rather than silently becoming an
+  empty meta value. A 210-item People-shaped regression payload is covered.
+- Isolated scanner diagnostics: runtime 101/103 with the two known baseline
+  scorer failures; Unspoken 35/39 with its four known baseline failures. The
+  new focused regressions and PHP syntax checks passed. No production scan,
+  deploy, OpenAI request, commit or push was run.
 
 Дата изменения: 2026-10-13.
 

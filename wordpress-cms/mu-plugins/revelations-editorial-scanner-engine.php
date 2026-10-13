@@ -487,6 +487,32 @@ function revelations_editorial_scanner_ai_signals(): array {
 }
 
 /**
+ * Recognize a bounded operations phrase whose material meaning depends on
+ * the combination of its terms rather than any one generic verb.
+ *
+ * A bare "runs" remains non-actionable. This is only the specific
+ * begin/start + daily/commercial + autonomous/driverless operations form.
+ *
+ * @return string[]
+ */
+function revelations_editorial_scanner_compositional_operations_actions(
+    string $text
+): array {
+    $pattern =
+        '~(?<![\p{L}\p{N}])' .
+        '(?:begin|begins|began|start|starts|started)\s+' .
+        '(?:daily|commercial)\s+' .
+        '(?:autonomous|driverless)' .
+        '(?:\s+[\p{L}\p{N}-]+){0,4}\s+' .
+        '(?:run|runs|service|operations?)' .
+        '(?![\p{L}\p{N}])~iu';
+
+    return 1 === preg_match( $pattern, $text )
+        ? array( 'operations' )
+        : array();
+}
+
+/**
  * Find canonical, non-overlapping signal matches.
  *
  * Candidate phrases are evaluated longest-first across all signal
@@ -817,7 +843,16 @@ function revelations_editorial_scanner_future_tech_gate( array $story ): array {
     );
     $family_matches = array_values( array_unique( $families['future_tech'] ?? array() ) );
     $corroboration_matches = $technical['corroboration'] ?? array();
-    $action_matches = $actions['action'] ?? array();
+    $action_matches = array_values(
+        array_unique(
+            array_merge(
+                $actions['action'] ?? array(),
+                revelations_editorial_scanner_compositional_operations_actions(
+                    $text
+                )
+            )
+        )
+    );
     $generic = preg_match(
         '~(?<![\p{L}\p{N}])(future|futuristic|smart|next-generation|technology|innovation)(?![\p{L}\p{N}])~iu',
         $text
@@ -985,7 +1020,10 @@ function revelations_editorial_scanner_ai_gate(
         array_unique(
             array_merge(
                 $title_matches['action'] ?? array(),
-                $summary_matches['action'] ?? array()
+                $summary_matches['action'] ?? array(),
+                revelations_editorial_scanner_compositional_operations_actions(
+                    $title . ' ' . $summary
+                )
             )
         )
     );
@@ -1121,6 +1159,40 @@ function revelations_editorial_scanner_ai_gate(
         $ai_result['reason'] = $future_result['reason'];
     }
     return $ai_result;
+}
+
+/**
+ * Pass bounded, already-recognized gate semantics to a section scorer.
+ *
+ * This preserves the global gate as a prefilter while allowing a scorer to
+ * interpret its own approved subset of concrete actions. It never passes RSS
+ * summary text or changes thresholds or aggregate formulas.
+ *
+ * @param array<string, mixed> $story
+ * @param array<string, mixed> $gate
+ * @return array<string, mixed>
+ */
+function revelations_editorial_scanner_attach_gate_semantics(
+    array $story,
+    array $gate
+): array {
+    $story['scanner_global_action_signals'] = array_values(
+        array_unique(
+            array_merge(
+                is_array( $gate['action_matches'] ?? null )
+                    ? $gate['action_matches']
+                    : array(),
+                is_array( $gate['future_tech_action_matches'] ?? null )
+                    ? $gate['future_tech_action_matches']
+                    : array()
+            )
+        )
+    );
+    $story['scanner_global_gate_branch'] = sanitize_key(
+        (string) ( $gate['gate_branch'] ?? '' )
+    );
+
+    return $story;
 }
 
 /**
@@ -2014,10 +2086,16 @@ function revelations_editorial_scanner_run_dry_run(
                 continue;
             }
 
+            $story_for_section =
+                revelations_editorial_scanner_attach_gate_semantics(
+                    $story,
+                    $ai_gate
+                );
+
             $scores =
                 call_user_func(
                     $score_story,
-                    $story
+                    $story_for_section
                 );
 
             if ( null === $scores ) {
