@@ -622,6 +622,257 @@ function revelations_editorial_unspoken_freshness(
 }
 
 /**
+ * Route only concrete RSS leads to the bounded Unspoken snapshot reader.
+ * This is intentionally broader than the final angle gate, but never
+ * qualifies a story by itself.
+ *
+ * @param array<string, mixed> $story RSS story after the shared global gate.
+ * @return array{plausible:bool,families:string[],anchors:string[]}
+ */
+function revelations_editorial_unspoken_snapshot_routing(
+    array $story
+): array {
+    $text = mb_strtolower(
+        trim(
+            (string) ( $story['title'] ?? '' ) . ' ' .
+            (string) ( $story['summary'] ?? '' )
+        ),
+        'UTF-8'
+    );
+
+    $families = array(
+        'accountability_disclosure' => array(
+            'nda', 'non-disclosure', 'non disclosure', 'disclosure',
+            'transparency', 'accountability', 'secret deal', 'secrecy',
+        ),
+        'privacy_control' => array(
+            'privacy', 'surveillance', 'monitoring', 'tracking',
+            'profiling', 'location inference', 'location data',
+            'biometric', 'facial recognition',
+        ),
+        'documented_failure_limitation' => array(
+            'failure', 'failed', 'fake tip', 'hallucination', 'error',
+            'unsafe', 'outage', 'misinformation', 'ai-generated evidence',
+        ),
+        'labor_power' => array(
+            'workers', 'worker', 'researchers', 'fired', 'laid off',
+            'layoffs', 'retaliation', 'labor', 'labour', 'union',
+            'exploitation',
+        ),
+        'community_infrastructure' => array(
+            'data center', 'datacentre', 'water', 'energy', 'power grid',
+            'community', 'communities', 'residents', 'opponents',
+        ),
+        'second_order_effect' => array(
+            'second-order', 'second order', 'shortage', 'disappear',
+            'price', 'cost', 'dependency', 'displacement', 'backlash',
+        ),
+    );
+
+    $anchors = array(
+        'named_actor' => array(
+            'openai', 'anthropic', 'google', 'microsoft', 'meta',
+            'amazon', 'apple', 'nvidia', 'police', 'government',
+        ),
+        'affected_group' => array(
+            'users', 'workers', 'researchers', 'residents', 'community',
+            'communities', 'countries', 'children', 'patients', 'public',
+        ),
+        'policy_document_process' => array(
+            'nda', 'policy', 'court', 'lawsuit', 'regulator', 'filing',
+            'contract', 'deal', 'investigation', 'hearing', 'order',
+            'report',
+        ),
+        'incident_or_decision' => array(
+            'fired', 'laid off', 'fake tip', 'failed', 'failure', 'used',
+            'drops', 'drop', 'banned', 'ruled', 'rule', 'dismissed',
+        ),
+        'attributable_reporting' => array(
+            'according to', 'said', 'stated', 'reported', 'found',
+            'confirmed', 'disclosed',
+        ),
+    );
+
+    $matched_families = array();
+    foreach ( $families as $family => $signals ) {
+        if (
+            array() !== revelations_editorial_unspoken_keyword_matches(
+                $text,
+                $signals
+            )
+        ) {
+            $matched_families[] = $family;
+        }
+    }
+
+    $matched_anchors = array();
+    foreach ( $anchors as $anchor => $signals ) {
+        if (
+            array() !== revelations_editorial_unspoken_keyword_matches(
+                $text,
+                $signals
+            )
+        ) {
+            $matched_anchors[] = $anchor;
+        }
+    }
+
+    return array(
+        'plausible' =>
+            array() !== $matched_families &&
+            array() !== $matched_anchors,
+        'families' => $matched_families,
+        'anchors' => $matched_anchors,
+    );
+}
+
+/**
+ * Score one Unspoken story, optionally enriching a plausible RSS lead with
+ * one ephemeral article snapshot. No snapshot text is returned or persisted.
+ *
+ * @param array<string, mixed> $story RSS story after the shared global gate.
+ * @param array{attempts:int,max_attempts:int} $snapshot_state Per-run state.
+ * @param callable(string):array<string,mixed>|null $fetcher Test seam only.
+ * @return array<string, mixed>|null
+ */
+function revelations_editorial_score_unspoken_story_with_snapshot(
+    array $story,
+    array &$snapshot_state,
+    ?callable $fetcher = null
+): ?array {
+    $rss_score = revelations_editorial_score_unspoken_story( $story );
+
+    if (
+        ! is_array( $rss_score ) ||
+        ! empty( $rss_score['qualified'] )
+    ) {
+        if ( is_array( $rss_score ) ) {
+            $rss_score['snapshot_status'] = 'not_needed';
+        }
+        return $rss_score;
+    }
+
+    $rss_rejection_code = sanitize_key(
+        (string) ( $rss_score['rejection_code'] ?? '' )
+    );
+    if (
+        ! empty( $rss_score['hard_rejected'] ) &&
+        ! in_array(
+            $rss_rejection_code,
+            array(
+                'insufficient_unspoken_angle',
+                'generic_negative_news',
+                'insufficient_evidence',
+            ),
+            true
+        )
+    ) {
+        $rss_score['snapshot_status'] = 'not_needed';
+        return $rss_score;
+    }
+
+    $routing = revelations_editorial_unspoken_snapshot_routing( $story );
+    if ( empty( $routing['plausible'] ) ) {
+        $rss_score['snapshot_status'] = 'not_needed';
+        return $rss_score;
+    }
+
+    $attempts = absint( $snapshot_state['attempts'] ?? 0 );
+    $maximum = max(
+        1,
+        absint( $snapshot_state['max_attempts'] ?? 8 )
+    );
+
+    if ( $attempts >= $maximum ) {
+        $rss_score['snapshot_status'] = 'fetch_failed';
+        return $rss_score;
+    }
+
+    $snapshot_state['attempts'] = $attempts + 1;
+    $source_url = esc_url_raw(
+        (string) ( $story['source_url'] ?? '' ),
+        array( 'https' )
+    );
+    $fetcher = $fetcher ??
+        'revelations_editorial_fetch_scanner_snapshot';
+
+    $snapshot = is_callable( $fetcher ) && '' !== $source_url
+        ? call_user_func( $fetcher, $source_url )
+        : array(
+            'ok' => false,
+            'status' => 'fetch_failed',
+            'text' => '',
+        );
+    $snapshot_status = sanitize_key(
+        (string) ( $snapshot['status'] ?? 'fetch_failed' )
+    );
+    $snapshot_text = is_string( $snapshot['text'] ?? null )
+        ? trim( (string) $snapshot['text'] )
+        : '';
+
+    if ( empty( $snapshot['ok'] ) || '' === $snapshot_text ) {
+        $result = revelations_editorial_scanner_rejection(
+            'insufficient_evidence',
+            'Unspoken snapshot is unverified: ' .
+                ( '' === $snapshot_status
+                    ? 'fetch_failed'
+                    : $snapshot_status ) . '.',
+            array(
+                'section_signals' => array_merge(
+                    $routing['families'],
+                    $routing['anchors']
+                ),
+            )
+        );
+        $result['snapshot_status'] =
+            '' === $snapshot_status
+                ? 'fetch_failed'
+                : $snapshot_status;
+        return $result;
+    }
+
+    $enriched_story = $story;
+    $enriched_story['summary'] = trim(
+        (string) ( $story['summary'] ?? '' ) . "\n\n" .
+        $snapshot_text
+    );
+    unset( $snapshot['text'], $snapshot_text );
+
+    $result = revelations_editorial_score_unspoken_story(
+        $enriched_story
+    );
+
+    if ( ! is_array( $result ) ) {
+        return $result;
+    }
+
+    $result['snapshot_status'] = 'fetched';
+    if ( ! empty( $result['qualified'] ) ) {
+        return $result;
+    }
+
+    $code = sanitize_key(
+        (string) ( $result['rejection_code'] ?? '' )
+    );
+    if ( 'insufficient_unspoken_angle' === $code ) {
+        $result['snapshot_status'] = 'angle_not_confirmed';
+    } elseif (
+        in_array(
+            $code,
+            array(
+                'insufficient_evidence',
+                'allegation_without_attribution',
+            ),
+            true
+        )
+    ) {
+        $result['snapshot_status'] = 'evidence_not_confirmed';
+    }
+
+    return $result;
+}
+
+/**
  * Score one Unspoken story after the shared global AI gate.
  *
  * High aggregate scores cannot compensate for a missing Unspoken angle,
@@ -1040,11 +1291,25 @@ function revelations_editorial_unspoken_scan_dry_run(
         );
     }
 
+    $snapshot_state = array(
+        'attempts' => 0,
+        'max_attempts' => 8,
+    );
+
+    $score_story = static function ( array $story ) use (
+        &$snapshot_state
+    ): ?array {
+        return revelations_editorial_score_unspoken_story_with_snapshot(
+            $story,
+            $snapshot_state
+        );
+    };
+
     return revelations_editorial_scanner_run_dry_run(
         'unspoken',
         revelations_editorial_unspoken_sources(),
         revelations_editorial_unspoken_disabled_sources(),
-        'revelations_editorial_score_unspoken_story',
+        $score_story,
         revelations_editorial_unspoken_thresholds(),
         $qualified_limit
     );

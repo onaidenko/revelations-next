@@ -40,6 +40,22 @@ function absint( mixed $value ): int {
     return abs( (int) $value );
 }
 
+function esc_url_raw(
+    mixed $url,
+    array $protocols = array()
+): string {
+    $url = trim( (string) $url );
+
+    if (
+        array() !== $protocols &&
+        ! str_starts_with( $url, 'https://' )
+    ) {
+        return '';
+    }
+
+    return $url;
+}
+
 $plugin_dir =
     dirname( __DIR__ ) . '/mu-plugins';
 
@@ -231,6 +247,289 @@ revelations_unspoken_test(
 );
 
 require_once $engine_file;
+
+$snapshot_router_cases = array(
+    'data-center accountability' => revelations_unspoken_story(
+        'AI data center deals face scrutiny over NDAs',
+        'Amazon disclosed a data center deal after community opponents asked for accountability.'
+    ),
+    'police location inference' => revelations_unspoken_story(
+        'AI company lets police infer a location from an interior photo',
+        'A report describes police use of AI location inference and surveillance.'
+    ),
+    'documented public-process failure' => revelations_unspoken_story(
+        'AI agent gave police a fake tip in an active case',
+        'The reported failure affected a public investigation.'
+    ),
+    'safety researcher retaliation' => revelations_unspoken_story(
+        'AI safety researchers say they were fired after raising concerns',
+        'Workers described retaliation linked to the company safety process.'
+    ),
+    'court AI evidence' => revelations_unspoken_story(
+        'Court examines AI-generated evidence after a disputed ruling',
+        'A court report describes an incident involving AI-generated evidence.'
+    ),
+);
+
+foreach ( $snapshot_router_cases as $label => $story ) {
+    $routing = revelations_editorial_unspoken_snapshot_routing( $story );
+    revelations_unspoken_test(
+        ! empty( $routing['plausible'] ) &&
+        array() !== ( $routing['families'] ?? array() ) &&
+        array() !== ( $routing['anchors'] ?? array() ),
+        'snapshot router selects ' . $label
+    );
+}
+
+$opinion_fetches = 0;
+$opinion_state = array(
+    'attempts' => 0,
+    'max_attempts' => 8,
+);
+$opinion_with_signals =
+    revelations_editorial_score_unspoken_story_with_snapshot(
+        revelations_unspoken_story(
+            'Opinion: AI data center privacy risks need attention',
+            'This commentary considers privacy and community concerns ' .
+            'around an Amazon data center.'
+        ),
+        $opinion_state,
+        static function ( string $url ) use ( &$opinion_fetches ): array {
+            $opinion_fetches++;
+            return array(
+                'ok' => true,
+                'status' => 'fetched',
+                'text' => 'This snapshot should never be fetched.',
+            );
+        }
+    );
+
+revelations_unspoken_test(
+    0 === $opinion_fetches &&
+    0 === $opinion_state['attempts'] &&
+    'not_needed' === (
+        $opinion_with_signals['snapshot_status'] ?? ''
+    ),
+    'hard-rejected opinion is never sent to the snapshot reader'
+);
+
+foreach (
+    array(
+        'generic safety essay' => revelations_unspoken_story(
+            'Why AI safety matters',
+            'An essay considers risk and safety in the future.'
+        ),
+        'regulatory opinion' => revelations_unspoken_story(
+            'Opinion: Governments should regulate AI',
+            'An opinion argues for future rules without a concrete event.'
+        ),
+        'generic explainer' => revelations_unspoken_story(
+            'What could go wrong with AI?',
+            'A guide discusses hypothetical future risk.'
+        ),
+        'ordinary product story' => revelations_unspoken_story(
+            'Company launches a new AI assistant',
+            'The product release adds features for customers.'
+        ),
+    ) as $label => $story
+) {
+    revelations_unspoken_test(
+        empty(
+            revelations_editorial_unspoken_snapshot_routing(
+                $story
+            )['plausible']
+        ),
+        'snapshot router does not default-fetch ' . $label
+    );
+}
+
+$snapshot_fetches = 0;
+$snapshot_state = array(
+    'attempts' => 0,
+    'max_attempts' => 8,
+);
+$snapshot_eligible =
+    revelations_editorial_score_unspoken_story_with_snapshot(
+        revelations_unspoken_story(
+            'AI company lets police infer locations from interior photos',
+            'A report describes an AI privacy and surveillance concern.'
+        ),
+        $snapshot_state,
+        static function ( string $url ) use ( &$snapshot_fetches ): array {
+            $snapshot_fetches++;
+            return array(
+                'ok' => true,
+                'status' => 'fetched',
+                'text' =>
+                    'A court filing said the system enabled surveillance ' .
+                    'and tracking of residents. A regulator said the AI ' .
+                    'system harmed public privacy. NONPERSISTENTBODYMARKER',
+            );
+        }
+    );
+
+revelations_unspoken_test(
+    1 === $snapshot_fetches &&
+    1 === $snapshot_state['attempts'] &&
+    true === ( $snapshot_eligible['qualified'] ?? false ) &&
+    'fetched' === ( $snapshot_eligible['snapshot_status'] ?? '' ) &&
+    ! str_contains(
+        (string) json_encode( $snapshot_eligible ),
+        'NONPERSISTENTBODYMARKER'
+    ),
+    'successful bounded snapshot confirms existing angle and evidence without returning body text'
+);
+
+$angle_state = array(
+    'attempts' => 0,
+    'max_attempts' => 8,
+);
+$angle_not_confirmed =
+    revelations_editorial_score_unspoken_story_with_snapshot(
+        revelations_unspoken_story(
+            'AI data center operator faces questions over an NDA',
+            'Community opponents ask for accountability over the data center deal.'
+        ),
+        $angle_state,
+        static fn( string $url ): array => array(
+            'ok' => true,
+            'status' => 'fetched',
+            'text' =>
+                'The company described a routine construction schedule ' .
+                'for its new facility and announced an opening date.',
+        )
+    );
+
+revelations_unspoken_test(
+    true === ( $angle_not_confirmed['hard_rejected'] ?? false ) &&
+    'insufficient_unspoken_angle' === (
+        $angle_not_confirmed['rejection_code'] ?? ''
+    ) &&
+    'angle_not_confirmed' === (
+        $angle_not_confirmed['snapshot_status'] ?? ''
+    ),
+    'successful snapshot without an existing Unspoken angle remains rejected'
+);
+
+$evidence_state = array(
+    'attempts' => 0,
+    'max_attempts' => 8,
+);
+$evidence_not_confirmed =
+    revelations_editorial_score_unspoken_story_with_snapshot(
+        revelations_unspoken_story(
+            'AI system lets police infer locations from photos',
+            'Privacy and surveillance concerns affect residents.'
+        ),
+        $evidence_state,
+        static fn( string $url ): array => array(
+            'ok' => true,
+            'status' => 'fetched',
+            'text' =>
+                'The system enables surveillance and tracking of residents ' .
+                'through location inference without a named source.',
+        )
+    );
+
+revelations_unspoken_test(
+    true === ( $evidence_not_confirmed['hard_rejected'] ?? false ) &&
+    'insufficient_evidence' === (
+        $evidence_not_confirmed['rejection_code'] ?? ''
+    ) &&
+    'evidence_not_confirmed' === (
+        $evidence_not_confirmed['snapshot_status'] ?? ''
+    ),
+    'snapshot without attributable evidence remains unverified and rejected'
+);
+
+foreach (
+    array( 'paywalled', 'timeout', 'too_short', 'fetch_failed' ) as $status
+) {
+    $failure_state = array(
+        'attempts' => 0,
+        'max_attempts' => 8,
+    );
+    $failure = revelations_editorial_score_unspoken_story_with_snapshot(
+        revelations_unspoken_story(
+            'AI data center deal faces NDA accountability questions',
+            'Community opponents seek disclosure from Amazon over the deal.'
+        ),
+        $failure_state,
+        static fn( string $url ): array => array(
+            'ok' => false,
+            'status' => $status,
+            'text' => '',
+        )
+    );
+
+    revelations_unspoken_test(
+        true === ( $failure['hard_rejected'] ?? false ) &&
+        'insufficient_evidence' === (
+            $failure['rejection_code'] ?? ''
+        ) &&
+        $status === ( $failure['snapshot_status'] ?? '' ),
+        'unverified ' . $status . ' snapshot never qualifies'
+    );
+}
+
+$budget_state = array(
+    'attempts' => 0,
+    'max_attempts' => 8,
+);
+$budget_fetches = 0;
+for ( $index = 0; $index < 9; $index++ ) {
+    revelations_editorial_score_unspoken_story_with_snapshot(
+        revelations_unspoken_story(
+            'AI data center deal faces NDA accountability questions',
+            'Community opponents seek disclosure from Amazon over the deal.'
+        ),
+        $budget_state,
+        static function ( string $url ) use ( &$budget_fetches ): array {
+            $budget_fetches++;
+            return array(
+                'ok' => false,
+                'status' => 'too_short',
+                'text' => '',
+            );
+        }
+    );
+}
+
+revelations_unspoken_test(
+    8 === $budget_fetches &&
+    8 === $budget_state['attempts'],
+    'Unspoken scanner caps ephemeral snapshot attempts at eight per run'
+);
+
+$reader_file =
+    $plugin_dir . '/revelations-editorial-source-reader.php';
+$reader_source = file_get_contents( $reader_file );
+
+revelations_unspoken_test(
+    false !== $reader_source &&
+    str_contains( $reader_source, "'timeout' => 8" ) &&
+    str_contains( $reader_source, "'redirection' => 2" ) &&
+    str_contains(
+        $reader_source,
+        "'limit_response_size' => 768 * KB_IN_BYTES"
+    ) &&
+    str_contains( $reader_source, "mb_substr( \$text, 0, 8000" ) &&
+    str_contains(
+        $reader_source,
+        'function revelations_editorial_fetch_scanner_snapshot'
+    ) &&
+    ! str_contains(
+        substr(
+            $reader_source,
+            (int) strpos(
+                $reader_source,
+                'function revelations_editorial_fetch_scanner_snapshot'
+            )
+        ),
+        'update_post_meta('
+    ),
+    'scanner snapshot reader is bounded and has no persistence write path'
+);
 
 $track_cases = array(
     'documented_harm' =>

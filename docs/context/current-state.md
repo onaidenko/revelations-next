@@ -1,5 +1,27 @@
 # Текущее состояние
 
+## Unspoken bounded evidence snapshot stage
+
+- Unspoken Preview now routes only a globally relevant RSS item with both a
+  potential hidden-cost, control, accountability, labour, infrastructure or
+  second-order family and a concrete anchor to an ephemeral article reader.
+  At most eight such reads occur in one Preview run. The reader accepts HTTPS,
+  uses a safe request with an 8-second timeout, two redirects, a 768 KB response
+  cap and an 8,000-character extraction cap.
+- Snapshot text exists only inside the current scorer call. It is never added
+  to candidate storage, Preview transients, run logs, diagnostics or fetched
+  item metadata. Fetch failures, paywalls and short extraction fail closed as
+  unverified and cannot qualify a candidate.
+- The enriched text is evaluated only by the existing Unspoken angle,
+  evidence and allegation rules. No new angle family, source pool, global-gate
+  rule, candidate flow, research requirement or other section semantics changed.
+- Isolated PHP lint passed. The focused Unspoken suite reports 54/58, with the
+  same four known baseline failures; scanner runtime reports 111/113, with its
+  two known baseline failures. No production RSS scan, generation, deployment,
+  commit or push was run.
+
+Дата изменения: 2026-10-13.
+
 ## RSS source-coverage update
 
 - News, People, Places and Unspoken now use the approved discovery pools for

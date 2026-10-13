@@ -621,3 +621,166 @@ function revelations_editorial_fetch_source_text(
 
     return $result;
 }
+
+/**
+ * Fetch a deliberately small, non-persistent article snapshot for scanner
+ * classification. Callers must discard the returned text after their current
+ * request; this helper never writes it to a post, option, transient or log.
+ *
+ * This is intentionally separate from the Editorial Desk source-snapshot
+ * action, whose explicit purpose is to save a candidate source text.
+ *
+ * @return array<string, mixed>
+ */
+function revelations_editorial_fetch_scanner_snapshot(
+    string $source_url
+): array {
+    $source_url = esc_url_raw(
+        $source_url,
+        array( 'https' )
+    );
+
+    if ( '' === $source_url ) {
+        return array(
+            'ok' => false,
+            'status' => 'fetch_failed',
+            'text' => '',
+            'characters' => 0,
+            'paragraphs' => 0,
+        );
+    }
+
+    $started = microtime( true );
+    $response = wp_safe_remote_get(
+        $source_url,
+        array(
+            'timeout' => 8,
+            'redirection' => 2,
+            'limit_response_size' => 768 * KB_IN_BYTES,
+            'headers' => array(
+                'Accept' => 'text/html,application/xhtml+xml',
+                'User-Agent' =>
+                    'REVELATIONS Editorial Scanner/0.1 ' .
+                    '(https://revelations.me)',
+            ),
+        )
+    );
+
+    $duration_ms = (int) round(
+        ( microtime( true ) - $started ) * 1000
+    );
+
+    if ( is_wp_error( $response ) ) {
+        $message = strtolower(
+            $response->get_error_message()
+        );
+
+        return array(
+            'ok' => false,
+            'status' => str_contains( $message, 'timeout' )
+                ? 'timeout'
+                : 'fetch_failed',
+            'text' => '',
+            'characters' => 0,
+            'paragraphs' => 0,
+            'duration_ms' => $duration_ms,
+        );
+    }
+
+    $http_status = (int) wp_remote_retrieve_response_code(
+        $response
+    );
+
+    if ( $http_status < 200 || $http_status >= 300 ) {
+        return array(
+            'ok' => false,
+            'status' => in_array(
+                $http_status,
+                array( 401, 402, 403, 451 ),
+                true
+            )
+                ? 'paywalled'
+                : 'fetch_failed',
+            'text' => '',
+            'characters' => 0,
+            'paragraphs' => 0,
+            'http_status' => $http_status,
+            'duration_ms' => $duration_ms,
+        );
+    }
+
+    $content_type = strtolower(
+        (string) wp_remote_retrieve_header(
+            $response,
+            'content-type'
+        )
+    );
+
+    if (
+        '' !== $content_type &&
+        ! str_contains( $content_type, 'text/html' ) &&
+        ! str_contains( $content_type, 'application/xhtml+xml' )
+    ) {
+        return array(
+            'ok' => false,
+            'status' => 'fetch_failed',
+            'text' => '',
+            'characters' => 0,
+            'paragraphs' => 0,
+            'http_status' => $http_status,
+            'duration_ms' => $duration_ms,
+        );
+    }
+
+    $result = revelations_editorial_extract_source_html(
+        wp_remote_retrieve_body( $response )
+    );
+
+    if (
+        empty( $result['ok'] ) ||
+        ! is_string( $result['text'] ?? null )
+    ) {
+        return array(
+            'ok' => false,
+            'status' => 'too_short',
+            'text' => '',
+            'characters' => 0,
+            'paragraphs' => 0,
+            'http_status' => $http_status,
+            'duration_ms' => $duration_ms,
+        );
+    }
+
+    $text = revelations_editorial_trim_source_tail(
+        (string) $result['text']
+    );
+    $text = trim(
+        mb_substr( $text, 0, 8000, 'UTF-8' )
+    );
+
+    if ( mb_strlen( $text, 'UTF-8' ) < 500 ) {
+        return array(
+            'ok' => false,
+            'status' => 'too_short',
+            'text' => '',
+            'characters' => 0,
+            'paragraphs' => 0,
+            'http_status' => $http_status,
+            'duration_ms' => $duration_ms,
+        );
+    }
+
+    return array(
+        'ok' => true,
+        'status' => 'fetched',
+        'text' => $text,
+        'characters' => mb_strlen( $text, 'UTF-8' ),
+        'paragraphs' => count(
+            array_filter(
+                preg_split( '/\R{2,}/u', $text )
+            )
+        ),
+        'http_status' => $http_status,
+        'duration_ms' => $duration_ms,
+    );
+}

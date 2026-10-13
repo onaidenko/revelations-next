@@ -558,3 +558,17 @@ cannot override that Constitution without explicit product-owner approval.
 - **Safeguard:** Save candidate and the downstream research/evidence pipeline
   remain the decision boundary for persistence and publication. Latest-run
   fetched-item retention remains unchanged.
+
+## Unspoken bounded evidence snapshots
+
+- **Решение:** only globally relevant Unspoken RSS leads that have both a
+  potential approved concern family and a concrete anchor can use one bounded
+  scanner-only article snapshot. The cap is eight attempts per Preview run.
+- **Решение:** snapshot text is in-memory classifier context only. It is never
+  stored in candidate meta, Preview transients, run logs, diagnostics or
+  fetched-item metadata. Failures, paywalls and short extraction are
+  unverified and fail closed.
+- **Решение:** the snapshot is passed to the existing Unspoken angle, evidence
+  and allegation logic without adding new angle families or weakening source
+  attribution safeguards. It is not independent corroboration; manual Save
+  and downstream research/evidence requirements remain unchanged.
