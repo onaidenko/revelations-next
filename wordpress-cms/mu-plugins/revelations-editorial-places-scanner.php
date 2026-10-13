@@ -345,6 +345,53 @@ function revelations_editorial_places_semantic_implementation_matches(
 }
 
 /**
+ * Require an established physical use, not merely a launch announcement or
+ * an intended route. The shared action labels are retained as semantics, but
+ * Places owns the categorical distinction between use and a future plan.
+ *
+ * @param array<string, mixed> $story Story record.
+ * @param string[] $physical_deployment_matches Confirmed physical context.
+ * @param string[] $speculative_matches Plan/speculation matches.
+ */
+function revelations_editorial_places_has_established_use(
+    array $story,
+    array $physical_deployment_matches,
+    array $speculative_matches,
+    string $text
+): bool {
+    if (
+        array() === $physical_deployment_matches ||
+        array() !== $speculative_matches
+    ) {
+        return false;
+    }
+
+    $actions = isset( $story['scanner_global_action_signals'] ) &&
+        is_array( $story['scanner_global_action_signals'] )
+            ? $story['scanner_global_action_signals']
+            : array();
+
+    if ( in_array( 'operations', $actions, true ) ) {
+        return true;
+    }
+
+    if (
+        in_array( 'deploy', $actions, true ) &&
+        1 === preg_match(
+            '~(?<![\p{L}\p{N}])(?:deployed|deployment\s+(?:is\s+)?(?:underway|active|live))(?![\p{L}\p{N}])~iu',
+            $text
+        )
+    ) {
+        return true;
+    }
+
+    return 1 === preg_match(
+        '~(?<![\p{L}\p{N}])(?:operates?|operating|operational|in\s+service|daily\s+(?:driverless|autonomous)\s+(?:runs?|service))(?![\p{L}\p{N}])~iu',
+        $text
+    );
+}
+
+/**
  * Score one Places story.
  *
  * Returning null removes the story from consideration.
@@ -357,9 +404,6 @@ function revelations_editorial_score_places_story(
 ): ?array {
     $keywords =
         revelations_editorial_places_keywords();
-
-    $thresholds =
-        revelations_editorial_places_thresholds();
 
     $title = (string) (
         $story['title'] ?? ''
@@ -415,6 +459,29 @@ function revelations_editorial_score_places_story(
         );
     }
 
+    $speculative_matches =
+        revelations_editorial_places_keyword_matches(
+            $text,
+            $keywords['speculative']
+        );
+
+    if (
+        ! revelations_editorial_places_has_established_use(
+            $story,
+            $physical_deployment_matches,
+            $speculative_matches,
+            $text
+        )
+    ) {
+        return revelations_editorial_scanner_rejection(
+            'planned_not_implemented',
+            'Physical deployment is not established as active use or operation.',
+            array(
+                'section_signals' => $relevance_matches,
+            )
+        );
+    }
+
     $implementation_matches =
         revelations_editorial_places_keyword_matches(
             $text,
@@ -432,12 +499,6 @@ function revelations_editorial_score_places_story(
             )
         )
     );
-
-    $speculative_matches =
-        revelations_editorial_places_keyword_matches(
-            $text,
-            $keywords['speculative']
-        );
 
     $impact_matches =
         revelations_editorial_places_keyword_matches(
@@ -498,48 +559,8 @@ function revelations_editorial_score_places_story(
         $fit_score
     ) / 6.7;
 
-    $places_thresholds = isset(
-        $thresholds['places_signal']
-    ) && is_array(
-        $thresholds['places_signal']
-    )
-        ? $thresholds['places_signal']
-        : array();
-
-    $base_qualified =
-        $total_score >= (float) (
-            $places_thresholds['total_score']
-            ?? 4.6
-        ) &&
-        $relevance_score >= (float) (
-            $places_thresholds['relevance_score']
-            ?? 2.5
-        ) &&
-        $freshness_score >= (float) (
-            $places_thresholds['freshness_score']
-            ?? 3.0
-        );
-
-    $significance_qualified =
-        $implementation_score >= (float) (
-            $places_thresholds[
-                'implementation_score'
-            ] ?? 2.0
-        ) ||
-        $impact_score >= (float) (
-            $places_thresholds[
-                'impact_score'
-            ] ?? 4.0
-        ) ||
-        $relevance_score >= (float) (
-            $places_thresholds[
-                'strong_relevance_score'
-            ] ?? 7.5
-        );
-
-    $qualified =
-        $base_qualified &&
-        $significance_qualified;
+    /* Identity is complete above; preserve the existing total for ranking. */
+    $qualified = true;
 
     $reasons = array();
 
@@ -633,25 +654,9 @@ function revelations_editorial_score_places_story(
         'qualified' =>
             $qualified,
 
-        'rejection_code' =>
-            $qualified
-                ? ''
-                : (
-                    array() !== $speculative_matches &&
-                    0.0 === (float) $implementation_score
-                        ? 'planned_not_implemented'
-                        : (
-                            $base_qualified &&
-                            ! $significance_qualified
-                                ? 'insufficient_significance'
-                                : 'below_threshold'
-                        )
-                ),
+        'rejection_code' => '',
 
-        'editorial_track' =>
-            $qualified
-                ? 'places_signal'
-                : null,
+        'editorial_track' => 'places_signal',
 
         'scoring_reason' =>
             array() !== $reasons

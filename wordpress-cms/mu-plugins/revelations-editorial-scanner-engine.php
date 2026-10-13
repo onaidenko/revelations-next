@@ -857,12 +857,15 @@ function revelations_editorial_scanner_future_tech_gate( array $story ): array {
         '~(?<![\p{L}\p{N}])(future|futuristic|smart|next-generation|technology|innovation)(?![\p{L}\p{N}])~iu',
         $text
     ) === 1;
-    $qualified = array() !== $family_matches &&
-        array() !== $action_matches;
+    /*
+     * This is a high-recall discovery boundary, not an event classifier.
+     * Keep action matches for section identity and ranking diagnostics, but
+     * do not require an event before an otherwise clear future-tech subject
+     * can reach the section scorer.
+     */
+    $qualified = array() !== $family_matches;
     $code = $qualified ? '' : (
-        array() === $family_matches
-            ? ( $generic ? 'generic_futurism_only' : 'no_ai_or_future_tech_signal' )
-            : 'future_tech_without_action'
+        $generic ? 'generic_futurism_only' : 'no_ai_or_future_tech_signal'
     );
 
     return array(
@@ -872,7 +875,7 @@ function revelations_editorial_scanner_future_tech_gate( array $story ): array {
         'future_tech_action_matches' => $action_matches,
         'rejection_code' => $code,
         'reason' => $qualified
-            ? 'Future-tech subject has a material action.'
+            ? 'Future-tech subject is present; section criteria remain required.'
             : $code,
     );
 }
@@ -1028,14 +1031,16 @@ function revelations_editorial_scanner_ai_gate(
         )
     );
 
-    $direct_qualified =
-        count( $direct_matches ) >= 1 &&
-        count( $action_matches ) >= 1;
+    /*
+     * The global gate establishes only a clear AI/future-tech subject.
+     * Material actions remain attached as semantics for a section scorer,
+     * where event, person and physical-deployment identity are decided.
+     */
+    $direct_qualified = count( $direct_matches ) >= 1;
 
     $contextual_qualified =
         0 === count( $direct_matches ) &&
         count( $contextual_matches ) >= 1 &&
-        count( $action_matches ) >= 1 &&
         count( $technical_matches ) >= 2;
 
     $qualified =
@@ -1046,14 +1051,13 @@ function revelations_editorial_scanner_ai_gate(
 
     if ( $direct_qualified ) {
         $reason =
-            'AI subject has action and context: ' .
+            'AI subject is present: ' .
             implode(
                 ', ',
                 array_slice(
                     array_merge(
                         $direct_matches,
                         $contextual_matches,
-                        $action_matches,
                         $technical_matches
                     ),
                     0,
@@ -1068,7 +1072,6 @@ function revelations_editorial_scanner_ai_gate(
                 array_slice(
                     array_merge(
                         $contextual_matches,
-                        $action_matches,
                         $technical_matches
                     ),
                     0,
@@ -1085,9 +1088,6 @@ function revelations_editorial_scanner_ai_gate(
                 array() !== $action_matches
                     ? 'broad_signal_without_technical_context'
                     : 'no_ai_signal';
-        } elseif ( array() === $action_matches ) {
-            $rejection_code =
-                'no_meaningful_ai_action';
         } elseif (
             array() === $direct_matches &&
             array() !== $contextual_matches
@@ -1100,8 +1100,8 @@ function revelations_editorial_scanner_ai_gate(
         }
 
         $reason =
-            'AI lacks the action and technical context required '
-            . 'to be the dominant subject.';
+            'AI lacks the clear subject context required '
+            . 'to reach a section scorer.';
     }
 
     $ai_result = array(
@@ -1752,7 +1752,7 @@ function revelations_editorial_scanner_run_dry_run(
 
     $qualified_limit = max(
         1,
-        min( 20, $qualified_limit )
+        min( 5, $qualified_limit )
     );
 
     $seen_keys =
@@ -2286,17 +2286,26 @@ function revelations_editorial_scanner_run_dry_run(
 
     usort(
         $stories,
-        static fn (
-            array $left,
-            array $right
-        ): int =>
-            (float) (
-                $right['total_score'] ?? 0
-            )
-            <=>
-            (float) (
-                $left['total_score'] ?? 0
-            )
+        static function ( array $left, array $right ): int {
+            $score_order = (float) ( $right['total_score'] ?? 0 )
+                <=> (float) ( $left['total_score'] ?? 0 );
+
+            if ( 0 !== $score_order ) {
+                return $score_order;
+            }
+
+            $published_order = (int) ( $right['published_timestamp'] ?? 0 )
+                <=> (int) ( $left['published_timestamp'] ?? 0 );
+
+            if ( 0 !== $published_order ) {
+                return $published_order;
+            }
+
+            return strcmp(
+                (string) ( $left['source_url'] ?? '' ),
+                (string) ( $right['source_url'] ?? '' )
+            );
+        }
     );
     usort(
         $closest_rejected,

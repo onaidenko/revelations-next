@@ -538,3 +538,23 @@ cannot override that Constitution without explicit product-owner approval.
   server rather than trusted to the model.
 - **Решение:** an X draft cannot be marked posted when its source article
   has changed since generation or manual save.
+
+## Preview Scanner discovery ranking
+
+- **Решение:** Preview Scanner is an editorial discovery and ranking tool, not
+  an automatic publication gate. Its bounded pipeline is `feed -> freshness
+  horizon -> dedup -> high-recall global relevance -> categorical section
+  identity -> existing-score ranking -> top five`.
+- **Решение:** the global gate establishes an explicit AI or recognised
+  future-tech subject only. It retains action extraction for downstream
+  semantics, but a missing action does not globally reject an otherwise clear
+  subject and it never decides section significance.
+- **Решение:** News requires a concrete current event; People requires a real
+  central named person with a material AI/future-tech action; Places requires
+  established use in a central physical environment. Existing aggregate,
+  freshness and significance thresholds rank these eligible candidates rather
+  than reject them. Tech qualification and Unspoken section requirements are
+  intentionally unchanged.
+- **Safeguard:** Save candidate and the downstream research/evidence pipeline
+  remain the decision boundary for persistence and publication. Latest-run
+  fetched-item retention remains unchanged.

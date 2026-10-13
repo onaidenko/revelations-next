@@ -215,6 +215,17 @@ function revelations_editorial_people_has_name_signal(
         'why',
     );
 
+    /*
+     * This is deliberately a bounded lexical guard, not a person-classifier.
+     * It removes common organisation-like pairs from the lightweight title
+     * heuristic before the People identity gate relies on it.
+     */
+    $organisation_words = array(
+        'air', 'army', 'company', 'corporation', 'department', 'dynamics',
+        'force', 'group', 'inc', 'lab', 'labs', 'llc', 'ltd', 'ministry',
+        'robotics', 'systems', 'technologies', 'technology', 'university',
+    );
+
     foreach ( $matches as $match ) {
         $first = mb_strtolower(
             str_replace(
@@ -236,7 +247,23 @@ function revelations_editorial_people_has_name_signal(
 
         if (
             in_array( $first, $stopwords, true ) ||
-            in_array( $second, $stopwords, true )
+            in_array( $second, $stopwords, true ) ||
+            in_array( $first, $organisation_words, true ) ||
+            in_array( $second, $organisation_words, true )
+        ) {
+            continue;
+        }
+
+        /* Camel-cased tokens such as WindBorne are company-like. */
+        if (
+            1 === preg_match(
+                '/\p{Ll}\p{Lu}/u',
+                (string) ( $match[1] ?? '' )
+            ) ||
+            1 === preg_match(
+                '/\p{Ll}\p{Lu}/u',
+                (string) ( $match[2] ?? '' )
+            )
         ) {
             continue;
         }
@@ -252,6 +279,24 @@ function revelations_editorial_people_has_name_signal(
     }
 
     return false;
+}
+
+/**
+ * Detect a bounded set of concrete person-event verbs. This establishes
+ * categorical identity only; it does not alter any component-score weights.
+ */
+function revelations_editorial_people_has_concrete_action(
+    string $text
+): bool {
+    return 1 === preg_match(
+        '/\b(?:appoints?|appointed|names?|named|joins?|joined|leaves?|' .
+        'left|resigns?|steps?\s+down|launches?|launched|founds?|' .
+        'founded|builds?|built|creates?|created|raises?|raised|' .
+        'invests?|invested|acquires?|acquired|wins?|won|unveils?|' .
+        'unveiled|announces?|announced|says?|said|decides?|decided|' .
+        'proposes?|proposed|files?|filed|testifies|testified)\b/iu',
+        $text
+    );
 }
 
 /**
@@ -418,9 +463,6 @@ function revelations_editorial_score_people_story(
     $keywords =
         revelations_editorial_people_keywords();
 
-    $thresholds =
-        revelations_editorial_people_thresholds();
-
     $title = (string) (
         $story['title'] ?? ''
     );
@@ -489,13 +531,6 @@ function revelations_editorial_score_people_story(
             $title
         );
 
-    $future_tech_context = function_exists(
-        'revelations_editorial_scanner_future_tech_context_gate'
-    )
-        ? revelations_editorial_scanner_future_tech_context_gate(
-            $story
-        )
-        : array( 'qualified' => false );
     $future_tech_significance =
         revelations_editorial_people_future_tech_significance(
             $text
@@ -504,16 +539,21 @@ function revelations_editorial_score_people_story(
     $has_explicit_people_signal =
         array() !== $relevance_matches;
 
-    $has_named_action_signal =
-        $name_signal &&
-        array() !== $title_action_matches;
-
     $governance_implementation_matches =
         revelations_editorial_people_governance_implementation_matches(
             $story,
             $name_signal,
             $has_explicit_people_signal
         );
+
+    $has_material_person_connection =
+        $has_explicit_people_signal ||
+        array() !== $future_tech_significance;
+    $has_concrete_person_action =
+        array() !== $title_action_matches ||
+        array() !== $implementation_matches ||
+        array() !== $governance_implementation_matches ||
+        revelations_editorial_people_has_concrete_action( $title );
 
     if (
         revelations_editorial_people_is_generic_advice(
@@ -532,27 +572,13 @@ function revelations_editorial_score_people_story(
      * confirmed action. Company names alone are not sufficient.
      */
     if (
-        ! $has_explicit_people_signal &&
-        ! $has_named_action_signal
+        ! $name_signal ||
+        ! $has_material_person_connection ||
+        ! $has_concrete_person_action
     ) {
         return revelations_editorial_scanner_rejection(
             'person_not_central',
-            'No central person or named personal action was found.'
-        );
-    }
-
-    if (
-        ! empty( $future_tech_context['qualified'] ) &&
-        (
-            ! $name_signal ||
-            array() === $future_tech_significance
-        )
-    ) {
-        return revelations_editorial_scanner_rejection(
-            $name_signal
-                ? 'insufficient_future_tech_significance'
-                : 'person_not_central',
-            'Future-tech story lacks a named central technical leader.'
+            'No central real person with a material AI/future-tech action was found.'
         );
     }
 
@@ -627,48 +653,8 @@ function revelations_editorial_score_people_story(
         $fit_score
     ) / 6.7;
 
-    $people_thresholds = isset(
-        $thresholds['people_signal']
-    ) && is_array(
-        $thresholds['people_signal']
-    )
-        ? $thresholds['people_signal']
-        : array();
-
-    $base_qualified =
-        $total_score >= (float) (
-            $people_thresholds['total_score']
-            ?? 4.8
-        ) &&
-        $relevance_score >= (float) (
-            $people_thresholds['relevance_score']
-            ?? 2.0
-        ) &&
-        $freshness_score >= (float) (
-            $people_thresholds['freshness_score']
-            ?? 3.0
-        );
-
-    $significance_qualified =
-        $implementation_score >= (float) (
-            $people_thresholds[
-                'implementation_score'
-            ] ?? 2.0
-        ) ||
-        $impact_score >= (float) (
-            $people_thresholds[
-                'impact_score'
-            ] ?? 2.5
-        ) ||
-        $relevance_score >= (float) (
-            $people_thresholds[
-                'strong_relevance_score'
-            ] ?? 6.0
-        );
-
-    $qualified =
-        $base_qualified &&
-        $significance_qualified;
+    /* Identity is complete above; the unchanged total is Preview ranking. */
+    $qualified = true;
 
     $reasons = array();
 
@@ -779,19 +765,9 @@ function revelations_editorial_score_people_story(
         'qualified' =>
             $qualified,
 
-        'rejection_code' =>
-            $qualified
-                ? ''
-                : (
-                    ! $base_qualified
-                        ? 'below_threshold'
-                        : 'insufficient_person_significance'
-                ),
+        'rejection_code' => '',
 
-        'editorial_track' =>
-            $qualified
-                ? 'people_signal'
-                : null,
+        'editorial_track' => 'people_signal',
 
         'scoring_reason' =>
             array() !== $reasons

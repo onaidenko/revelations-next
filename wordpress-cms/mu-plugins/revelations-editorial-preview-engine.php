@@ -28,7 +28,7 @@ function revelations_editorial_preview_sections(): array {
                 true,
 
             'default_preview_limit' =>
-                10,
+                5,
 
             'scan_callback' =>
                 'revelations_editorial_tech_scan_dry_run',
@@ -212,7 +212,7 @@ function revelations_editorial_preview_runtime_config(
     $preview_limit = max(
         1,
         min(
-            20,
+            5,
             absint(
                 $profile['preview_limit']
                 ?? $default_preview_limit

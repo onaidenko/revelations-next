@@ -169,10 +169,9 @@ function revelations_editorial_news_keyword_matches(
 /**
  * Detect the narrow type of concrete News event.
  *
- * Product/deployment, research, capital and strategic-company events use
- * different qualification paths. This prevents financing from being judged
- * as though it were a product implementation, while retaining strict
- * significance protection for routine funding and minor releases.
+ * Product/deployment, research, capital and strategic-company events retain
+ * their distinct editorial labels. The labels establish concrete News
+ * identity and explain ranking; they are not separate qualification routes.
  *
  * @return array<string, string[]>
  *
@@ -231,9 +230,10 @@ function revelations_editorial_news_event_matches( string $text ): array {
  * Convert only already-confirmed global actions into News event semantics.
  *
  * This prevents an ordinary mention of a policy, proposal or NDA from adding
- * score. The shared gate must first establish AI/future-tech context and a
- * concrete action; governance/safety proposals additionally require a named
- * actor in the headline.
+ * an event label. The shared gate must first establish AI/future-tech context;
+ * recognised concrete actions are then interpreted only by this section.
+ * Governance/safety proposals additionally require a named actor in the
+ * headline.
  *
  * @param array<string, mixed> $story
  * @return string[]
@@ -246,6 +246,23 @@ function revelations_editorial_news_global_event_matches(
             ? $story['scanner_global_action_signals']
             : array();
     $matches = array();
+
+    $action_events = array(
+        'launch'                  => 'launch',
+        'release'                 => 'release',
+        'deploy'                  => 'deployment',
+        'trial_or_pilot'          => 'trial or pilot',
+        'operations'              => 'operations',
+        'partnership_or_contract' => 'partnership or contract',
+        'rollout'                 => 'rollout',
+        'appointment'             => 'appointment',
+    );
+
+    foreach ( $action_events as $action => $label ) {
+        if ( in_array( $action, $actions, true ) ) {
+            $matches[] = $label;
+        }
+    }
 
     if ( in_array( 'authorization', $actions, true ) ) {
         $matches[] = 'regulatory authorization';
@@ -317,9 +334,6 @@ function revelations_editorial_score_news_story(
 ): ?array {
     $keywords =
         revelations_editorial_news_keywords();
-
-    $thresholds =
-        revelations_editorial_news_thresholds();
 
     $text = mb_strtolower(
         (string) (
@@ -402,6 +416,34 @@ function revelations_editorial_score_news_story(
         )
     );
 
+    /*
+     * A model reference is a subject signal, not an event by itself. The
+     * remaining track/global-action matches are a categorical News boundary.
+     */
+    $concrete_event_matches = array_values(
+        array_diff(
+            $event_matches,
+            array( 'ai model', 'new model' )
+        )
+    );
+
+    if ( array() === $concrete_event_matches ) {
+        return revelations_editorial_scanner_rejection(
+            'insufficient_event_signal',
+            'News requires a concrete current event or development.',
+            array(
+                'section_signals' => array_values(
+                    array_unique(
+                        array_merge(
+                            $concrete_event_matches,
+                            $implementation_matches
+                        )
+                    )
+                ),
+            )
+        );
+    }
+
     $implementation_score = min(
         10,
         max(
@@ -433,28 +475,6 @@ function revelations_editorial_score_news_story(
         count( $relevance_matches ) * 2 +
         count( $event_matches ) * 2
     );
-
-    if ( $relevance_score < 2 ) {
-        return revelations_editorial_scanner_rejection(
-            'insufficient_section_signal',
-            'News relevance signal is below the required minimum.',
-            array(
-                'relevance_score' =>
-                    round( $relevance_score, 1 ),
-                'implementation_score' =>
-                    round( $implementation_score, 1 ),
-                'section_signals' => array_values(
-                    array_unique(
-                        array_merge(
-                            $relevance_matches,
-                            $event_matches,
-                            $implementation_matches
-                        )
-                    )
-                ),
-            )
-        );
-    }
 
     $impact_matches =
         revelations_editorial_news_keyword_matches(
@@ -494,91 +514,25 @@ function revelations_editorial_score_news_story(
         + $fit_score
     ) / 5.5;
 
-    $news_thresholds = isset(
-        $thresholds['news_signal']
-    ) && is_array(
-        $thresholds['news_signal']
-    )
-        ? $thresholds['news_signal']
-        : array();
-
-    $base_qualified =
-        $total_score >= (float) (
-            $news_thresholds['total_score']
-            ?? 4.5
-        ) &&
-        $relevance_score >= (float) (
-            $news_thresholds['relevance_score']
-            ?? 2.0
-        ) &&
-        $freshness_score >= (float) (
-            $news_thresholds['freshness_score']
-            ?? 4.0
-        );
-
-    $significance_qualified =
-        $relevance_score >= (float) (
-            $news_thresholds[
-                'significance_relevance_score'
-            ] ?? 6.0
-        ) ||
-        $impact_score >= (float) (
-            $news_thresholds[
-                'significance_impact_score'
-            ] ?? 2.5
-        ) ||
-        array() !== array_intersect(
-            $event_matches,
-            array(
-                'model release', 'model launches', 'model launched',
-                'model releases', 'model released', 'research breakthrough',
-                'published research', 'researchers found', 'study found',
-            )
-        );
-
-    $major_capital_qualified =
-        array() !== $event_tracks['major_capital'] &&
-        revelations_editorial_news_has_exceptional_capital_scale( $text ) &&
-        $impact_score >= 5.0 &&
-        $relevance_score >= (float) (
-            $news_thresholds['relevance_score'] ?? 2.0
-        ) &&
-        $freshness_score >= (float) (
-            $news_thresholds['freshness_score'] ?? 4.0
-        );
-
-    $strategic_company_qualified =
-        array() !== $event_tracks['strategic_company'] &&
-        $base_qualified &&
-        (
-            $impact_score >= 2.5 ||
-            count( $event_tracks['strategic_company'] ) >= 2
-        );
-
-    $qualified =
-        $major_capital_qualified ||
-        $strategic_company_qualified ||
-        ( $base_qualified && $significance_qualified );
-
-    $editorial_track = null;
-    if ( $major_capital_qualified ) {
-        $editorial_track = 'major_capital_event';
-    } elseif ( $strategic_company_qualified ) {
-        $editorial_track = 'strategic_company_event';
-    } elseif ( $qualified ) {
-        foreach (
-            array(
-                'research_breakthrough',
-                'product_deployment',
-                'strategic_company',
-            ) as $track
-        ) {
-            if ( array() !== $event_tracks[ $track ] ) {
-                $editorial_track = $track;
-                break;
-            }
+    /*
+     * Once the categorical event gate above passes, preserve the established
+     * component calculation solely to rank Preview candidates. Neither total,
+     * freshness nor significance is a second News rejection route.
+     */
+    $qualified = true;
+    $editorial_track = 'news_event';
+    foreach (
+        array(
+            'research_breakthrough',
+            'product_deployment',
+            'major_capital',
+            'strategic_company',
+        ) as $track
+    ) {
+        if ( array() !== $event_tracks[ $track ] ) {
+            $editorial_track = $track;
+            break;
         }
-        $editorial_track = $editorial_track ?? 'news_signal';
     }
 
     $reasons = array();
@@ -608,11 +562,6 @@ function revelations_editorial_score_news_story(
         $reasons[] =
             'News events: ' .
             implode( ', ', array_slice( $event_matches, 0, 3 ) );
-    }
-
-    if ( $major_capital_qualified ) {
-        $reasons[] =
-            'Exceptional capital scale cleared the capital-event track.';
     }
 
     if ( array() !== $impact_matches ) {
@@ -684,14 +633,7 @@ function revelations_editorial_score_news_story(
         'qualified' =>
             $qualified,
 
-        'rejection_code' =>
-            $qualified
-                ? ''
-                : (
-                    ! $base_qualified
-                        ? 'below_threshold'
-                        : 'insufficient_significance'
-                ),
+        'rejection_code' => '',
 
         'editorial_track' => $editorial_track,
 

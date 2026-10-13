@@ -2429,3 +2429,19 @@ Base44 и DNS/domain cutover.
   five preserved pilots equals 36 staging revelations. Podcast and seven thin
   Unspoken records remain excluded. Production remains at five revelations;
   Stage 2D.2 dateModified remains open.
+
+## Preview Scanner simplification (2026-10-13)
+
+- The local runtime now implements the approved discovery pipeline: one source
+  freshness horizon, deduplication, high-recall AI/future-tech relevance,
+  categorical section identity, existing-score ranking and at most five
+  Preview items. No production scan, candidate save, generation, deployment
+  or database write was performed.
+- News, People and Places no longer reject an identity-passing item on an
+  aggregate threshold, scorer freshness floor or significance route. Their
+  existing component scores and formulas remain unchanged for ranking and
+  explainability. Tech qualification, Unspoken section semantics and
+  fetched-item latest-run retention remain unchanged.
+- Isolated PHP lint passed. Scanner runtime diagnostics report 111/113; the
+  two failures are the known baseline cases. Unspoken diagnostics report
+  35/39; the four failures are the known baseline cases.

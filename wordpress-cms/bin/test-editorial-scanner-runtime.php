@@ -557,10 +557,6 @@ $gate_cases = array(
         'Autonomous robot begins a route',
         'The robot carries packages across campus.',
     ),
-    'no_meaningful_ai_action' => array(
-        'OpenAI model overview',
-        'A profile of OpenAI and its model.',
-    ),
     'ambiguous_product_without_ai_context' => array(
         'Gemini launches a model',
         'Gemini launches a model for teams.',
@@ -583,6 +579,20 @@ foreach ( $gate_cases as $expected => $case ) {
         'global gate reports ' . $expected
     );
 }
+
+$direct_ai_without_action = revelations_editorial_scanner_ai_gate(
+    array(
+        'title' => 'OpenAI model overview',
+        'summary' => 'A profile of OpenAI and its model.',
+    ),
+    'unspoken'
+);
+
+revelations_scanner_runtime_test(
+    true === ( $direct_ai_without_action['qualified'] ?? false ) &&
+    array() === ( $direct_ai_without_action['action_matches'] ?? array() ),
+    'global gate passes a clear direct AI subject without a material action'
+);
 
 $global_gate_regressions = array(
     'autonomous trucking exemption' => array(
@@ -692,6 +702,93 @@ revelations_scanner_runtime_test(
         true
     ),
     'People gives a central named leader a governance/safety implementation signal'
+);
+
+$preview_gold_news = array(
+    'AWS Physical AI Toolchain' => revelations_scanner_runtime_story(
+        'AWS launches a Physical AI Toolchain',
+        'The company released an AI toolchain for industrial deployment.'
+    ),
+    'Helm commercial contract' => revelations_scanner_runtime_story(
+        'Helm.ai signs commercial contract for autonomous systems',
+        'The AI company announced a commercial contract for deployment.'
+    ),
+    'PTC Schneider transaction' => revelations_scanner_runtime_story(
+        'Schneider Electric acquires PTC in an AI industrial software transaction',
+        'The companies announced the acquisition of the AI software business.'
+    ),
+);
+
+foreach ( $preview_gold_news as $label => $story ) {
+    $gate = revelations_editorial_scanner_ai_gate( $story, 'news' );
+    $score = revelations_editorial_score_news_story(
+        revelations_editorial_scanner_attach_gate_semantics( $story, $gate )
+    );
+
+    revelations_scanner_runtime_test(
+        true === ( $gate['qualified'] ?? false ) &&
+        true === ( $score['qualified'] ?? false ),
+        'Preview News gold-set event remains eligible: ' . $label
+    );
+}
+
+$rohit_people_story = revelations_scanner_runtime_story(
+    'Rohit Prasad appointed CEO of Boston Dynamics',
+    'The AI and robotics executive was named CEO of the company.'
+);
+$windborne_people_story = revelations_scanner_runtime_story(
+    'WindBorne wins Air Force contract for AI balloon data',
+    'The company announced a contract for AI-enabled weather data.'
+);
+
+revelations_scanner_runtime_test(
+    true === (
+        revelations_editorial_score_people_story( $rohit_people_story )['qualified'] ?? false
+    ) &&
+    true === (
+        $satya_people_score['qualified'] ?? false
+    ) &&
+    'person_not_central' === (
+        revelations_editorial_score_people_story( $windborne_people_story )['rejection_code'] ?? ''
+    ),
+    'People keeps real central leaders and rejects company-like names'
+);
+
+$einride_places_story = revelations_scanner_runtime_story(
+    'Einride and EASE begin daily driverless freight runs in Ohio',
+    'The companies begin daily autonomous freight operations on the Ohio route.'
+);
+$einride_places_gate = revelations_editorial_scanner_ai_gate(
+    $einride_places_story,
+    'places'
+);
+$einride_places_score = revelations_editorial_score_places_story(
+    revelations_editorial_scanner_attach_gate_semantics(
+        $einride_places_story,
+        $einride_places_gate
+    )
+);
+$planned_route_story = revelations_scanner_runtime_story(
+    'Company launches autonomous freight on the I-45 route',
+    'The company announced its planned driverless freight deployment.'
+);
+$planned_route_gate = revelations_editorial_scanner_ai_gate(
+    $planned_route_story,
+    'places'
+);
+$planned_route_score = revelations_editorial_score_places_story(
+    revelations_editorial_scanner_attach_gate_semantics(
+        $planned_route_story,
+        $planned_route_gate
+    )
+);
+
+revelations_scanner_runtime_test(
+    true === ( $einride_places_score['qualified'] ?? false ) &&
+    'planned_not_implemented' === (
+        $planned_route_score['rejection_code'] ?? ''
+    ),
+    'Places admits established operations and rejects announced-only routes'
 );
 
 $place_positive_regressions = array(
@@ -866,32 +963,40 @@ revelations_scanner_runtime_test(
         revelations_editorial_scanner_compositional_operations_actions(
             'Driverless company runs a workshop'
         ) &&
-    'future_tech_without_action' === (
-        $generic_runs_gate['rejection_code'] ?? ''
-    ),
-    'generic runs remains outside the compositional operations action'
+    true === ( $generic_runs_gate['qualified'] ?? false ),
+    'generic runs is not an operations action but no longer blocks future-tech discovery'
 );
 
 $global_gate_negative_fixtures = array(
     'career advice' => array(
         'Career advice: how to use AI at work',
         'A columnist shares generic career tips.',
+        'people',
+        'opinion_or_advice',
     ),
     'hotel opening' => array(
         'Luxury hotel opens downtown',
         'The property adds restaurants and a spa.',
+        '',
+        'no_ai_signal',
     ),
     'generic leadership' => array(
         'The AI leadership playbook for executives',
         'A generic leadership article offers management advice.',
+        'people',
+        'person_not_central',
     ),
     'entertainment' => array(
         'AI film wins at a festival',
         'An entertainment review discusses the winner.',
+        'news',
+        'insufficient_event_signal',
     ),
     'ordinary construction' => array(
         'Construction company begins building apartments',
         'The developer starts ordinary housing work downtown.',
+        '',
+        'no_ai_signal',
     ),
 );
 
@@ -901,12 +1006,29 @@ foreach ( $global_gate_negative_fixtures as $label => $fixture ) {
             'title' => $fixture[0],
             'summary' => $fixture[1],
         ),
-        'news'
+        '' === $fixture[2] ? 'news' : $fixture[2]
     );
 
+    if ( '' === $fixture[2] ) {
+        $condition = empty( $result['qualified'] ) &&
+            $fixture[3] === ( $result['rejection_code'] ?? '' );
+    } else {
+        $scorer = 'people' === $fixture[2]
+            ? 'revelations_editorial_score_people_story'
+            : 'revelations_editorial_score_news_story';
+        $score = $scorer(
+            revelations_editorial_scanner_attach_gate_semantics(
+                revelations_scanner_runtime_story( $fixture[0], $fixture[1] ),
+                $result
+            )
+        );
+        $condition = true === ( $result['qualified'] ?? false ) &&
+            $fixture[3] === ( $score['rejection_code'] ?? '' );
+    }
+
     revelations_scanner_runtime_test(
-        empty( $result['qualified'] ),
-        'global gate still rejects generic ' . $label
+        $condition,
+        'pipeline still rejects generic ' . $label
     );
 }
 
@@ -1028,8 +1150,8 @@ $news_minor_feature = revelations_editorial_score_news_story(
 );
 
 revelations_scanner_runtime_test(
-    empty( $news_minor_feature['qualified'] ),
-    'minor AI feature update does not automatically qualify as News'
+    true === ( $news_minor_feature['qualified'] ?? false ),
+    'minor AI feature update remains eligible and is ranked rather than threshold-rejected'
 );
 
 $news_generic_funding = revelations_editorial_score_news_story(
@@ -1040,8 +1162,8 @@ $news_generic_funding = revelations_editorial_score_news_story(
 );
 
 revelations_scanner_runtime_test(
-    empty( $news_generic_funding['qualified'] ),
-    'generic funding news without scale does not automatically qualify'
+    true === ( $news_generic_funding['qualified'] ?? false ),
+    'concrete funding event remains eligible and is ranked rather than scale-rejected'
 );
 
 $news_major_capital = revelations_editorial_score_news_story(
@@ -1053,7 +1175,7 @@ $news_major_capital = revelations_editorial_score_news_story(
 
 revelations_scanner_runtime_test(
     true === ( $news_major_capital['qualified'] ?? false ) &&
-    'major_capital_event' === (
+    'major_capital' === (
         $news_major_capital['editorial_track'] ?? ''
     ) &&
     0.0 === (float) (
@@ -1071,10 +1193,10 @@ $news_research_roundup = revelations_editorial_score_news_story(
 
 revelations_scanner_runtime_test(
     empty( $news_research_roundup['qualified'] ) &&
-    'insufficient_section_signal' === (
+    'insufficient_event_signal' === (
         $news_research_roundup['rejection_code'] ?? ''
     ),
-    'generic AI research roundup remains outside the research-event track'
+    'generic AI research roundup remains outside the concrete-event identity gate'
 );
 
 $news_strategic_company = revelations_editorial_score_news_story(
@@ -1086,7 +1208,7 @@ $news_strategic_company = revelations_editorial_score_news_story(
 
 revelations_scanner_runtime_test(
     true === ( $news_strategic_company['qualified'] ?? false ) &&
-    'strategic_company_event' === (
+    'strategic_company' === (
         $news_strategic_company['editorial_track'] ?? ''
     ),
     'substantive strategic company event uses its narrow event track'
@@ -1177,7 +1299,7 @@ $section_cases = array(
 
 $expected_section_codes = array(
     'news opinion' => 'opinion_or_advice',
-    'news section signal' => 'insufficient_section_signal',
+    'news section signal' => 'insufficient_event_signal',
     'people centrality' => 'person_not_central',
     'tech section signal' => 'insufficient_section_signal',
     'places centrality' => 'place_not_central',
@@ -1313,6 +1435,45 @@ revelations_scanner_runtime_test(
     30 === (int) ( $aggregate['source_results'][0]['item_limit'] ?? 0 ) &&
     168 === (int) ( $aggregate['source_results'][0]['freshness_hours'] ?? 0 ),
     'fetched diagnostics record every in-window item and its discovery stage'
+);
+
+$GLOBALS['scanner_test_feed'] = new RevelationsScannerTestFeed(
+    array(
+        new RevelationsScannerTestItem( 'OpenAI launches ranking z', 'AI release.', 'https://example.test/z', time() - HOUR_IN_SECONDS ),
+        new RevelationsScannerTestItem( 'OpenAI launches ranking f', 'AI release.', 'https://example.test/f', time() - HOUR_IN_SECONDS ),
+        new RevelationsScannerTestItem( 'OpenAI launches ranking e', 'AI release.', 'https://example.test/e', time() - HOUR_IN_SECONDS ),
+        new RevelationsScannerTestItem( 'OpenAI launches ranking d', 'AI release.', 'https://example.test/d', time() - HOUR_IN_SECONDS ),
+        new RevelationsScannerTestItem( 'OpenAI launches ranking c', 'AI release.', 'https://example.test/c', time() - HOUR_IN_SECONDS ),
+        new RevelationsScannerTestItem( 'OpenAI launches ranking b', 'AI release.', 'https://example.test/b', time() - HOUR_IN_SECONDS ),
+        new RevelationsScannerTestItem( 'OpenAI launches ranking a', 'AI release.', 'https://example.test/a', time() - HOUR_IN_SECONDS ),
+    )
+);
+
+$top_five = revelations_editorial_scanner_run_dry_run(
+    'news',
+    array( array( 'name' => 'Synthetic Feed', 'url' => 'https://example.test/feed' ) ),
+    array(),
+    static fn ( array $story ): array => array(
+        'freshness_score' => 10.0,
+        'implementation_score' => 2.0,
+        'relevance_score' => 2.0,
+        'impact_score' => 0.0,
+        'fit_score' => 5.0,
+        'total_score' => 5.0,
+        'qualified' => true,
+        'editorial_track' => 'news_event',
+        'rejection_code' => '',
+        'scoring_reason' => 'Synthetic eligible event.',
+    ),
+    array(),
+    20
+);
+
+revelations_scanner_runtime_test(
+    5 === count( $top_five['qualified_items'] ?? array() ) &&
+    'https://example.test/a' === ( $top_five['qualified_items'][0]['url'] ?? '' ) &&
+    'https://example.test/e' === ( $top_five['qualified_items'][4]['url'] ?? '' ),
+    'Preview returns a deterministic top five even when a caller requests more'
 );
 
 $safe_diagnostics = wp_json_encode(
