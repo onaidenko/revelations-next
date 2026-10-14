@@ -1,5 +1,22 @@
 # Текущее состояние
 
+## Draft-scoped AI-generation UI notices
+
+- A generation flash notice is now correlated to both the current user and the
+  draft ID carried in its redirect. The renderer requires the redirect status
+  (`success` or `error`) to agree with the same draft-scoped transient, so a
+  prior failure cannot be displayed as the result of a later generation.
+- A successful UI generation explicitly clears the current user result before
+  storing its success result. Historical generation logs remain independent and
+  unchanged; this does not alter research, brief repair, source roles,
+  dominance validation, prompts or generation flow.
+- The isolated notice regression covers failed generation followed by a
+  successful regeneration and confirms that the old error is not rendered.
+  Isolated PHP lint passed. No production generation, OpenAI request, deploy,
+  commit or push was run.
+
+Дата изменения: 2026-10-15.
+
 ## Unspoken bounded evidence snapshot stage
 
 - Unspoken Preview now routes only a globally relevant RSS item with both a

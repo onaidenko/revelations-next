@@ -22,7 +22,8 @@ function revelations_editorial_ai_generation_result_key(): string {
  * Redirect to AI Drafts.
  */
 function revelations_editorial_ai_generation_redirect(
-    string $status
+    string $status,
+    int $draft_id
 ): void {
     wp_safe_redirect(
         add_query_arg(
@@ -31,12 +32,31 @@ function revelations_editorial_ai_generation_redirect(
                     'revelations-editorial-desk',
                 'view'          => 'drafts',
                 'ai_generation' => $status,
+                'ai_generation_draft' => $draft_id,
             ),
             admin_url( 'admin.php' )
         )
     );
 
     exit;
+}
+
+/**
+ * Store the current user's result for one specific draft generation.
+ *
+ * @param array<string, mixed> $result
+ */
+function revelations_editorial_store_ai_generation_result(
+    int $draft_id,
+    array $result
+): void {
+    $result['draft_id'] = $draft_id;
+
+    set_transient(
+        revelations_editorial_ai_generation_result_key(),
+        $result,
+        15 * MINUTE_IN_SECONDS
+    );
 }
 
 /**
@@ -2256,18 +2276,18 @@ add_action(
             $draft_id;
 
         if ( get_transient( $lock_key ) ) {
-            set_transient(
-                revelations_editorial_ai_generation_result_key(),
+            revelations_editorial_store_ai_generation_result(
+                $draft_id,
                 array(
                     'ok'      => false,
                     'message' =>
                         'This draft is already being generated.',
-                ),
-                15 * MINUTE_IN_SECONDS
+                )
             );
 
             revelations_editorial_ai_generation_redirect(
-                'error'
+                'error',
+                $draft_id
             );
         }
 
@@ -2336,20 +2356,20 @@ add_action(
                 );
             }
 
-            set_transient(
-                revelations_editorial_ai_generation_result_key(),
+            revelations_editorial_store_ai_generation_result(
+                $draft_id,
                 array(
                     'ok'      => false,
                     'message' =>
                         $result->get_error_message(),
                     'code'    =>
                         $error_code,
-                ),
-                15 * MINUTE_IN_SECONDS
+                )
             );
 
             revelations_editorial_ai_generation_redirect(
-                'error'
+                'error',
+                $draft_id
             );
         }
 
@@ -2378,8 +2398,12 @@ add_action(
                 (string) $result['word_count_warning'];
         }
 
-        set_transient(
-            revelations_editorial_ai_generation_result_key(),
+        delete_transient(
+            revelations_editorial_ai_generation_result_key()
+        );
+
+        revelations_editorial_store_ai_generation_result(
+            $draft_id,
             array_merge(
                 array(
                     'ok' => true,
@@ -2388,12 +2412,12 @@ add_action(
                         $success_message,
                 ),
                 $result
-            ),
-            15 * MINUTE_IN_SECONDS
+            )
         );
 
         revelations_editorial_ai_generation_redirect(
-            'success'
+            'success',
+            $draft_id
         );
     }
 );
@@ -2406,6 +2430,27 @@ function revelations_editorial_render_ai_generation_notices(): void {
         return;
     }
 
+    $status = sanitize_key(
+        (string) wp_unslash(
+            $_GET['ai_generation']
+        )
+    );
+
+    $draft_id = absint(
+        $_GET['ai_generation_draft'] ?? 0
+    );
+
+    if (
+        ! in_array(
+            $status,
+            array( 'success', 'error' ),
+            true
+        ) ||
+        $draft_id < 1
+    ) {
+        return;
+    }
+
     $result = get_transient(
         revelations_editorial_ai_generation_result_key()
     );
@@ -2414,9 +2459,17 @@ function revelations_editorial_render_ai_generation_notices(): void {
         return;
     }
 
+    if ( $draft_id !== absint( $result['draft_id'] ?? 0 ) ) {
+        return;
+    }
+
     $success = ! empty(
         $result['ok']
     );
+
+    if ( ( 'success' === $status ) !== $success ) {
+        return;
+    }
 
     $warning =
         $success &&
