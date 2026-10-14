@@ -64,7 +64,12 @@ run_suite \
     "$SCRIPT_DIR/test-editorial-ai-review-metadata.php"
 
 run_suite \
-    'Stage 8 integration: complete AI generation pipeline' \
+    'Stage 8 component: bounded editorial brief repair' \
+    "$PHP_BIN" \
+    "$SCRIPT_DIR/test-editorial-ai-brief-repair.php"
+
+run_suite \
+    'Stage 9 integration: complete AI generation pipeline' \
     "$PHP_BIN" \
     "$SCRIPT_DIR/test-editorial-ai-generation-integration.php"
 

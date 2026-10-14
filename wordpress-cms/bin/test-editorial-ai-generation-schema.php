@@ -670,6 +670,29 @@ revelations_schema_test(
     'generation logs do not contain secrets, prompt or source snapshot'
 );
 
+$brief_repair_log_fields = array(
+    'brief_repair_attempted',
+    'initial_dominance_failure_code',
+    'repaired_validation_result',
+    'central_pillar_count_before',
+    'supporting_pillar_count_before',
+    'central_pillar_count_after',
+    'supporting_pillar_count_after',
+);
+
+revelations_schema_test(
+    count(
+        array_filter(
+            $brief_repair_log_fields,
+            static fn( string $field ): bool => str_contains(
+                $log_function,
+                "'" . $field . "'"
+            )
+        )
+    ) === count( $brief_repair_log_fields ),
+    'generation logs retain only bounded brief-repair diagnostics'
+);
+
 echo "\n" .
     $passed .
     ' passed, ' .

@@ -128,6 +128,15 @@ approval requirement are canonical in
   these diagnostics, so a research-to-brief failure has research/brief totals
   without a fabricated final stage. Raw prompts, URLs, excerpts and Responses
   payloads are excluded.
+- If, and only if, the initial editorial brief fails the existing dominance
+  validator for a secondary source that solely supports a central pillar or a
+  majority of pillars, generation may make one in-memory brief-repair request
+  against the same research pack. The repair can retain genuinely matching
+  support, narrow, demote or remove a pillar; it cannot collect sources,
+  reclassify roles, weaken validation or retry. The repaired brief passes the
+  unchanged validator once. Run diagnostics retain only the attempt flag,
+  initial failure code, repaired-validation result and central/supporting
+  counts before and after; no brief, claim or evidence text is newly retained.
 - Global Research & Source Policy is shared across every generated section:
   lead classification, independent corroboration, source roles, restricted
   lead safeguards, evidence provenance, sensitive claims, attribution and

@@ -125,6 +125,10 @@ function revelations_editorial_ai_generation_runtime_diagnostics( array $researc
         'policy_chars' => strlen( $editorial_policy ),
         'brief_chars' => strlen( (string) wp_json_encode( $editorial_brief, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) ),
     );
+    $repair_diagnostics = is_array( $brief_result['repair_diagnostics'] ?? null )
+        ? $brief_result['repair_diagnostics']
+        : array();
+
     return array_merge( array(
         'input_tokens' => array_sum( array_column( $stage_usage, 'input_tokens' ) ),
         'output_tokens' => array_sum( array_column( $stage_usage, 'output_tokens' ) ),
@@ -136,7 +140,7 @@ function revelations_editorial_ai_generation_runtime_diagnostics( array $researc
         'response_status' => sanitize_key( $final_status ),
         'stage_usage' => $stage_usage,
         'context_sizes' => $context_sizes,
-    ), revelations_editorial_ai_research_diagnostics( $research ), revelations_editorial_ai_pillar_diagnostics( is_array( $editorial_brief['pillar_support'] ?? null ) ? $editorial_brief['pillar_support'] : array(), is_array( $editorial_brief['dominance'] ?? null ) ? $editorial_brief['dominance'] : array() ) );
+    ), revelations_editorial_ai_research_diagnostics( $research ), revelations_editorial_ai_pillar_diagnostics( is_array( $editorial_brief['pillar_support'] ?? null ) ? $editorial_brief['pillar_support'] : array(), is_array( $editorial_brief['dominance'] ?? null ) ? $editorial_brief['dominance'] : array() ), $repair_diagnostics );
 }
 
 /** @return WP_Error */
@@ -891,7 +895,7 @@ function revelations_editorial_generate_draft_with_ai(
             ), revelations_editorial_ai_pillar_diagnostics(
                 is_array( $editorial_brief['pillar_support'] ?? null ) ? $editorial_brief['pillar_support'] : array(),
                 is_array( $editorial_brief['dominance'] ?? null ) ? $editorial_brief['dominance'] : array()
-            ) )
+            ), is_array( $brief_result['repair_diagnostics'] ?? null ) ? $brief_result['repair_diagnostics'] : array() )
         );
     }
     $source_input = (string) ( $final_evidence['evidence_text'] ?? '' );

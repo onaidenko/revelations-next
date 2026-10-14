@@ -572,3 +572,18 @@ cannot override that Constitution without explicit product-owner approval.
   and allegation logic without adding new angle families or weakening source
   attribution safeguards. It is not independent corroboration; manual Save
   and downstream research/evidence requirements remain unchanged.
+
+## Editorial brief dominance repair
+
+- **Решение:** source-dominance validation remains the final authority. Only
+  its two existing secondary-source hard failures can trigger one in-memory
+  corrected-brief request using the same evidence pack. No research, source
+  fetch, role reclassification, validator relaxation or repair loop is
+  allowed.
+- **Решение:** the repair planner must use claim-level evidence genuinely, and
+  may narrow, demote or remove unsupported central pillars. It must never
+  attach an unrelated primary source merely to pass dominance. Failure after
+  the one revalidation retains the existing safe generation failure.
+- **Решение:** run logs retain only bounded repair state and before/after
+  pillar counts. Raw research, claims, pillars and model responses stay
+  private and non-persistent.

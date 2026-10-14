@@ -2467,3 +2467,19 @@ Base44 и DNS/domain cutover.
 - Isolated PHP lint passed. Scanner runtime diagnostics report 111/113; the
   two failures are the known baseline cases. Unspoken diagnostics report
   35/39; the four failures are the known baseline cases.
+
+## Bounded editorial brief dominance repair (2026-10-15)
+
+- Local runtime adds exactly one in-memory repair path only for the existing
+  secondary-source central/majority dominance failures. It reuses the same
+  research pack and unchanged validator; it cannot perform web research,
+  source fetches, role changes or a retry loop.
+- The repair can keep genuinely matching support, narrow, demote or remove a
+  factual pillar. If revalidation fails, generation retains the existing safe
+  dominance failure. Safe run diagnostics record attempt state, the initial
+  code, revalidation result and central/supporting counts only; no raw brief,
+  claim, evidence or response is newly persisted.
+- Isolated remote PHP lint passed for the three affected runtime files and the
+  new fixture. The focused repair fixture passed, as did existing research,
+  schema/storage and generation-validation diagnostics. No production OpenAI
+  request, RSS scan, deploy, database write, commit or push was performed.
