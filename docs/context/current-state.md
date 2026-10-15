@@ -2,6 +2,12 @@
 
 ## THE REVELATION generation and publication boundary
 
+- The canonical final-generation prompt now requires a self-contained opening:
+  its first one or two short sentences name the article's concrete subject and
+  state the strongest evidence-bound conclusion before explaining its broader
+  implication. Context-dependent openings such as “The real story is” and
+  “This matters because” are explicitly disallowed. This changes neither the
+  research/brief input nor the one-request generation flow.
 - The single structured final-generation response now requires a plain-text
   `revelation`. It is prompted as an evidence-bound editorial takeaway,
   normally 60-150 words, in two short paragraphs, and is rejected if empty,

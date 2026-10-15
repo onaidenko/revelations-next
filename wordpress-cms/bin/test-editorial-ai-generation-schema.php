@@ -494,13 +494,29 @@ revelations_schema_test(
     ) &&
     str_contains(
         $generation_function,
+        'Open with the strongest defensible conclusion of this specific article'
+    ) &&
+    str_contains(
+        $generation_function,
+        'must stand alone for a reader who has not read the headline'
+    ) &&
+    str_contains(
+        $generation_function,
+        "Never open with vague or context-dependent framing such as 'The real story is'"
+    ) &&
+    str_contains(
+        $generation_function,
+        "Then explain why the article's facts support that conclusion"
+    ) &&
+    str_contains(
+        $generation_function,
         "'revelations_revelation'"
     ) &&
     str_contains(
         $generation_function,
         "'revelation' =>"
     ),
-    'one final-generation request validates and persists THE REVELATION'
+    'one final-generation request prompts, validates and persists THE REVELATION'
 );
 
 revelations_schema_test(

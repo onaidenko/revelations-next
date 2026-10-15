@@ -1009,9 +1009,14 @@ function revelations_editorial_generate_draft_with_ai(
         "keeps the assigned source section and WordPress category unchanged.\n\n" .
 
         "Return revelation as plain editorial text, normally 60 to 150 words and never more than 180 words. " .
-        "Use two short paragraphs when the material supports them. The first paragraph must extract the deeper conclusion from the article's evidence; the second must widen it into the larger implication. " .
+        "Open with the strongest defensible conclusion of this specific article, derived from its supplied research evidence and editorial brief. " .
+        "The first sentence, or at most the first two very short sentences, must stand alone for a reader who has not read the headline, deck, lede, or previous paragraph. " .
+        "Name the actual subject - company, technology, scientific development, policy, person, or system - and state concretely what it does, changes, reveals, or means, using concrete nouns and verbs. " .
+        "Never open with vague or context-dependent framing such as 'The real story is', 'The real product here is', 'What matters here is', 'The bigger picture is', or 'This matters because'. " .
+        "Then explain why the article's facts support that conclusion, widen it into the broader implication, and, where appropriate, end with the key unresolved question, limitation, or condition. " .
+        "Use two short paragraphs when the material supports them. " .
         "Do not summarize the article or repeat its headline, deck, or lede. " .
-        "State what the development changes or reveals without generic futurism, unsupported factual escalation, or new factual claims beyond the supplied evidence. " .
+        "State what the development changes or reveals without generic futurism, unsupported factual escalation, clickbait, or new factual claims beyond the supplied evidence. " .
         "Do not use Markdown or prepend THE REVELATION; the application supplies that heading.\n\n" .
 
         "Set fact_check_flags to an empty array. " .
