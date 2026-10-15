@@ -229,6 +229,11 @@
         const meta = state.meta;
         const authorProfileIds = authorIds(meta._revelations_author_profile_ids);
         const authorProfiles = editorData.authorProfiles || [];
+        const revelationWordCount = (
+            normalizeText(
+                meta.revelations_revelation
+            ).match(/[\p{L}\p{N}]+/gu) || []
+        ).length;
         const snapshot =
             editorData.reviewedSnapshot;
 
@@ -397,6 +402,23 @@
                     ).trim() !== ''
                         ? 'Complete'
                         : 'Required before publication',
+            },
+            {
+                key: 'revelation',
+                label: 'THE REVELATION',
+                ready:
+                    normalizeText(
+                        meta.revelations_revelation
+                    ).trim() !== '' &&
+                    revelationWordCount <= 180,
+                detail:
+                    normalizeText(
+                        meta.revelations_revelation
+                    ).trim() === ''
+                        ? 'The Revelation is required before publication'
+                        : revelationWordCount > 180
+                            ? 'Must not exceed 180 words'
+                            : 'Complete',
             },
             {
                 key: 'editorial-review',
@@ -576,7 +598,7 @@
 
                 el('hr', { style: { margin: '24px 0 16px' } }),
                 el('h3', { style: { margin: '0 0 6px', fontSize: '13px' } }, 'ARTICLE ENRICHMENT'),
-                el('p', { style: { margin: '0 0 14px', color: '#646970', fontSize: '12px' } }, 'Optional public editorial context. Changes require a new editorial review.'),
+                el('p', { style: { margin: '0 0 14px', color: '#646970', fontSize: '12px' } }, 'THE REVELATION is required before publication. Other public editorial context is optional. Changes require a new editorial review.'),
 
                 el(components.TextareaControl, {
                     label: 'THE REVELATION',

@@ -1,5 +1,29 @@
 # Текущее состояние
 
+## THE REVELATION generation and publication boundary
+
+- The single structured final-generation response now requires a plain-text
+  `revelation`. It is prompted as an evidence-bound editorial takeaway,
+  normally 60-150 words, in two short paragraphs, and is rejected if empty,
+  headed or longer than 180 words. This adds no request, research step or
+  body block: the accepted value is written only to canonical
+  `revelations_revelation` metadata.
+- `THE REVELATION` is a publication-readiness requirement for new and draft
+  articles, including manual drafts. Drafts may still be saved with the field
+  empty; a publish/future transition is blocked until it is present and at
+  most 180 words. Already-published non-candidate legacy articles are not
+  retroactively blocked or backfilled.
+- The existing public API and article template already read and render the
+  canonical field, so neither public contract nor frontend presentation
+  changed. Existing review/version handling includes the field; regeneration
+  overwrites its canonical value and version restore retains the prior one.
+- Isolated diagnostics passed for schema, validation, publication gate and
+  public contract. The full in-memory generation integration test retains its
+  known unrelated failure because its fixture lacks a `wp_parse_url()` stub;
+  no OpenAI request, production generation, deploy, commit or push was run.
+
+Дата изменения: 2026-10-15.
+
 ## Draft-scoped AI-generation UI notices
 
 - A generation flash notice is now correlated to both the current user and the

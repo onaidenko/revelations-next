@@ -145,6 +145,8 @@ function revelations_editorial_ai_is_validation_error_code(
             'invalid_title_set',
             'invalid_section_advisory',
             'duplicate_descriptions',
+            'invalid_revelation',
+            'revelation_too_long',
             'invalid_fact_check_flag',
             'invalid_fact_check_evidence',
             'duplicate_fact_check_flag',
@@ -340,6 +342,7 @@ function revelations_editorial_ai_normalize_generated_editorial_text(
             'excerpt',
             'seo_title',
             'seo_description',
+            'revelation',
             'section_mismatch_reason',
         ) as $field
     ) {
@@ -412,6 +415,7 @@ function revelations_editorial_ai_generated_dash_violations(
             'excerpt',
             'seo_title',
             'seo_description',
+            'revelation',
             'section_mismatch_reason',
         ) as $field
     ) {

@@ -41,6 +41,86 @@ function revelations_editorial_publish_gate_applies(
 }
 
 /**
+ * A Revelation is required for a new article publication, including a manual
+ * article, without retroactively blocking an already-published legacy post.
+ */
+function revelations_editorial_publish_gate_revelation_applies(
+    int $post_id,
+    string $post_type = ''
+): bool {
+    if ( $post_id > 0 ) {
+        if ( 'post' !== get_post_type( $post_id ) ) {
+            return false;
+        }
+
+        return revelations_editorial_publish_gate_applies(
+            $post_id
+        ) || 'publish' !== get_post_status( $post_id );
+    }
+
+    return 'post' === $post_type;
+}
+
+/**
+ * Use the canonical enrichment word rule when available.
+ */
+function revelations_editorial_publish_gate_revelation_word_count(
+    string $revelation
+): int {
+    if (
+        function_exists(
+            'revelations_enrichment_word_count'
+        )
+    ) {
+        return revelations_enrichment_word_count(
+            $revelation
+        );
+    }
+
+    preg_match_all(
+        "/[\p{L}\p{N}]+(?:[’'\-][\p{L}\p{N}]+)*/u",
+        $revelation,
+        $matches
+    );
+
+    return count( $matches[0] ?? array() );
+}
+
+/**
+ * Return the public Revelation requirement failure, if any.
+ *
+ * @param array<string, mixed> $proposal Proposed post values.
+ */
+function revelations_editorial_publish_gate_revelation_reason(
+    int $post_id,
+    array $proposal = array()
+): string {
+    $revelation = array_key_exists( 'revelation', $proposal )
+        ? sanitize_textarea_field( (string) $proposal['revelation'] )
+        : sanitize_textarea_field(
+            (string) get_post_meta(
+                $post_id,
+                'revelations_revelation',
+                true
+            )
+        );
+
+    if ( '' === trim( $revelation ) ) {
+        return 'The Revelation is required before publication.';
+    }
+
+    if (
+        revelations_editorial_publish_gate_revelation_word_count(
+            $revelation
+        ) > 180
+    ) {
+        return 'THE REVELATION must not exceed 180 words.';
+    }
+
+    return '';
+}
+
+/**
  * Normalize text before comparing saved and proposed content.
  */
 function revelations_editorial_publish_gate_normalize_text(
@@ -367,6 +447,25 @@ function revelations_editorial_publish_gate_reason(
     array $proposal = array()
 ): string {
     if (
+        ! revelations_editorial_publish_gate_revelation_applies(
+            $post_id,
+            (string) ( $proposal['_post_type'] ?? '' )
+        )
+    ) {
+        return '';
+    }
+
+    $revelation_reason =
+        revelations_editorial_publish_gate_revelation_reason(
+            $post_id,
+            $proposal
+        );
+
+    if ( '' !== $revelation_reason ) {
+        return $revelation_reason;
+    }
+
+    if (
         ! revelations_editorial_publish_gate_applies(
             $post_id
         )
@@ -471,14 +570,19 @@ add_filter(
         );
 
         if (
-            ! revelations_editorial_publish_gate_applies(
-                $post_id
+            ! revelations_editorial_publish_gate_revelation_applies(
+                $post_id,
+                (string) ( $prepared_post->post_type ?? '' )
             )
         ) {
             return $prepared_post;
         }
 
-        $proposal = array();
+        $proposal = array(
+            '_post_type' => (string) (
+                $prepared_post->post_type ?? ''
+            ),
+        );
 
         foreach (
             array(
@@ -630,14 +734,19 @@ add_filter(
         );
 
         if (
-            ! revelations_editorial_publish_gate_applies(
-                $post_id
+            ! revelations_editorial_publish_gate_revelation_applies(
+                $post_id,
+                (string) ( $data['post_type'] ?? '' )
             )
         ) {
             return $data;
         }
 
         $proposal = array(
+            '_post_type' => (string) (
+                $data['post_type'] ?? ''
+            ),
+
             'title' =>
                 revelations_editorial_publish_gate_unslashed_text(
                     $data['post_title'] ?? ''

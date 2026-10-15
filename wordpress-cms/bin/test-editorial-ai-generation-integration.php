@@ -717,6 +717,16 @@ function revelations_integration_article(
                     : '.'
             ),
 
+        'revelation' =>
+            'AI drafting does not move editorial judgment into a system; it makes the boundary around that judgment more visible. The value of the workflow depends on whether editors keep the evidence, context, and final decisions in view.' .
+            "\n\n" .
+            'That is the larger change: automation can speed preparation, but it does not reduce the human responsibility that gives published work its credibility' .
+            (
+                'regenerated' === $variant
+                    ? ' in the renewed draft.'
+                    : '.'
+            ),
+
         'fact_check_flags' => array(
             array(
                 'claim' => $quote,
@@ -1223,6 +1233,27 @@ foreach ( $supported_sections as $section ) {
         $section . ' stores recommended, alternative and server source-section metadata'
     );
     revelations_integration_check(
+        revelations_integration_article(
+            $section
+        )['revelation'] === (
+            $result['revelation'] ?? ''
+        ) &&
+        revelations_integration_article(
+            $section
+        )['revelation'] === get_post_meta(
+            100,
+            'revelations_revelation',
+            true
+        ) &&
+        ! str_contains(
+            $draft->post_content,
+            revelations_integration_article(
+                $section
+            )['revelation']
+        ),
+        $section . ' stores THE REVELATION separately from article body'
+    );
+    revelations_integration_check(
         $category_before ===
             wp_get_post_categories( 100 ) &&
         $author_before === $draft->post_author &&
@@ -1412,6 +1443,26 @@ $validation_cases = array(
                 return $article;
             },
     ),
+    'empty Revelation' => array(
+        'section' => 'news',
+        'error' => 'invalid_revelation',
+        'mutate' =>
+            static function ( array $article ): array {
+                $article['revelation'] = '   ';
+                return $article;
+            },
+    ),
+    'over-limit Revelation' => array(
+        'section' => 'news',
+        'error' => 'revelation_too_long',
+        'mutate' =>
+            static function ( array $article ): array {
+                $article['revelation'] = trim(
+                    str_repeat( 'word ', 181 )
+                );
+                return $article;
+            },
+    ),
     'Unspoken without required flags' => array(
         'section' => 'unspoken',
         'error' => 'unspoken_fact_check_required',
@@ -1467,6 +1518,11 @@ $initial_result =
 $first_post = get_post( 100 );
 $first_title = $first_post->post_title;
 $first_content = $first_post->post_content;
+$first_revelation = get_post_meta(
+    100,
+    'revelations_revelation',
+    true
+);
 $first_metadata =
     revelations_editorial_ai_review_metadata_for_draft(
         100
@@ -1517,8 +1573,13 @@ revelations_integration_check(
         $first_title
     ) &&
     $first_content ===
-        $saved_version->post_content,
-    'regeneration backup preserves the previous title and content'
+        $saved_version->post_content &&
+    $first_revelation === get_post_meta(
+        $saved_version->ID,
+        '_rev_ai_revelation',
+        true
+    ),
+    'regeneration backup preserves the previous title, content and Revelation'
 );
 revelations_integration_check(
     $first_metadata !== $regenerated_metadata &&
@@ -1526,8 +1587,16 @@ revelations_integration_check(
         revelations_integration_article(
             'news',
             'regenerated'
-        )['alternative_titles'],
-    'regeneration makes new AI review metadata current'
+        )['alternative_titles'] &&
+    revelations_integration_article(
+        'news',
+        'regenerated'
+    )['revelation'] === get_post_meta(
+        100,
+        'revelations_revelation',
+        true
+    ),
+    'regeneration makes new AI review metadata and Revelation current'
 );
 revelations_integration_check(
     'outdated' === $regenerated_review['status'] &&

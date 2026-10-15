@@ -86,9 +86,9 @@ approval requirement are canonical in
 - Production generation currently uses known stable baseline `2051799`, restored
   by rollback commit `09cb32cd5c92a8dc664e8e968756a8679fe7ec24`. Its correctness
   architecture is stable and is not a hardening experiment; any further change
-  requires separately approved staging/experimental validation. Permitted
-  future optimization scope is research token cost and source-footer
-  compactness only, without modifying factual gates.
+  requires separate approval and isolated validation. The approved canonical
+  `THE REVELATION` integration is bounded to final structured output and the
+  publication/readiness boundary; it does not modify factual gates.
 
 - `revelations-editorial-ai-research.php` separates factual research from
   editorial judgment. It classifies a private lead snapshot and uses the
@@ -105,6 +105,13 @@ approval requirement are canonical in
   Pillar-level provenance distinguishes primary detail dominance from a
   secondary-source rewrite risk. Private draft/run metadata stores compact provenance and counts;
   public content receives a multi-source footer only.
+- The same single final structured response includes required plain-text
+  `revelation`. Server-side validation rejects an empty, headed or
+  over-180-word value before version backup and draft mutation. On success the
+  existing transaction stores it only in canonical `revelations_revelation`
+  metadata, never Gutenberg body blocks; no extra OpenAI or research request
+  exists. Existing version backup/restore and review snapshots already include
+  that canonical field.
 - Research and the editorial brief may inspect the broad evidence pack. The
   final writer receives a pre-writing `final_evidence_pack`: only evidence IDs
   selected by factual pillars, sensitive-claim, attribution or essential
@@ -238,6 +245,11 @@ approval requirement are canonical in
   regression-проверка и не смешивается с generation integration.
 
 ## Public frontend content mapping
+
+- The existing public CMS API exposes a non-empty, valid canonical
+  `revelations_revelation` as `revelation`; `lib/cms-articles.js` maps it and
+  the existing article template renders `THE REVELATION`. This integration
+  changes neither that API contract nor the frontend renderer.
 
 ## Article author entities
 

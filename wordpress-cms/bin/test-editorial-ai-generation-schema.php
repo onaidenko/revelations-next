@@ -190,6 +190,27 @@ revelations_schema_test(
     'recommended title is required'
 );
 
+$revelation_schema =
+    $properties['revelation'] ?? array();
+
+revelations_schema_test(
+    'string' === (
+        $revelation_schema['type'] ?? ''
+    ) &&
+    in_array(
+        'revelation',
+        $required,
+        true
+    ) &&
+    str_contains(
+        (string) (
+            $revelation_schema['description'] ?? ''
+        ),
+        '180 words'
+    ),
+    'THE REVELATION is required structured final-generation output'
+);
+
 $alternative_titles =
     $properties['alternative_titles'] ?? array();
 
@@ -460,6 +481,26 @@ revelations_schema_test(
         'If exact reuse is uncertain, omit the direct quote'
     ),
     'generation prompt requires exact body reuse or omission of direct quotes'
+);
+
+revelations_schema_test(
+    str_contains(
+        $generation_function,
+        'Return revelation as plain editorial text'
+    ) &&
+    str_contains(
+        $generation_function,
+        'Do not use Markdown or prepend THE REVELATION'
+    ) &&
+    str_contains(
+        $generation_function,
+        "'revelations_revelation'"
+    ) &&
+    str_contains(
+        $generation_function,
+        "'revelation' =>"
+    ),
+    'one final-generation request validates and persists THE REVELATION'
 );
 
 revelations_schema_test(

@@ -260,6 +260,14 @@ function revelations_editorial_ai_article_schema(): array {
                     'Concise search description.',
             ),
 
+            'revelation' => array(
+                'type' =>
+                    'string',
+
+                'description' =>
+                    'Plain-text REVELATIONS editorial takeaway, normally two short paragraphs and never more than 180 words. Do not include a heading.',
+            ),
+
             'fact_check_flags' => array(
                 'type' => 'array',
                 'maxItems' => 0,
@@ -419,6 +427,7 @@ function revelations_editorial_ai_article_schema(): array {
             'excerpt',
             'seo_title',
             'seo_description',
+            'revelation',
             'fact_check_flags',
             'direct_quotes',
             'blocks',
@@ -459,6 +468,34 @@ function revelations_editorial_ai_article_word_count(
     preg_match_all(
         "/[\p{L}\p{N}]+(?:[’'\-][\p{L}\p{N}]+)*/u",
         implode( ' ', $text_parts ),
+        $matches
+    );
+
+    return count(
+        $matches[0] ?? array()
+    );
+}
+
+/**
+ * Count a generated Revelation with the canonical enrichment rule when
+ * available, while keeping isolated generation diagnostics self-contained.
+ */
+function revelations_editorial_ai_revelation_word_count(
+    string $revelation
+): int {
+    if (
+        function_exists(
+            'revelations_enrichment_word_count'
+        )
+    ) {
+        return revelations_enrichment_word_count(
+            $revelation
+        );
+    }
+
+    preg_match_all(
+        "/[\p{L}\p{N}]+(?:[’'\-][\p{L}\p{N}]+)*/u",
+        $revelation,
         $matches
     );
 
@@ -971,6 +1008,12 @@ function revelations_editorial_generate_draft_with_ai(
         "Treat section mismatch fields as editorial advice only; the server " .
         "keeps the assigned source section and WordPress category unchanged.\n\n" .
 
+        "Return revelation as plain editorial text, normally 60 to 150 words and never more than 180 words. " .
+        "Use two short paragraphs when the material supports them. The first paragraph must extract the deeper conclusion from the article's evidence; the second must widen it into the larger implication. " .
+        "Do not summarize the article or repeat its headline, deck, or lede. " .
+        "State what the development changes or reveals without generic futurism, unsupported factual escalation, or new factual claims beyond the supplied evidence. " .
+        "Do not use Markdown or prepend THE REVELATION; the application supplies that heading.\n\n" .
+
         "Set fact_check_flags to an empty array. " .
         "The server derives sensitive fact-check flags from block evidence. " .
         "For every article body block, return one or more supplied source " .
@@ -1199,6 +1242,7 @@ function revelations_editorial_generate_draft_with_ai(
         'excerpt',
         'seo_title',
         'seo_description',
+        'revelation',
         'fact_check_flags',
         'direct_quotes',
         'blocks',
@@ -1326,6 +1370,47 @@ function revelations_editorial_generate_draft_with_ai(
         (string) $article['seo_description']
     );
 
+    $revelation = sanitize_textarea_field(
+        (string) $article['revelation']
+    );
+
+    if ( '' === trim( $revelation ) ) {
+        return revelations_editorial_ai_generation_validation_error(
+            'invalid_revelation',
+            'Generated THE REVELATION is empty.',
+            $runtime_diagnostics
+        );
+    }
+
+    if (
+        1 === preg_match(
+            '/(?:^|\n)\s*#{1,6}\s+/u',
+            $revelation
+        ) ||
+        1 === preg_match(
+            '/^\s*the\s+revelation\s*:?\s*(?:\r?\n|$)/iu',
+            $revelation
+        )
+    ) {
+        return revelations_editorial_ai_generation_validation_error(
+            'invalid_revelation',
+            'Generated THE REVELATION must not include a heading.',
+            $runtime_diagnostics
+        );
+    }
+
+    if (
+        revelations_editorial_ai_revelation_word_count(
+            $revelation
+        ) > 180
+    ) {
+        return revelations_editorial_ai_generation_validation_error(
+            'revelation_too_long',
+            'Generated THE REVELATION must not exceed 180 words.',
+            $runtime_diagnostics
+        );
+    }
+
     $fact_check_flags = array();
 
     if ( is_array( $article['fact_check_flags'] ) ) {
@@ -1437,6 +1522,7 @@ function revelations_editorial_generate_draft_with_ai(
         '' === $excerpt ||
         '' === $seo_title ||
         '' === $seo_description ||
+        '' === $revelation ||
         $blocks === array()
     ) {
         return new WP_Error(
@@ -1475,6 +1561,8 @@ function revelations_editorial_generate_draft_with_ai(
                     $seo_title,
                 'seo_description' =>
                     $seo_description,
+                'revelation' =>
+                    $revelation,
                 'fact_check_flags' =>
                     $fact_check_flags,
                 'direct_quotes' =>
@@ -1703,6 +1791,9 @@ function revelations_editorial_generate_draft_with_ai(
                 'UTF-8'
             ),
 
+        'revelations_revelation' =>
+            $revelation,
+
         '_revelations_draft_kind' =>
             'ai_generated',
 
@@ -1872,6 +1963,8 @@ function revelations_editorial_generate_draft_with_ai(
             ) + 1,
         'recommended_title' =>
             $recommended_title,
+        'revelation' =>
+            $revelation,
         'source_section' =>
             $current_section,
         'section_mismatch' =>
