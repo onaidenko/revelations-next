@@ -375,6 +375,14 @@ $ai_readiness = function_exists(
 
             if (
                 function_exists(
+                    'revelations_editorial_render_art_preview'
+                )
+            ) {
+                revelations_editorial_render_art_preview();
+            }
+
+            if (
+                function_exists(
                     'revelations_editorial_render_unspoken_preview'
                 )
             ) {
@@ -426,7 +434,7 @@ $ai_readiness = function_exists(
         <div class="revelations-desk__notice">
             <strong>Editorial Desk is operational.</strong>
 
-            Private candidate storage, News, People, Places and Tech RSS previews, and source snapshots are active.
+            Private candidate storage, News, People, Places, Tech, Art and Unspoken RSS previews, and source snapshots are available when enabled in Settings.
             AI article and social-draft generation are active. Publication remains manual.
         </div>
     </div>

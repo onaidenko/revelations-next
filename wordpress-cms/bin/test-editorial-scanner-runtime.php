@@ -177,6 +177,8 @@ require_once $plugin_dir .
 require_once $plugin_dir .
     '/revelations-editorial-places-scanner.php';
 require_once $plugin_dir .
+    '/revelations-editorial-art-scanner.php';
+require_once $plugin_dir .
     '/revelations-editorial-unspoken-scanner.php';
 require_once $plugin_dir .
     '/revelations-editorial-logs.php';
@@ -257,6 +259,9 @@ $people_sources = revelations_scanner_runtime_source_names(
 $places_sources = revelations_scanner_runtime_source_names(
     $defaults['places']
 );
+$art_sources = revelations_scanner_runtime_source_names(
+    $defaults['art']
+);
 $unspoken_sources = revelations_scanner_runtime_source_names(
     $defaults['unspoken']
 );
@@ -330,6 +335,46 @@ revelations_scanner_runtime_test(
     in_array( 'EFF Deeplinks', $unspoken_sources, true ) &&
     in_array( 'Grist', $unspoken_sources, true ),
     'Unspoken discovery pool covers infrastructure, privacy, accountability and community impact'
+);
+
+revelations_scanner_runtime_test(
+    false === ( $defaults['art']['enabled'] ?? null ) &&
+    array(
+        'Hyperallergic',
+        'The Art Newspaper',
+        'ARTnews',
+        'Artforum',
+        'Designboom Art',
+        'Guggenheim',
+        'La Biennale di Venezia',
+    ) === $art_sources,
+    'Art is disabled by default and ships the verified seven-source discovery pool'
+);
+
+$art_non_ai = revelations_editorial_art_relevance_gate(
+    revelations_scanner_runtime_story(
+        'Museum opens a retrospective for a contemporary artist',
+        'The exhibition brings a new installation and a public collection to the museum.'
+    )
+);
+$art_generic_tech = revelations_editorial_art_relevance_gate(
+    revelations_scanner_runtime_story(
+        'Company releases a new image model',
+        'The image generator adds an API for commercial product teams.'
+    )
+);
+$art_listing = revelations_editorial_art_relevance_gate(
+    revelations_scanner_runtime_story(
+        'What to see at the art fair this week',
+        'Tickets and opening hours for the event calendar are now available.'
+    )
+);
+
+revelations_scanner_runtime_test(
+    ! empty( $art_non_ai['qualified'] ) &&
+    'generic_tech_not_art' === ( $art_generic_tech['rejection_code'] ?? '' ) &&
+    'generic_event_listing' === ( $art_listing['rejection_code'] ?? '' ),
+    'Art gate accepts non-AI art developments and rejects generic tech and event listings'
 );
 
 revelations_scanner_runtime_test(

@@ -22,6 +22,7 @@ function revelations_editorial_sections(): array {
         'people',
         'tech',
         'places',
+        'art',
         'unspoken',
         'podcast',
     );

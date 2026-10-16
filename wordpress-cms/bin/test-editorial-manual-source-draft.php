@@ -17,6 +17,7 @@ class WP_Post {
     public string $post_content;
     public string $post_excerpt;
     public int $post_author;
+    public array $post_category;
 
     /** @param array<string, mixed> $data */
     public function __construct( array $data ) {
@@ -27,6 +28,7 @@ class WP_Post {
         $this->post_content = (string) ( $data['post_content'] ?? '' );
         $this->post_excerpt = (string) ( $data['post_excerpt'] ?? '' );
         $this->post_author = (int) ( $data['post_author'] ?? 0 );
+        $this->post_category = array_values( (array) ( $data['post_category'] ?? array() ) );
     }
 }
 
@@ -44,6 +46,7 @@ $revelations_manual_draft_meta = array();
 $revelations_manual_draft_next_id = 100;
 $revelations_manual_draft_redirect = '';
 $revelations_manual_draft_fetch_calls = 0;
+$revelations_manual_draft_categories = array( 'news' => 10 );
 
 function add_action( string $hook, callable $callback ): void {
     global $revelations_manual_draft_actions;
@@ -211,7 +214,10 @@ function delete_post_meta( int $post_id, string $key ): void {
 }
 
 function get_category_by_slug( string $slug ): ?WP_Term {
-    return null;
+    global $revelations_manual_draft_categories;
+    return isset( $revelations_manual_draft_categories[ $slug ] )
+        ? new WP_Term( (int) $revelations_manual_draft_categories[ $slug ] )
+        : null;
 }
 
 function wp_slash( mixed $value ): mixed {
@@ -304,6 +310,7 @@ foreach ( array_slice( $argv, 1 ) as $argument ) {
 }
 
 if ( '' !== $scenario ) {
+    global $revelations_manual_draft_categories;
     $decoded_state = json_decode(
         base64_decode( $encoded_state, true ) ?: '{}',
         true
@@ -340,6 +347,9 @@ if ( '' !== $scenario ) {
         if ( 'manual-invalid-section' === $scenario ) {
             $section = 'invalid';
         }
+        if ( 'manual-art' === $scenario ) {
+            $section = 'art';
+        }
 
         $_POST = array(
             'candidate_title' => $title,
@@ -356,7 +366,13 @@ if ( '' !== $scenario ) {
 
     $candidate_id = revelations_manual_draft_find_post_id( 'rev_candidate' );
 
-    if ( 'source-draft' === $scenario ) {
+    if ( 'source-draft-art-present' === $scenario ) {
+        $revelations_manual_draft_categories['art'] = 20;
+    }
+    if ( 'source-draft-existing-missing-category' === $scenario ) {
+        $revelations_manual_draft_categories = array();
+    }
+    if ( in_array( $scenario, array( 'source-draft', 'source-draft-art-present', 'source-draft-existing-missing-category' ), true ) ) {
         $_POST = array( 'candidate_id' => $candidate_id );
         $revelations_manual_draft_actions[
             'admin_post_revelations_create_source_draft'
@@ -445,6 +461,30 @@ $empty_candidate = $post( $empty_manual, 'rev_candidate' );
 $assert(
     '' === ( $empty_manual['meta'][100]['_rev_summary'] ?? null ),
     'manual candidate preserves an empty optional summary'
+);
+
+$art_manual = $run( 'manual-art' );
+$art_missing = $run( 'source-draft', $art_manual );
+$assert(
+    array() === $post( $art_missing, 'post' ) &&
+        'selected' === ( $art_missing['meta'][100]['_rev_status'] ?? '' ) &&
+        str_contains( (string) ( $art_missing['meta'][100]['_rev_error_message'] ?? '' ), 'Art editorial category must be provisioned' ) &&
+        str_contains( (string) ( $art_missing['redirect'] ?? '' ), 'draft_error=category' ),
+    'missing Art category preserves candidate and reports a provisioning error'
+);
+$art_present = $run( 'source-draft-art-present', $art_manual );
+$art_draft = $post( $art_present, 'post' );
+$assert(
+    array( 20 ) === ( $art_draft['post_category'] ?? array() ),
+    'provisioned Art category is the source draft’s only category'
+);
+$existing_missing = $run( 'source-draft-existing-missing-category', $empty_manual );
+$existing_missing_draft = $post( $existing_missing, 'post' );
+$assert(
+    'draft' === ( $existing_missing_draft['post_status'] ?? '' ) &&
+        array() === ( $existing_missing_draft['post_category'] ?? array() ) &&
+        ! str_contains( (string) ( $existing_missing['redirect'] ?? '' ), 'draft_error=category' ),
+    'existing sections retain uncategorized source-draft behavior when their category is missing'
 );
 
 $empty_draft_state = $run( 'source-draft', $empty_manual );

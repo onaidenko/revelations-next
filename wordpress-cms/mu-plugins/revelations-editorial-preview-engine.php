@@ -76,6 +76,20 @@ function revelations_editorial_preview_sections(): array {
                 'revelations_editorial_places_scan_dry_run',
         ),
 
+        'art' => array(
+            'label' =>
+                'Art',
+
+            'default_enabled' =>
+                false,
+
+            'default_preview_limit' =>
+                5,
+
+            'scan_callback' =>
+                'revelations_editorial_art_scan_dry_run',
+        ),
+
         'unspoken' => array(
             'label' =>
                 'Unspoken',

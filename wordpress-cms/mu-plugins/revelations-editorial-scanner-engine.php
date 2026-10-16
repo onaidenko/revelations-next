@@ -1198,7 +1198,7 @@ function revelations_editorial_scanner_attach_gate_semantics(
 /**
  * Return the stable machine-readable rejection vocabulary.
  *
- * @return array{global_ai_gate:string[],section:string[]}
+ * @return array{global_ai_gate:string[],art_relevance_gate:string[],section:string[]}
  */
 function revelations_editorial_scanner_rejection_codes(): array {
     return array(
@@ -1212,6 +1212,15 @@ function revelations_editorial_scanner_rejection_codes(): array {
             'future_tech_without_action',
             'future_tech_without_corroboration',
             'generic_futurism_only',
+        ),
+        'art_relevance_gate' => array(
+            'no_art_signal',
+            'art_not_central',
+            'generic_event_listing',
+            'promotional_only',
+            'design_not_art',
+            'celebrity_art_incidental',
+            'generic_tech_not_art',
         ),
         'section' => array(
             'opinion_or_advice',
@@ -1334,8 +1343,12 @@ function revelations_editorial_scanner_count_rejection(
     string $scope,
     string $code
 ): void {
-    $scope = 'global_ai_gate' === $scope
-        ? 'global_ai_gate'
+    $scope = in_array(
+        $scope,
+        array( 'global_ai_gate', 'art_relevance_gate' ),
+        true
+    )
+        ? $scope
         : 'section';
     $allowed =
         revelations_editorial_scanner_rejection_codes()[
@@ -1346,7 +1359,9 @@ function revelations_editorial_scanner_count_rejection(
     if ( ! in_array( $code, $allowed, true ) ) {
         $code = 'global_ai_gate' === $scope
             ? 'insufficient_ai_context'
-            : 'unspecified_section_rejection';
+            : ( 'art_relevance_gate' === $scope
+                ? 'no_art_signal'
+                : 'unspecified_section_rejection' );
     }
 
     if ( ! isset( $counts[ $scope ] ) ) {
@@ -1371,8 +1386,12 @@ function revelations_editorial_scanner_add_rejection_sample(
     array $story,
     array $diagnostic = array()
 ): void {
-    $scope = 'global_ai_gate' === $scope
-        ? 'global_ai_gate'
+    $scope = in_array(
+        $scope,
+        array( 'global_ai_gate', 'art_relevance_gate' ),
+        true
+    )
+        ? $scope
         : 'section';
     $code = sanitize_key( $code );
 
@@ -1699,10 +1718,15 @@ function revelations_editorial_scanner_source_window( array $source ): array {
 function revelations_editorial_scanner_fetched_item_diagnostic(
     array $story,
     string $stage,
-    string $global_rejection_code = '',
-    string $section_rejection_code = ''
+    string $relevance_rejection_code = '',
+    string $section_rejection_code = '',
+    string $relevance_scope = 'global_ai_gate'
 ): array {
-    return array(
+    $relevance_scope = 'art_relevance_gate' === $relevance_scope
+        ? 'art_relevance_gate'
+        : 'global_ai_gate';
+
+    $diagnostic = array(
         'source' => sanitize_text_field(
             (string) ( $story['source_name'] ?? '' )
         ),
@@ -1716,9 +1740,29 @@ function revelations_editorial_scanner_fetched_item_diagnostic(
             (string) ( $story['published_at'] ?? '' )
         ),
         'stage' => sanitize_key( $stage ),
-        'global_rejection_code' => sanitize_key( $global_rejection_code ),
+        'global_rejection_code' => 'global_ai_gate' === $relevance_scope
+            ? sanitize_key( $relevance_rejection_code )
+            : '',
         'section_rejection_code' => sanitize_key( $section_rejection_code ),
     );
+
+    if ( 'art_relevance_gate' === $relevance_scope ) {
+        $diagnostic['relevance_scope'] = $relevance_scope;
+        $diagnostic['relevance_rejection_code'] = sanitize_key( $relevance_rejection_code );
+    }
+
+    return $diagnostic;
+}
+
+/** Apply a section-specific relevance callback without changing global gating. */
+function revelations_editorial_scanner_apply_relevance_gate(
+    array $story,
+    string $section,
+    ?callable $relevance_gate = null
+): array {
+    return null !== $relevance_gate
+        ? call_user_func( $relevance_gate, $story )
+        : revelations_editorial_scanner_ai_gate( $story, $section );
 }
 
 /**
@@ -1740,7 +1784,10 @@ function revelations_editorial_scanner_run_dry_run(
     array $disabled_sources,
     callable $score_story,
     array $thresholds,
-    int $qualified_limit = 10
+    int $qualified_limit = 10,
+    ?callable $relevance_gate = null,
+    string $relevance_scope = 'global_ai_gate',
+    string $relevance_label = 'AI gate'
 ): array {
     if ( ! function_exists( 'fetch_feed' ) ) {
         require_once ABSPATH . WPINC . '/feed.php';
@@ -1749,6 +1796,14 @@ function revelations_editorial_scanner_run_dry_run(
     $section = sanitize_key(
         $section
     );
+
+    $relevance_scope = 'art_relevance_gate' === $relevance_scope
+        ? 'art_relevance_gate'
+        : 'global_ai_gate';
+    $relevance_label = sanitize_text_field( $relevance_label );
+    if ( '' === $relevance_label ) {
+        $relevance_label = 'AI gate';
+    }
 
     $qualified_limit = max(
         1,
@@ -1767,14 +1822,12 @@ function revelations_editorial_scanner_run_dry_run(
     $invalid_removed    = 0;
     $ai_gate_filtered   = 0;
     $hard_filtered      = 0;
-    $rejection_counts   = array(
-        'global_ai_gate' => array(),
-        'section' => array(),
-    );
-    $rejection_samples  = array(
-        'global_ai_gate' => array(),
-        'section' => array(),
-    );
+    $rejection_counts   = array( 'global_ai_gate' => array(), 'section' => array() );
+    $rejection_samples  = array( 'global_ai_gate' => array(), 'section' => array() );
+    if ( 'art_relevance_gate' === $relevance_scope ) {
+        $rejection_counts['art_relevance_gate'] = array();
+        $rejection_samples['art_relevance_gate'] = array();
+    }
     $below_threshold_scores = array();
     $closest_rejected = array();
     $fetched_items = array();
@@ -2016,11 +2069,11 @@ function revelations_editorial_scanner_run_dry_run(
                     $duplicate_key,
             );
 
-            $ai_gate =
-                revelations_editorial_scanner_ai_gate(
-                    $story,
-                    $section
-                );
+            $ai_gate = revelations_editorial_scanner_apply_relevance_gate(
+                $story,
+                $section,
+                $relevance_gate
+            );
 
             if (
                 empty(
@@ -2032,19 +2085,21 @@ function revelations_editorial_scanner_run_dry_run(
                 $rejection_code = sanitize_key(
                     (string) (
                         $ai_gate['rejection_code']
-                        ?? 'insufficient_ai_context'
+                        ?? ( 'art_relevance_gate' === $relevance_scope
+                            ? 'no_art_signal'
+                            : 'insufficient_ai_context' )
                     )
                 );
 
                 revelations_editorial_scanner_count_rejection(
                     $rejection_counts,
-                    'global_ai_gate',
+                    $relevance_scope,
                     $rejection_code
                 );
 
                 revelations_editorial_scanner_add_rejection_sample(
                     $rejection_samples,
-                    'global_ai_gate',
+                    $relevance_scope,
                     $rejection_code,
                     $story,
                     array(
@@ -2059,14 +2114,19 @@ function revelations_editorial_scanner_run_dry_run(
                         'future_tech_families' => $ai_gate['future_tech_families'] ?? array(),
                         'future_tech_corroboration' => $ai_gate['future_tech_corroboration'] ?? array(),
                         'future_tech_action_matches' => $ai_gate['future_tech_action_matches'] ?? array(),
+                        'art_matches' => $ai_gate['art_matches'] ?? array(),
                         'gate_branch' => $ai_gate['gate_branch'] ?? '',
                     )
                 );
                 $fetched_items[] =
                     revelations_editorial_scanner_fetched_item_diagnostic(
                         $story,
-                        'global_rejected',
-                        $rejection_code
+                        'global_ai_gate' === $relevance_scope
+                            ? 'global_rejected'
+                            : 'relevance_rejected',
+                        $rejection_code,
+                        '',
+                        $relevance_scope
                     );
                 $closest = revelations_editorial_scanner_format_story(
                     array_merge(
@@ -2207,7 +2267,7 @@ function revelations_editorial_scanner_run_dry_run(
             );
 
             $scores['scoring_reason'] =
-                'AI gate: ' .
+                $relevance_label . ': ' .
                 (string) (
                     $ai_gate['reason'] ?? ''
                 ) .
@@ -2355,7 +2415,7 @@ function revelations_editorial_scanner_run_dry_run(
         array_slice( $qualified, 0, $qualified_limit )
     );
 
-    return array(
+    $result = array(
         'mode' =>
             'dry-run',
 
@@ -2414,8 +2474,7 @@ function revelations_editorial_scanner_run_dry_run(
         'invalid_removed' =>
             $invalid_removed,
 
-        'ai_gate_filtered' =>
-            $ai_gate_filtered,
+        'ai_gate_filtered' => 'global_ai_gate' === $relevance_scope ? $ai_gate_filtered : 0,
 
         'hard_filtered' =>
             $hard_filtered,
@@ -2471,4 +2530,11 @@ function revelations_editorial_scanner_run_dry_run(
         'run_logs_created' =>
             0,
     );
+
+    if ( 'art_relevance_gate' === $relevance_scope ) {
+        $result['relevance_filtered'] = $ai_gate_filtered;
+        $result['relevance_scope'] = $relevance_scope;
+    }
+
+    return $result;
 }

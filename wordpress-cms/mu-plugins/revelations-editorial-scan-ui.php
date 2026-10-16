@@ -49,6 +49,7 @@ function revelations_editorial_render_scan_progress_ui(): void {
                 'revelations_preview_people_scan',
                 'revelations_preview_places_scan',
                 'revelations_preview_tech_scan',
+                'revelations_preview_art_scan',
                 'revelations_preview_unspoken_scan'
             ]);
 

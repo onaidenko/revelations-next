@@ -114,12 +114,13 @@ $expected_sections = array(
     'tech',
     'people',
     'places',
+    'art',
     'unspoken',
 );
 
 revelations_profile_test(
     $expected_sections === array_keys( $profiles ),
-    'registry contains exactly the five supported sections'
+    'registry contains exactly the six supported sections'
 );
 
 foreach ( $expected_sections as $section ) {

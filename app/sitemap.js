@@ -11,6 +11,7 @@ const SECTION_PATHS = [
   'people',
   'tech',
   'places',
+  'art',
   'unspoken',
   'podcast',
 ];

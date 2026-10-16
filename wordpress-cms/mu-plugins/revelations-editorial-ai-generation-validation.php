@@ -1749,6 +1749,7 @@ function revelations_editorial_ai_validate_generated_article(
                     'tech',
                     'people',
                     'places',
+                    'art',
                     'unspoken',
                 ),
                 true

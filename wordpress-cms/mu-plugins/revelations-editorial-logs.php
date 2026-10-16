@@ -114,6 +114,7 @@ function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
         'invalid',
         'deduplicated',
         'global_rejected',
+        'relevance_rejected',
         'scored',
         'qualified',
     );
@@ -127,7 +128,7 @@ function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
             continue;
         }
 
-        $fetched_items[] = array(
+        $safe_item = array(
             'source' => sanitize_text_field( (string) ( $item['source'] ?? '' ) ),
             'title' => sanitize_text_field( (string) ( $item['title'] ?? '' ) ),
             'canonical_url' => esc_url_raw( (string) ( $item['canonical_url'] ?? '' ) ),
@@ -136,6 +137,11 @@ function revelations_editorial_sanitize_scan_diagnostics( array $data ): array {
             'global_rejection_code' => sanitize_key( (string) ( $item['global_rejection_code'] ?? '' ) ),
             'section_rejection_code' => sanitize_key( (string) ( $item['section_rejection_code'] ?? '' ) ),
         );
+        if ( 'relevance_rejected' === $stage && 'art_relevance_gate' === sanitize_key( (string) ( $item['relevance_scope'] ?? '' ) ) ) {
+            $safe_item['relevance_scope'] = 'art_relevance_gate';
+            $safe_item['relevance_rejection_code'] = sanitize_key( (string) ( $item['relevance_rejection_code'] ?? '' ) );
+        }
+        $fetched_items[] = $safe_item;
     }
 
     return compact(

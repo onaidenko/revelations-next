@@ -1,5 +1,44 @@
 # Текущее состояние
 
+## Native Art section implementation (local, not deployed)
+
+- Product-owner approval made Art a first-class editorial section with canonical
+  slug `art` and label `Art`. The Constitution and project context now record
+  the narrow exception: AI and future-tech are optional for Art only; every
+  existing section retains its prior qualification semantics and every common
+  evidence, Human Review, publication and THE REVELATION rule still applies.
+- The frontend has the native `/art` route, metadata, section registry,
+  navigation, footer, archive, sitemap and revalidation coverage. CMS storage,
+  category validation, scanner settings, Preview registry, candidate saving and
+  the AI-generation profile now recognize Art. No article, topic or taxonomy
+  assignment was reclassified.
+- Art has a separate disabled-by-default seven-feed discovery profile:
+  Hyperallergic, The Art Newspaper, ARTnews, Artforum, Designboom Art,
+  Guggenheim and La Biennale di Venezia. A bounded server-side HTTP probe
+  verified each configured feed before it was added; no WordPress option,
+  scanner transient, candidate, database record, production Preview scan or
+  OpenAI request was made. The profile's source labels are discovery-only, not
+  factual authority. The explicit category provisioner exists locally but was
+  not executed against any WordPress database.
+- The shared scanner accepts a scoped relevance callback. Art uses its own
+  `art_relevance_gate`, allowing central non-AI art developments while rejecting
+  generic tech, promotional material, event listings, incidental celebrity and
+  non-art design coverage. Existing sections continue through the unchanged
+  global AI/future-tech gate. Art Preview reports its own diagnostics and saves
+  candidates only on an explicit operator action.
+- `npm run lint`, the full `npm test` suite (120 passing tests), Art preview and
+  category-provisioner static diagnostics, `git diff --check`, and an escalated
+  local `npm run build` passed; the build lists static `/art`. Local PHP is not
+  installed, so changed PHP was linted and focused isolated diagnostics were
+  run from copied files in fresh remote `/tmp` directories only: generation
+  profile 38/38, generation schema 61/61, generation validation 64/64 and
+  frontend revalidation 52/52 passed. Scanner runtime passed all Art checks
+  and remains 129/131 because of its two documented unrelated generic-content
+  baseline failures. No deploy, production scan/generation, commit or push was
+  run.
+
+Дата изменения: 2026-10-15.
+
 ## THE REVELATION generation and publication boundary
 
 - The canonical final-generation prompt now requires a self-contained opening:
@@ -2530,3 +2569,22 @@ Base44 и DNS/domain cutover.
   new fixture. The focused repair fixture passed, as did existing research,
   schema/storage and generation-validation diagnostics. No production OpenAI
   request, RSS scan, deploy, database write, commit or push was performed.
+
+## Art remediation verification (2026-10-16)
+
+- Source-draft creation fails closed only for Art when its canonical category
+  is absent. The candidate remains selected, records a provisioning error and
+  creates no uncategorized Art fallback draft. Existing sections retain their
+  prior missing-category source-draft behavior; the isolated harness covers
+  both boundaries.
+- Art uses its dedicated relevance gate for central visual-art subject plus
+  substantive development/action, followed by score-based ranking only. It
+  has no Art-specific aggregate threshold. Art-only rejection diagnostics are
+  persisted as `art_relevance_gate` data without changing ordinary global-gate
+  fetched-item fields.
+- Isolated remote PHP diagnostics passed: manual source drafts (9/9), Art
+  diagnostics, Art relevance gate and Art THE REVELATION prompt composition.
+  A single non-persistent source-access probe returned HTTP 200 for exactly
+  Hyperallergic, The Art Newspaper, ARTnews, Artforum, Designboom Art,
+  Guggenheim and La Biennale di Venezia. It did not run Preview, write
+  WordPress data, invoke AI, deploy, commit or push.

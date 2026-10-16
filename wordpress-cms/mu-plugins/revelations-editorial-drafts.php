@@ -244,14 +244,29 @@ add_action(
 
         $category_ids = array();
 
-        if ( '' !== $section ) {
-            $category = get_category_by_slug(
-                $section
-            );
+        if ( 'art' === $section ) {
+            $category = get_category_by_slug( 'art' );
+
+            if ( ! $category instanceof WP_Term ) {
+                update_post_meta(
+                    $candidate_id,
+                    '_rev_error_message',
+                    'The Art editorial category must be provisioned before a source draft can be created.'
+                );
+
+                revelations_editorial_drafts_redirect(
+                    array(
+                        'draft_error' => 'category',
+                    )
+                );
+            }
+
+            $category_ids = array( (int) $category->term_id );
+        } elseif ( '' !== $section ) {
+            $category = get_category_by_slug( $section );
 
             if ( $category instanceof WP_Term ) {
-                $category_ids[] =
-                    (int) $category->term_id;
+                $category_ids[] = (int) $category->term_id;
             }
         }
 
@@ -463,7 +478,16 @@ function revelations_editorial_render_drafts(): void {
         )
     );
 
-    if ( '' !== $draft_error ) {
+    if ( 'category' === $draft_error ) {
+        ?>
+        <div class="notice notice-error is-dismissible">
+            <p>
+                The required editorial category is unavailable. Provision the
+                candidate's section category before creating its source draft.
+            </p>
+        </div>
+        <?php
+    } elseif ( '' !== $draft_error ) {
         ?>
         <div class="notice notice-error is-dismissible">
             <p>

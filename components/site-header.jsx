@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { label: 'People', href: '/people' },
   { label: 'Tech', href: '/tech' },
   { label: 'Places', href: '/places' },
+  { label: 'Art', href: '/art' },
   { label: 'Unspoken', href: '/unspoken' },
   { label: 'Podcast', href: '/podcast', accent: true },
 ];

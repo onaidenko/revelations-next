@@ -28,6 +28,7 @@ function revelations_editorial_scanner_sections(): array {
         'people'   => 'People',
         'tech'     => 'Tech',
         'places'   => 'Places',
+        'art'      => 'Art',
         'unspoken' => 'Unspoken',
     );
 }
@@ -827,6 +828,86 @@ function revelations_editorial_default_scanner_settings(): array {
             ),
         ),
 
+        'art' => array(
+            'enabled' =>
+                false,
+
+            'preview_limit' =>
+                5,
+
+            'active_sources' => array(
+                revelations_editorial_discovery_source( 'Hyperallergic', 'https://hyperallergic.com/feed/', 'primary', 'high' ),
+                revelations_editorial_discovery_source( 'The Art Newspaper', 'https://www.theartnewspaper.com/rss.xml', 'primary', 'high' ),
+                revelations_editorial_discovery_source( 'ARTnews', 'https://www.artnews.com/feed/', 'primary', 'medium' ),
+                revelations_editorial_discovery_source( 'Artforum', 'https://www.artforum.com/feed/', 'secondary', 'medium' ),
+                revelations_editorial_discovery_source( 'Designboom Art', 'https://www.designboom.com/art/feed/', 'secondary', 'medium' ),
+                revelations_editorial_discovery_source( 'Guggenheim', 'https://www.guggenheim.org/feed', 'supplementary', 'low' ),
+                revelations_editorial_discovery_source( 'La Biennale di Venezia', 'https://www.labiennale.org/en/rss.xml', 'supplementary', 'low' ),
+            ),
+
+            'disabled_sources' => array(
+                array(
+                    'name' => 'MoMA Magazine',
+                    'reason' => 'Feed endpoint returned HTTP 403 during the bounded server-side access probe.',
+                ),
+                array(
+                    'name' => 'Frieze',
+                    'reason' => 'Feed endpoint returned HTTP 403 during the bounded server-side access probe.',
+                ),
+                array(
+                    'name' => 'Tate',
+                    'reason' => 'Candidate RSS endpoint returned HTTP 404 during the bounded server-side access probe.',
+                ),
+                array(
+                    'name' => 'Art Basel',
+                    'reason' => 'Candidate RSS endpoint returned HTTP 404 during the bounded server-side access probe.',
+                ),
+                array(
+                    'name' => 'e-flux',
+                    'reason' => 'Candidate RSS endpoint returned HTTP 404 during the bounded server-side access probe.',
+                ),
+                array(
+                    'name' => 'CreativeApplications.Net',
+                    'reason' => 'Full-content RSS is member-only and was not eligible for the public scanner pool.',
+                ),
+            ),
+
+            'keywords' => array(
+                'relevance' => array(
+                    'art', 'artist', 'artwork', 'art work', 'painting', 'sculpture',
+                    'photography', 'visual art', 'contemporary art', 'exhibition',
+                    'museum', 'gallery', 'biennale', 'installation', 'public art',
+                    'curator', 'collection', 'acquisition', 'art fair', 'art market',
+                    'auction',
+                    'immersive art', 'digital art', 'new media art',
+                    'generative art', 'computational art', 'ai-assisted art',
+                    'ai-generated art', 'ai-created art', 'ai art',
+                ),
+                'implementation' => array(
+                    'opens', 'opened', 'unveils', 'unveiled', 'presents',
+                    'presented', 'acquires', 'acquired', 'commissions',
+                    'commissioned', 'installs', 'installed', 'launches',
+                    'launched', 'debuts', 'debuted', 'announces', 'announced',
+                ),
+                'speculative' => array(
+                    'plans to', 'will open', 'upcoming', 'preview',
+                    'coming soon', 'proposed',
+                ),
+                'impact' => array(
+                    'retrospective', 'survey', 'public commission',
+                    'permanent collection', 'museum acquisition', 'biennale',
+                    'institutional debut', 'first major', 'landmark',
+                ),
+                'product_launch' => array(),
+                'avoid' => array(
+                    'event calendar', 'what to see', "what's on", 'this week in',
+                    'tickets', 'register now', 'opening hours', 'shop now',
+                    'for sale now', 'interior design', 'home decor', 'fashion week',
+                    'celebrity style',
+                ),
+            ),
+        ),
+
         'unspoken' => array(
             'enabled' =>
                 false,
@@ -1600,6 +1681,7 @@ function revelations_editorial_scanner_section_is_editable(
             'people',
             'places',
             'tech',
+            'art',
             'unspoken',
         ),
         true
@@ -2071,7 +2153,7 @@ function revelations_editorial_render_scanner_settings(): void {
 
         <p>
             <strong>Scannable sections:</strong>
-            News, People, Tech, Places and Unspoken.
+            News, People, Tech, Places, Art and Unspoken.
             Podcast is intentionally excluded because its
             content is created internally.
         </p>

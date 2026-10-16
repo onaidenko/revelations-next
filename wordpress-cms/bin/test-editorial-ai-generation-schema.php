@@ -271,12 +271,13 @@ revelations_schema_test(
         'tech',
         'people',
         'places',
+        'art',
         'unspoken',
         null,
     ) === (
         $suggested_section['enum'] ?? null
     ),
-    'suggested section is limited to five sections or null'
+    'suggested section is limited to six sections or null'
 );
 
 revelations_schema_test(

@@ -15,6 +15,7 @@ const staticRoutes = {
   'app/people/page.jsx': '/people',
   'app/tech/page.jsx': '/tech',
   'app/places/page.jsx': '/places',
+  'app/art/page.jsx': '/art',
   'app/unspoken/page.jsx': '/unspoken',
   'app/podcast/page.jsx': '/podcast',
 };

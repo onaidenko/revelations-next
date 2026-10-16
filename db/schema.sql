@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS articles (
   id text PRIMARY KEY,
   slug text UNIQUE NOT NULL,
   title text NOT NULL,
-  section text NOT NULL CHECK (section IN ('news','people','tech','places','unspoken','podcast')),
+  section text NOT NULL CHECK (section IN ('news','people','tech','places','art','unspoken','podcast')),
   excerpt text,
   content text,
   cover_image text,

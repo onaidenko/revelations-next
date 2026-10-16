@@ -11,6 +11,7 @@ const MEDIA_LINKS = [
   ['People', '/people'],
   ['Tech', '/tech'],
   ['Places', '/places'],
+  ['Art', '/art'],
   ['Unspoken', '/unspoken'],
   ['Podcast', '/podcast'],
 ];

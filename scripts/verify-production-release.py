@@ -33,6 +33,7 @@ RESERVED_ROOT_PATHS = {
     "news",
     "people",
     "places",
+    "art",
     "podcast",
     "tech",
     "unspoken",

@@ -36,7 +36,7 @@ test('footer social controls retain official URLs and accessible outline treatme
 test('footer keeps editorial verticals in Media and collections in Explore', () => {
   assert.match(
     footer,
-    /const MEDIA_LINKS = \[\s*\['News', '\/news'\],\s*\['People', '\/people'\],\s*\['Tech', '\/tech'\],\s*\['Places', '\/places'\],\s*\['Unspoken', '\/unspoken'\],\s*\['Podcast', '\/podcast'\],\s*\];/
+    /const MEDIA_LINKS = \[\s*\['News', '\/news'\],\s*\['People', '\/people'\],\s*\['Tech', '\/tech'\],\s*\['Places', '\/places'\],\s*\['Art', '\/art'\],\s*\['Unspoken', '\/unspoken'\],\s*\['Podcast', '\/podcast'\],\s*\];/
   );
   assert.match(
     footer,

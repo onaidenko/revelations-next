@@ -23,6 +23,29 @@ cannot override that Constitution without explicit product-owner approval.
   the current CMS post's `revelations_legacy_id`, not by per-deletion
   tombstones.
 
+## Native Art editorial section
+
+- **Решение:** Art is an approved first-class top-level section with canonical
+  slug `art` and label `Art`, parallel to News, People, Tech, Places and
+  Unspoken. It is present in the frontend registry, routes, navigation,
+  sitemap, archive, revalidation contract, CMS category contract, candidate
+  storage, Preview registry and AI-generation profile registry. Existing
+  articles and topic assignments are not reclassified.
+- **Причина:** product-owner approval explicitly makes AI and future-tech
+  optional for Art only. News, People, Tech, Places and Unspoken retain their
+  existing AI/future-tech qualification semantics and all sections retain the
+  shared evidence, Human Review, publication and THE REVELATION boundaries.
+- **Safeguard:** Art's scanner uses a separate `art_relevance_gate` callback
+  scope in the shared dry-run engine. It selects central visual/contemporary
+  art developments and rejects generic technology, promotion, event-listing,
+  incidental celebrity and non-art design noise without weakening the global
+  AI/future-tech gate used by every existing scanner.
+- **Operations:** the seven initial feeds were verified only by a bounded,
+  non-persisting server-side HTTP probe. The profile remains disabled by
+  default. The Art WordPress category is created only by the explicit
+  `wordpress-cms/bin/provision-editorial-art-category.php` command during an
+  authorized environment mutation; it is not created during deploy or runtime.
+
 ## Evidence-first AI drafting
 
 - **Решение:** commit `09cb32cd5c92a8dc664e8e968756a8679fe7ec24` restores
@@ -594,3 +617,16 @@ cannot override that Constitution without explicit product-owner approval.
 - **Решение:** run logs retain only bounded repair state and before/after
   pillar counts. Raw research, claims, pillars and model responses stay
   private and non-persistent.
+
+## Art category and relevance safety
+
+- **Решение:** Art source drafts require the canonical Art category. A missing
+  Art term is an explicit provisioning failure, not permission to create an
+  uncategorized Art draft. Existing-section source-draft behavior is unchanged.
+- **Решение:** Art eligibility is categorical: a meaningful visual-art
+  subject and a substantive development/action are both required. Existing
+  Art scores rank eligible candidates; no Art-specific score threshold is an
+  eligibility gate.
+- **Решение:** Art relevance rejections retain their own scope and code only
+  in Art diagnostic records, preserving the existing global scanner output
+  shape for all other sections.

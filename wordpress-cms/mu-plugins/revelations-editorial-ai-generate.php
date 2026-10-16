@@ -11,6 +11,22 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/** Keep THE REVELATION concrete while preserving existing section wording. */
+function revelations_editorial_ai_revelation_subject_guidance( string $section ): string {
+    $subjects = 'company, technology, scientific development, policy, person, or system';
+
+    if ( 'art' === $section ) {
+        $subjects .= ', artwork, artist, artistic practice, exhibition, museum, institution, or cultural development';
+    }
+
+    return 'Name the actual subject - ' . $subjects . ' - and state concretely what it does, changes, reveals, or means, using concrete nouns and verbs.';
+}
+
+/** @param array<string, string> $profile */
+function revelations_editorial_ai_final_prompt_section_context( string $section, array $profile ): string {
+    return revelations_editorial_ai_revelation_subject_guidance( $section );
+}
+
 /**
  * User-specific generation result.
  */
@@ -218,6 +234,7 @@ function revelations_editorial_ai_article_schema(): array {
                     'tech',
                     'people',
                     'places',
+                    'art',
                     'unspoken',
                     null,
                 ),
@@ -905,6 +922,11 @@ function revelations_editorial_generate_draft_with_ai(
             $current_section,
             $generation_profile
         );
+    $revelation_subject_guidance =
+        revelations_editorial_ai_final_prompt_section_context(
+            $current_section,
+            $generation_profile
+        );
 
     /* The lead is for discovery only. Final claims come from research evidence. */
     $lead_classification = revelations_editorial_ai_classify_lead_source(
@@ -1011,7 +1033,7 @@ function revelations_editorial_generate_draft_with_ai(
         "Return revelation as plain editorial text, normally 60 to 150 words and never more than 180 words. " .
         "Open with the strongest defensible conclusion of this specific article, derived from its supplied research evidence and editorial brief. " .
         "The first sentence, or at most the first two very short sentences, must stand alone for a reader who has not read the headline, deck, lede, or previous paragraph. " .
-        "Name the actual subject - company, technology, scientific development, policy, person, or system - and state concretely what it does, changes, reveals, or means, using concrete nouns and verbs. " .
+        $revelation_subject_guidance . ' ' .
         "Never open with vague or context-dependent framing such as 'The real story is', 'The real product here is', 'What matters here is', 'The bigger picture is', or 'This matters because'. " .
         "Then explain why the article's facts support that conclusion, widen it into the broader implication, and, where appropriate, end with the key unresolved question, limitation, or condition. " .
         "Use two short paragraphs when the material supports them. " .

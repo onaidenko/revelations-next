@@ -84,6 +84,36 @@ run_suite \
     "$SCRIPT_DIR/test-editorial-unspoken-preview.mjs"
 
 run_suite \
+    'Art component: preview and dedicated relevance gate' \
+    "$NODE_BIN" \
+    "$SCRIPT_DIR/test-editorial-art-preview.mjs"
+
+run_suite \
+    'Art component: explicit category provisioner contract' \
+    "$NODE_BIN" \
+    "$SCRIPT_DIR/test-editorial-art-provisioner.mjs"
+
+run_suite \
+    'Art component: category-safe source drafts' \
+    "$PHP_BIN" \
+    "$SCRIPT_DIR/test-editorial-manual-source-draft.php"
+
+run_suite \
+    'Art component: relevance gate and runner callback' \
+    "$PHP_BIN" \
+    "$SCRIPT_DIR/test-editorial-art-scanner-gate.php"
+
+run_suite \
+    'Art component: persisted diagnostics' \
+    "$PHP_BIN" \
+    "$SCRIPT_DIR/test-editorial-art-diagnostics.php"
+
+run_suite \
+    'Art component: revelation prompt context' \
+    "$PHP_BIN" \
+    "$SCRIPT_DIR/test-editorial-art-generation-prompt.php"
+
+run_suite \
     'Scanner runtime: settings and structured rejection diagnostics' \
     "$PHP_BIN" \
     "$SCRIPT_DIR/test-editorial-scanner-runtime.php"

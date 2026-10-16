@@ -50,6 +50,20 @@ function revelations_editorial_ai_generation_profiles(): array {
                 'user experience. Plans and concepts do not qualify.',
         ),
 
+        'art' => array(
+            'label' => 'Art',
+            'instructions' =>
+                'Cover meaningful developments in visual and contemporary art, ' .
+                'artistic practice, exhibitions, institutions, installations, ' .
+                'art markets when artistically significant, and digital, ' .
+                'immersive or AI-enabled art. Treat the artwork, artist, ' .
+                'artistic practice, institution or cultural development as the ' .
+                'central subject. Technology may be central when it materially ' .
+                'changes artistic practice or experience, but technology is not ' .
+                'required. Avoid commercial announcements, event listings, ' .
+                'celebrity culture and generic technology reporting.',
+        ),
+
         'unspoken' => array(
             'label' => 'Unspoken',
             'instructions' =>

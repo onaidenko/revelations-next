@@ -27,24 +27,25 @@ approval requirement are canonical in
 
 ## Scanner subsystem
 
-- `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, one-time source freshness horizon, глобальная дедупликация, high-recall AI/future-tech prefilter и section scorer. Prefilter принимает clear explicit AI или recognised future-tech family без universal material-action requirement; action labels остаются downstream semantics. Он recognises autonomy/driverless freight, robotics/cobots, smart infrastructure, advanced construction, future mobility и human-machine systems, including the bounded `begin/start + daily/commercial + autonomous/driverless + run/service/operations` deployment phrase. Section identity, а не global gate, решает concrete News event, central person и central physical deployment.
-- Preview Scanner применяет pipeline `feed -> freshness horizon -> dedup -> global relevance -> categorical section identity -> existing score ranking -> top five`. После identity existing score components и total объясняют и сортируют Preview, но aggregate threshold/freshness floor/significance route больше не создают второй rejection для News, People или Places. Deterministic ties use publication time then canonical URL. Tech qualification remains unchanged.
+- `revelations-editorial-scanner-engine.php` — общий dry-run RSS engine: загрузка feeds, нормализация, валидация, one-time source freshness horizon, глобальная дедупликация, high-recall AI/future-tech prefilter и section scorer. Prefilter принимает clear explicit AI или recognised future-tech family без universal material-action requirement; action labels остаются downstream semantics. Он recognises autonomy/driverless freight, robotics/cobots, smart infrastructure, advanced construction, future mobility и human-machine systems, including the bounded `begin/start + daily/commercial + autonomous/driverless + run/service/operations` deployment phrase. Section identity, а не global gate, решает concrete News event, central person и central physical deployment. A callback seam permits a named section-specific relevance gate without changing the global gate for existing sections.
+- Preview Scanner применяет pipeline `feed -> freshness horizon -> dedup -> relevance gate -> categorical section identity -> existing score ranking -> top five`. News, People, Places, Tech and Unspoken retain the global AI/future-tech gate; Art instead uses its isolated Art relevance gate. После identity existing score components и total объясняют и сортируют Preview, но aggregate threshold/freshness floor/significance route больше не создают второй rejection для News, People или Places. Deterministic ties use publication time then canonical URL. Tech qualification remains unchanged.
 - Places accepts a named route/site (for example I-45) as central only when
   the passed action label and autonomous/driverless context establish a
   physical deployment. It separately converts confirmed shared `deploy` or
   `operations` labels into an implementation signal only after that physical
   predicate succeeds; a bare route or generic company launch remains outside
   Places implementation semantics.
-- `revelations-editorial-{news,people,tech,places,unspoken}-scanner.php` — источники, ключевые слова, пороги и scoring соответствующего раздела. News separates product/deployment, concrete-research, major-capital and strategic-company events; only exceptional capital events use their impact-and-scale path instead of implementation maturity. Каждый scanner вызывает общий engine.
-- `revelations-editorial-scanner-settings.php` — профили News, People, Tech, Places и Unspoken: включение, preview limit, активные и отключённые источники, keyword groups и thresholds. Active source carries discovery-only `priority` and `volume`; neither value is a factual authority, reliability or evidence role.
+- `revelations-editorial-{news,people,tech,places,art,unspoken}-scanner.php` — источники, ключевые слова, пороги и scoring соответствующего раздела. News separates product/deployment, concrete-research, major-capital and strategic-company events; only exceptional capital events use their impact-and-scale path instead of implementation maturity. Каждый scanner вызывает общий engine.
+- `revelations-editorial-scanner-settings.php` — профили News, People, Tech, Places, Art и Unspoken: включение, preview limit, активные и отключённые источники, keyword groups и thresholds. Active source carries discovery-only `priority` and `volume`; neither value is a factual authority, reliability or evidence role.
 - Runtime settings выполняют pure-нормализацию Unspoken и source coverage:
   legacy-пустой профиль получает актуальные default feeds, а exact former
   shipped source pool получает approved replacement. Частичный профиль,
   `enabled=false` и любой operator-edited source list сохраняются; обычное
   чтение option не выполняет запись. Отдельная idempotent migration function
   доступна только для явного вызова.
-- `revelations-editorial-preview-engine.php` — registry и общий запуск preview для пяти разделов, runtime-настройки, transient preview и run logging.
-- `revelations-editorial-{news,people,tech,places,unspoken}-preview.php` — административные preview-интерфейсы разделов.
+- `revelations-editorial-preview-engine.php` — registry и общий запуск preview для шести разделов, runtime-настройки, transient preview и run logging.
+- `revelations-editorial-{news,people,tech,places,art,unspoken}-preview.php` — административные preview-интерфейсы разделов.
+- Art is an approved first-class section (`art` / `Art`). Its disabled-by-default seven-feed discovery pool is Hyperallergic, The Art Newspaper, ARTnews, Artforum, Designboom Art, Guggenheim and La Biennale di Venezia; the pool is discovery-only and does not establish factual authority. Art's gate accepts central visual/contemporary-art developments without AI or future-tech, while rejecting generic listings, promotions, incidental celebrity/design coverage and generic technology coverage. Its diagnostics use the separate `art_relevance_gate` scope, so Art Preview does not imply that an AI gate filtered its items.
 - Unspoken scanner по умолчанию выключен. Его discovery pool combines broad
   technology reporting with accountability sources: TechCrunch, TechCrunch AI,
   WIRED, The Verge, 404 Media, Rest of World, MIT Technology Review, BBC
@@ -52,7 +53,7 @@ approval requirement are canonical in
 - Unspoken сохраняет legacy tracks `documented_harm`, `failure_or_reversal`, `economic_model_failure`, `legal_or_governance_conflict` и `labor_or_social_cost`, а также принимает evidence-backed hidden-labor, limitation, human-effect, trust/identity, infrastructure-cost, autonomy-gap и second-order angles. Negative sentiment сам по себе не квалифицирует материал. A plausible RSS lead may receive one of at most eight scanner-only article snapshots per Preview run when it has both a potential Unspoken family and a concrete anchor. The 8-second/2-redirect/768 KB/8,000-character snapshot is in-memory only; its body is not written to candidates, transients, run logs or fetched-item metadata. The existing Unspoken angle, evidence and allegation gate remains the only eligibility evaluator after enrichment.
 - После общего relevance gate Unspoken требует evidence, свежесть и конкретный hidden/overlooked angle либо legacy track. Total threshold равен `5.2`, что выше самого строгого действующего total threshold остальных разделов `4.8`; implementation сохраняется как diagnostic score, но evidence-backed emerging issues не требуют deployment-maturity minimum. Обязательные evidence/angle gates нельзя компенсировать aggregate score.
 - Общий engine агрегирует machine-readable rejection counts отдельно
-  для global gate и section scorer. Discovery volume selects bounded source
+  для global gate, Art relevance gate и section scorer. Discovery volume selects bounded source
   windows: high 50 entries/72h, medium 30/7d and low 20/14d. Постоянный run
   log хранит source counts, rejection counts, не более десяти closest rejected
   и bounded qualified items, а также complete bounded fetched-item metadata
@@ -72,7 +73,7 @@ approval requirement are canonical in
 
 - `revelations-editorial-preview-candidate-save.php` — общий backend
   сохранения одного qualified preview candidate для News, People,
-  Tech, Places и Unspoken.
+  Tech, Places, Art и Unspoken.
 - Формы разделов передают общий action, исходный section и candidate
   index с section-specific nonce.
 - Handler проверяет capability, server-side section registry, nonce и
@@ -436,6 +437,17 @@ approval requirement are canonical in
 
 
 ## Public brand identity graph
+
+## Art source-draft and diagnostic boundary
+
+- Art candidate-to-draft conversion requires the canonical Art category before
+  creating a post. A missing Art term stops conversion, retains the candidate
+  for review and records a bounded error; existing-section draft behavior is
+  unchanged.
+- The generic scanner runner accepts an optional section relevance callback.
+  Art provides its own central-subject/development gate and writes
+  `art_relevance_gate` diagnostics only for Art; legacy global scanner
+  diagnostics retain their original fields.
 
 ## Podcast structured data
 

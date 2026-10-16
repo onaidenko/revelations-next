@@ -169,6 +169,7 @@ const actionScripts = Object.values(scripts);
     'revelations_preview_people_scan',
     'revelations_preview_places_scan',
     'revelations_preview_tech_scan',
+    'revelations_preview_art_scan',
     'revelations_preview_unspoken_scan',
 ].forEach((action) => {
     check(
@@ -182,7 +183,7 @@ check(
         scanUiScript,
         "form.addEventListener('submit'"
     ),
-    'all five scan actions retain one shared submit handler'
+    'all six scan actions retain one shared submit handler'
 );
 
 check(

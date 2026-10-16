@@ -56,8 +56,12 @@ product-owner approval may amend a constitutional rule.
 
 - Current editorial priorities are Artificial Intelligence and Wellness within
   Emerging Technology. Historical Web3/crypto coverage stays factually intact,
-  but is not automatically the primary current brand signal. Art is a future
-  direction, not an approved top-level section.
+  but is not automatically the primary current brand signal. Art is an approved
+  first-class top-level section with the canonical slug `art` and label `Art`.
+  AI and future-tech are optional for Art only; the existing AI/future-tech
+  semantics for News, People, Places, Tech and Unspoken remain unchanged. Art
+  remains subject to every common factual, evidence, publication, Human Review
+  and THE REVELATION requirement.
 - AI may suggest content but cannot silently approve or publish protected
   editorial fields. Reuse the canonical Human Review implementation; never
   forge review hashes, permissions or reviewer identities.

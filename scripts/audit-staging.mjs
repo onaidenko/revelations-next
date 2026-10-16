@@ -28,6 +28,7 @@ const STATIC_PATHS = [
   '/people',
   '/tech',
   '/places',
+  '/art',
   '/unspoken',
   '/podcast',
   '/archive',

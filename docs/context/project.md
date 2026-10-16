@@ -3,14 +3,16 @@
 This project context is governed by [`../PROJECT_CONSTITUTION.md`](../PROJECT_CONSTITUTION.md).
 The current editorial focus is Artificial Intelligence and Wellness within
 Emerging Technology. Historical Web3/crypto coverage remains factual but is
-not automatically a primary current brand signal. Art is a future direction,
-not an approved top-level section.
+not automatically a primary current brand signal. Art is an approved
+first-class top-level section with the canonical slug `art`.
 
 REVELATIONS — избирательная медиа-платформа для основателей, инвесторов и людей, создающих будущее. Она отбирает значимые сигналы и истории о людях, технологиях, культуре, местах и силах, формирующих будущее.
 
 ## Глобальная редакционная политика
 
-AI должен быть центральной темой материала во всех разделах.
+AI должен быть центральной темой материала в News, Tech, People, Places и
+Unspoken. Art is the explicit exception: it covers meaningful visual and
+contemporary art, and AI/future-tech is optional when art remains central.
 Случайного или фонового упоминания недостаточно: материал должен
 содержательно относиться к AI-индустрии, её участникам, технологиям,
 внедрениям или последствиям. При автоматическом отборе это правило
@@ -35,9 +37,13 @@ AI должен быть центральной темой материала в
   провалах, злоупотреблениях, скрытых издержках, конфликтах интересов,
   этических и социальных проблемах AI. Раздел требует особенно
   строгой атрибуции, фактчекинга и human review.
+- **Art** — meaningful developments in visual and contemporary art, artists,
+  exhibitions, institutions, installations, public art and artistically
+  significant market developments. Digital, immersive, generative and
+  AI-assisted art qualify when art is central; AI is not required.
 
 Раздел WordPress draft выбирает scanner или оператор. AI может
 предложить другой раздел, но не меняет его автоматически. Scanner и
-preview поддерживают все пять перечисленных разделов; автоматический
+preview поддерживают все шесть перечисленных разделов; автоматический
 запуск остаётся выключенным, а сохранение preview candidate требует
 явного действия оператора.

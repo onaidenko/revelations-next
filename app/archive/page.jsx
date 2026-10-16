@@ -22,6 +22,7 @@ const SECTION_ORDER = [
   'people',
   'tech',
   'places',
+  'art',
   'unspoken',
   'podcast',
 ];
@@ -31,6 +32,7 @@ const SECTION_LABELS = {
   people: 'People',
   tech: 'Tech',
   places: 'Places',
+  art: 'Art',
   unspoken: 'Unspoken',
   podcast: 'Podcast',
 };

@@ -46,6 +46,7 @@ const knownSections = [
   'people',
   'tech',
   'places',
+  'art',
   'unspoken',
   'podcast',
 ];

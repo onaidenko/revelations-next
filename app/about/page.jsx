@@ -39,6 +39,10 @@ const EDITORIAL_SECTIONS = [
     'Spaces where the future is already embedded in everyday experience.',
   ],
   [
+    'Art',
+    'Artists, exhibitions, institutions and visual practices shaping culture now.',
+  ],
+  [
     'Unspoken',
     'The risks, failures and uncomfortable realities hidden behind progress.',
   ],

@@ -510,6 +510,19 @@ revelations_validation_test(
 );
 
 $article = revelations_validation_article();
+$article['section_mismatch'] = true;
+$article['suggested_section'] = 'art';
+$article['section_mismatch_reason'] =
+    'The article centers on a visual-art development.';
+
+$result = revelations_validation_run( $article );
+
+revelations_validation_test(
+    true === ( $result['valid'] ?? false ),
+    'Art is accepted as a suggested-section advisory'
+);
+
+$article = revelations_validation_article();
 $article['seo_description'] =
     " A DEPLOYED AI SYSTEM is now part of routine\u{00A0}operations. ";
 
