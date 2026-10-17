@@ -6,18 +6,15 @@ import SiteFooter from '@/components/site-footer';
 import SectionArticleCard from '@/components/section-article-card';
 
 import { getArticlesBySection } from '@/lib/cms-articles';
-import { SECTIONS } from '@/lib/sections';
+import {
+  featuredStorySide,
+  SECTIONS,
+} from '@/lib/sections';
 import { BRAND_NAME, SITE_URL } from '@/lib/site';
 import {
   buildSectionBreadcrumbJsonLd,
   serializeJsonLd,
 } from '@/lib/seo';
-
-const STICKY_RIGHT = new Set([
-  'news',
-  'tech',
-  'unspoken',
-]);
 
 export default async function SectionPage({
   sectionId,
@@ -35,7 +32,8 @@ export default async function SectionPage({
     SITE_URL
   );
   const isPodcast = sectionId === 'podcast';
-  const stickyRight = STICKY_RIGHT.has(sectionId);
+  const stickyRight =
+    featuredStorySide(sectionId) === 'right';
 
   const featured = articles[0] || null;
 

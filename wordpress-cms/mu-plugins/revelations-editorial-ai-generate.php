@@ -825,35 +825,51 @@ function revelations_editorial_generate_draft_with_ai(
         ? revelations_editorial_get_settings()
         : array();
 
-    $minimum_words = max(
-        100,
-        absint(
-            $settings['article_length_min']
-            ?? 350
-        )
-    );
+    $word_limits =
+        revelations_editorial_ai_generation_word_limits(
+            $generation_profile,
+            $settings
+        );
+    $minimum_words = $word_limits['minimum'];
+    $maximum_words = $word_limits['maximum'];
+    $preferred_minimum_words =
+        $word_limits['preferred_minimum'];
+    $preferred_maximum_words =
+        $word_limits['preferred_maximum'];
 
-    $maximum_words = max(
-        $minimum_words,
-        absint(
-            $settings['article_length_max']
-            ?? 600
-        )
-    );
+    $word_count_instruction =
+        "Required article length: " .
+        $minimum_words .
+        " to " .
+        $maximum_words .
+        " words. Aim for " .
+        $preferred_minimum_words .
+        " to " .
+        $preferred_maximum_words .
+        " words so the result stays safely inside the required range. " .
+        "Never return fewer than " .
+        $minimum_words .
+        " or more than " .
+        $maximum_words .
+        " words.";
 
-    /*
-     * Give the model an internal buffer while preserving the exact
-     * configured limits enforced later by server-side validation.
-     */
-    $preferred_minimum_words = min(
-        $maximum_words,
-        $minimum_words + 75
-    );
-
-    $preferred_maximum_words = max(
-        $preferred_minimum_words,
-        $maximum_words - 100
-    );
+    if ( 'art' === $current_section ) {
+        $word_count_instruction =
+            "Required article length: " .
+            $minimum_words .
+            " to " .
+            $maximum_words .
+            " words. Aim for " .
+            $preferred_minimum_words .
+            " to " .
+            $preferred_maximum_words .
+            " words where the material supports it. Do not pad the article merely to reach a target. " .
+            "Never return fewer than " .
+            $minimum_words .
+            " or more than " .
+            $maximum_words .
+            " words.";
+    }
 
     $editorial_policy = trim(
         (string) (
@@ -998,20 +1014,7 @@ function revelations_editorial_generate_draft_with_ai(
 
         "Do not closely paraphrase any source, mirror its sequence, or reproduce long passages verbatim. Synthesize across the evidence pack. Use natural attribution for claim-specific facts. Do not include a source-credit line; the application adds a Sources footer automatically.\n\n" .
 
-        "Required article length: " .
-        $minimum_words .
-        " to " .
-        $maximum_words .
-        " words. Aim for " .
-        $preferred_minimum_words .
-        " to " .
-        $preferred_maximum_words .
-        " words so the result stays safely inside the required range. " .
-        "Never return fewer than " .
-        $minimum_words .
-        " or more than " .
-        $maximum_words .
-        " words.\n\n" .
+        $word_count_instruction . "\n\n" .
 
         "Editorial policy:\n" .
         $editorial_policy .
@@ -1672,7 +1675,10 @@ function revelations_editorial_generate_draft_with_ai(
     $word_count_status = 'in_range';
     $word_count_warning = '';
 
-    if ( $word_count < $minimum_words ) {
+    if ( ! revelations_editorial_ai_generation_word_count_is_valid(
+        $word_count,
+        $word_limits
+    ) ) {
         return new WP_Error(
             'invalid_word_count',
             sprintf(

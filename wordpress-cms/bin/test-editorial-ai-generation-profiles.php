@@ -186,6 +186,65 @@ foreach ( $expected_sections as $section ) {
     );
 }
 
+$word_limit_settings = array(
+    'article_length_min' => 350,
+    'article_length_max' => 600,
+);
+$art_profile = revelations_editorial_ai_generation_profile( 'art' );
+$news_profile = revelations_editorial_ai_generation_profile( 'news' );
+$art_word_limits = revelations_editorial_ai_generation_word_limits(
+    is_array( $art_profile ) ? $art_profile : array(),
+    $word_limit_settings
+);
+$news_word_limits = revelations_editorial_ai_generation_word_limits(
+    is_array( $news_profile ) ? $news_profile : array(),
+    $word_limit_settings
+);
+
+revelations_profile_test(
+    250 === $art_word_limits['minimum'] &&
+    350 === $art_word_limits['preferred_minimum'] &&
+    600 === $art_word_limits['maximum'] &&
+    revelations_editorial_ai_generation_word_count_is_valid(
+        280,
+        $art_word_limits
+    ),
+    'Art accepts an evidence-complete 280-word article while retaining a 350-word preferred floor'
+);
+
+revelations_profile_test(
+    ! revelations_editorial_ai_generation_word_count_is_valid(
+        249,
+        $art_word_limits
+    ),
+    'Art rejects a 249-word article below its hard minimum'
+);
+
+revelations_profile_test(
+    350 === $news_word_limits['minimum'] &&
+    ! revelations_editorial_ai_generation_word_count_is_valid(
+        280,
+        $news_word_limits
+    ),
+    'News retains its existing 350-word minimum and rejects 280 words'
+);
+
+revelations_profile_test(
+    str_contains(
+        $generation_function,
+        "if ( 'art' === \$current_section )"
+    ) &&
+    str_contains(
+        $generation_function,
+        'where the material supports it. Do not pad the article merely to reach a target.'
+    ) &&
+    str_contains(
+        $generation_function,
+        'revelations_editorial_ai_generation_word_count_is_valid('
+    ),
+    'Art uses its profile word floor in server validation and receives no-padding target guidance'
+);
+
 revelations_profile_test(
     null === revelations_editorial_ai_generation_profile( '' ),
     'missing section is rejected'
