@@ -1,6 +1,6 @@
 # Текущее состояние
 
-## GA4 Basic Consent Mode v2 (local, not deployed)
+## GA4 Basic Consent Mode v2 (staging deployed, production not deployed)
 
 - The public Next.js frontend now has a compact, styled analytics consent
   surface. `NEXT_PUBLIC_GA4_MEASUREMENT_ID` controls analytics at build time:
@@ -34,6 +34,13 @@
   and a rejected preference plus GA disable flag after revocation. A client
   navigation to `/privacy-policy` then produced no GA collector request. The
   collector domains were blocked in that test, so it did not create GA4 data.
+- Staging now serves commit `17cdeb88a759127342ff946d4f69f542fe64f821` at
+  `https://staging.revelations.me`. Its prepared artifact passed the explicit
+  production-ID scan; public HTML and nine referenced client bundles contain
+  no `G-GZSZRHS50G`. Service, loopback and Nginx checks passed. Browser QA
+  confirmed the banner, consent persistence, Reject and SPA navigation while
+  retaining zero GA tag, `dataLayer` and Google network requests after Accept,
+  as required for a staging build without a Measurement ID.
 - Before release, the controller's legal name, registered address, privacy
   contact, hosting/server-log and processor arrangements, retention settings,
   international transfers and applicable legal basis must be confirmed. The
