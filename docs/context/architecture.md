@@ -252,6 +252,36 @@ approval requirement are canonical in
   the existing article template renders `THE REVELATION`. This integration
   changes neither that API contract nor the frontend renderer.
 
+## Public frontend analytics
+
+- A client-side Basic Consent Mode v2 boundary owns the one official GA4 Google
+  tag (`gtag.js`). `NEXT_PUBLIC_GA4_MEASUREMENT_ID` is compiled into the
+  client artifact. An absent or invalid value disables GA4 completely; when a
+  valid value is present, the tag is not rendered or loaded until the visitor
+  explicitly accepts analytics. It is not present in the WordPress CMS.
+- The boundary persists the accepted or rejected choice in first-party browser
+  storage. It offers an always-available settings control, disables future
+  analytics collection and clears accessible `_ga*` cookies when consent is
+  revoked. Advertising storage, advertising user data and advertising
+  personalization remain denied for every choice.
+- The integration relies on GA4 Enhanced Measurement for page loads and
+  History API navigation, rather than adding a manual `page_view` handler.
+  One guarded GA4 configuration prevents duplicate initial page views.
+- Public `/privacy-policy` and `/cookie-policy` use the shared legal-page
+  shell, are linked from the footer and sitemap, and Cookie Policy is linked
+  from the consent surface. Their copy is limited to implemented public-site
+  behavior and explicitly marks unknown controller, contact, hosting,
+  retention and transfer information for confirmation.
+- The browser-held choice is deliberately not treated as an auditable
+  controller-side consent record: the current localStorage value contains no
+  notice version, timestamp or source and is unavailable to the controller.
+  A server-side evidence design, if required by the applicable law, is a
+  separate privacy architecture decision.
+- The production build script pins and verifies the approved Measurement ID.
+  The staging release script explicitly supplies an empty value and rejects a
+  packaged artifact containing the production ID, preventing staging traffic
+  from entering the production GA4 property.
+
 ## Article author entities
 
 - `revelations-editorial-authors.php` owns the non-login `rev_author` CPT and

@@ -4,9 +4,11 @@ set -euo pipefail
 
 PRODUCTION_SITE_URL='https://revelations.me'
 PRODUCTION_CMS_API_URL='https://cms.revelations.me/wp-json/revelations/v1'
+PRODUCTION_GA4_MEASUREMENT_ID='G-GZSZRHS50G'
 
 export NEXT_PUBLIC_SITE_URL="$PRODUCTION_SITE_URL"
 export REVELATIONS_CMS_API_URL="$PRODUCTION_CMS_API_URL"
+export NEXT_PUBLIC_GA4_MEASUREMENT_ID="$PRODUCTION_GA4_MEASUREMENT_ID"
 
 ENV_FILE='.env.production'
 ENV_BACKUP="$(mktemp "${TMPDIR:-/tmp}/revelations-env-production-backup.XXXXXX")"
@@ -33,10 +35,12 @@ trap restore_env EXIT
 if [[ -f "$ENV_FILE" ]]; then
   awk \
     -v site="$PRODUCTION_SITE_URL" \
-    -v cms="$PRODUCTION_CMS_API_URL" '
+    -v cms="$PRODUCTION_CMS_API_URL" \
+    -v ga4="$PRODUCTION_GA4_MEASUREMENT_ID" '
       BEGIN {
         site_seen = 0
         cms_seen = 0
+        ga4_seen = 0
       }
       /^NEXT_PUBLIC_SITE_URL=/ {
         print "NEXT_PUBLIC_SITE_URL=" site
@@ -46,6 +50,11 @@ if [[ -f "$ENV_FILE" ]]; then
       /^REVELATIONS_CMS_API_URL=/ {
         print "REVELATIONS_CMS_API_URL=" cms
         cms_seen = 1
+        next
+      }
+      /^NEXT_PUBLIC_GA4_MEASUREMENT_ID=/ {
+        print "NEXT_PUBLIC_GA4_MEASUREMENT_ID=" ga4
+        ga4_seen = 1
         next
       }
       {
@@ -58,12 +67,16 @@ if [[ -f "$ENV_FILE" ]]; then
         if (!cms_seen) {
           print "REVELATIONS_CMS_API_URL=" cms
         }
+        if (!ga4_seen) {
+          print "NEXT_PUBLIC_GA4_MEASUREMENT_ID=" ga4
+        }
       }
     ' "$ENV_FILE" > "$ENV_REPLACEMENT"
 else
-  printf '%s\n%s\n' \
+  printf '%s\n%s\n%s\n' \
     "NEXT_PUBLIC_SITE_URL=$PRODUCTION_SITE_URL" \
     "REVELATIONS_CMS_API_URL=$PRODUCTION_CMS_API_URL" \
+    "NEXT_PUBLIC_GA4_MEASUREMENT_ID=$PRODUCTION_GA4_MEASUREMENT_ID" \
     > "$ENV_REPLACEMENT"
 fi
 
@@ -98,6 +111,11 @@ if ! artifact_contains "$PRODUCTION_SITE_URL"; then
   exit 1
 fi
 
+if ! artifact_contains "$PRODUCTION_GA4_MEASUREMENT_ID"; then
+  echo 'Production artifact does not contain the required GA4 Measurement ID.' >&2
+  exit 1
+fi
+
 if [[ -f .next/standalone/.env.production ]]; then
   if ! grep -Fqx \
     "NEXT_PUBLIC_SITE_URL=$PRODUCTION_SITE_URL" \
@@ -112,6 +130,14 @@ if [[ -f .next/standalone/.env.production ]]; then
     .next/standalone/.env.production
   then
     echo 'Standalone production environment has the wrong CMS URL.' >&2
+    exit 1
+  fi
+
+  if ! grep -Fqx \
+    "NEXT_PUBLIC_GA4_MEASUREMENT_ID=$PRODUCTION_GA4_MEASUREMENT_ID" \
+    .next/standalone/.env.production
+  then
+    echo 'Standalone production environment has the wrong GA4 Measurement ID.' >&2
     exit 1
   fi
 fi

@@ -10,6 +10,11 @@ test('staging release packages and validates standalone static assets', async ()
     read('../scripts/deploy-staging.sh'),
   ]);
   assert.match(prepare, /\.next\/standalone/);
+  assert.match(prepare, /NEXT_PUBLIC_GA4_MEASUREMENT_ID=''/);
+  assert.match(
+    prepare,
+    /Staging artifact contains the production GA4 Measurement ID/
+  );
   for (const source of [prepare, deploy]) {
     assert.match(source, /\.next\/static/);
     assert.match(source, /\.next\/BUILD_ID/);
