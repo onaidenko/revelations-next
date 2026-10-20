@@ -1,5 +1,48 @@
 # Текущее состояние
 
+## GA4 Basic Consent Mode v2 (local, not deployed)
+
+- The public Next.js frontend now has a compact, styled analytics consent
+  surface. `NEXT_PUBLIC_GA4_MEASUREMENT_ID` controls analytics at build time:
+  it is unset for local and staging builds, so GA4 is not rendered, loaded or
+  initialized there. The production build pins `G-GZSZRHS50G` and verifies
+  that it reached the artifact. Reject initializes neither `dataLayer` nor
+  `gtag`; WordPress CMS is unchanged.
+- Accept saves first-party browser consent, loads the one official Google tag
+  and grants only `analytics_storage`. `ad_storage`, `ad_user_data` and
+  `ad_personalization` remain denied. The persistent Cookie settings control
+  lets visitors later change the choice. Reject/revocation sets the GA disable
+  flag, updates consent to denied and clears accessible `_ga*` cookies.
+- GA4 Enhanced Measurement remains responsible for initial page loads and
+  Next.js History API navigation. There is no manual `page_view`, and a
+  guarded single `config` call prevents duplicate initial views.
+- Public `/privacy-policy` and `/cookie-policy` routes now document the
+  implemented browser behavior, link to one another, appear in the shared
+  footer and sitemap, and the consent banner links to Cookie Policy. They
+  identify Google Analytics, localStorage choices, accessible GA cookies,
+  YouTube's click-to-load player, outbound resources and the email-based
+  Access/Contact flows without claiming unverified recipients or retention.
+- Focused tests cover pre-consent blocking, reject, accept, persistence,
+  revocation, advertising denial, no manual page view and policy-route/link
+  coverage, including a disabled Measurement ID. `npm run lint`, the full
+  `npm test` suite (133 passing tests), `git diff --check`, a staging-configured
+  build without the production ID, and the production-configured build with
+  the required ID passed. The staging release script forces the variable empty
+  and fails if its packaged artifact contains the production ID.
+- An isolated headless-browser check against the local production build found
+  no GA tag or measurement ID before a choice, exactly one tag after Accept,
+  and a rejected preference plus GA disable flag after revocation. A client
+  navigation to `/privacy-policy` then produced no GA collector request. The
+  collector domains were blocked in that test, so it did not create GA4 data.
+- Before release, the controller's legal name, registered address, privacy
+  contact, hosting/server-log and processor arrangements, retention settings,
+  international transfers and applicable legal basis must be confirmed. The
+  localStorage preference respects a choice on the device but does not provide
+  controller-held consent evidence (for example notice version, time and
+  source); a lawful consent-record strategy needs a separate decision.
+
+Дата изменения: 2026-10-20.
+
 ## Native Art section implementation (local, not deployed)
 
 - Product-owner approval made Art a first-class editorial section with canonical

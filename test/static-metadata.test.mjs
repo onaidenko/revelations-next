@@ -10,6 +10,8 @@ const staticRoutes = {
   'app/advertise/page.jsx': '/advertise',
   'app/access/page.jsx': '/access',
   'app/contact/page.jsx': '/contact',
+  'app/privacy-policy/page.jsx': '/privacy-policy',
+  'app/cookie-policy/page.jsx': '/cookie-policy',
   'app/archive/page.jsx': '/archive',
   'app/news/page.jsx': '/news',
   'app/people/page.jsx': '/people',

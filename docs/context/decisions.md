@@ -12,6 +12,36 @@ cannot override that Constitution without explicit product-owner approval.
   allowlist, remote staged syntax/checksum verification and a per-file backup
   manifest. Manual file copy is not a routine release mechanism.
 
+## GA4 public-site analytics
+
+- **Решение:** the public Next.js root layout mounts a client-side Basic
+  Consent Mode v2 boundary. It loads the single official GA4 Google tag only
+  after explicit analytics consent; WordPress CMS remains unmodified.
+- **Причина:** Basic mode prevents Google tag loading and analytics collection
+  before the user's choice. Consent is saved locally and can be changed at any
+  time. Accept grants only `analytics_storage`; `ad_storage`, `ad_user_data`
+  and `ad_personalization` remain denied. Revocation sets Google Analytics'
+  disable flag before updating consent to denied.
+- **Решение:** GA4 Measurement ID is a build-time
+  `NEXT_PUBLIC_GA4_MEASUREMENT_ID`, not frontend source. Local and staging
+  builds use no ID; production build pins and verifies `G-GZSZRHS50G`. The
+  staging release fails if its package contains that production ID.
+- **Причина:** Next.js embeds `NEXT_PUBLIC_*` values in client bundles during
+  build. A runtime-only setting could not prevent a staging client from using
+  a production analytics property.
+- **Safeguard:** GA4 Enhanced Measurement owns initial and History API page
+  views. The implementation sends no manual `page_view` and guards the one
+  `config` call, preventing duplicate navigation measurement.
+- **Решение:** the public frontend has separate Privacy Policy and Cookie
+  Policy routes in the shared legal-page shell. Footer navigation links to
+  both; the consent banner links to Cookie Policy. The policies describe only
+  observed frontend behavior and visibly mark unconfirmed controller/contact,
+  hosting, retention and transfer details instead of inventing them.
+- **Open requirement:** localStorage persists the choice for that browser but
+  is not controller-held proof of consent. If the applicable regime requires
+  evidence, the product owner must approve a lawful record strategy, including
+  the notice version, time and source, before production release.
+
 ## CMS article authority
 
 - **Решение:** a configured CMS is authoritative for every public article

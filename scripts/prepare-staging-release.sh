@@ -5,6 +5,7 @@ ROOT="${REVELATIONS_RELEASE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pw
 BRANCH=admin-editorial
 SITE_URL=https://staging.revelations.me
 CMS_API_URL=https://staging.revelations.me/cms/wp-json/revelations/v1
+PRODUCTION_GA4_MEASUREMENT_ID='G-GZSZRHS50G'
 EXPECTED_COMMIT="${1:-}"
 
 [[ "$EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo 'Full commit SHA required.' >&2; exit 2; }
@@ -36,7 +37,7 @@ fi
 npm test
 npm run lint
 rm -rf .next
-NEXT_PUBLIC_SITE_URL="$SITE_URL" REVELATIONS_CMS_API_URL="$CMS_API_URL" npm run build
+NEXT_PUBLIC_SITE_URL="$SITE_URL" REVELATIONS_CMS_API_URL="$CMS_API_URL" NEXT_PUBLIC_GA4_MEASUREMENT_ID='' npm run build
 
 test -f .next/standalone/server.js
 test -d .next/static
@@ -51,6 +52,12 @@ cp .next/BUILD_ID "$PACKAGE_DIR/.next/BUILD_ID"
 cp -a public "$PACKAGE_DIR/public"
 printf '%s\n' "$EXPECTED_COMMIT" > "$PACKAGE_DIR/RELEASE_COMMIT"
 find "$PACKAGE_DIR" -type f \( -name '.env' -o -name '.env.*' -o -name '*.pem' -o -name '*.key' \) -delete
+
+if rg --text --fixed-strings --quiet "$PRODUCTION_GA4_MEASUREMENT_ID" "$PACKAGE_DIR"; then
+  echo 'Staging artifact contains the production GA4 Measurement ID.' >&2
+  exit 1
+fi
+
 COPYFILE_DISABLE=1 tar --no-xattrs -C "$PACKAGE_DIR" -czf "$ARCHIVE" .
 SHA="$(shasum -a 256 "$ARCHIVE" | awk '{print $1}')"
 BUILD_ID="$(cat .next/BUILD_ID)"

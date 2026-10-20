@@ -94,6 +94,24 @@ export default function SiteFooter() {
             © {new Date().getFullYear()} REVELATIONS - Published by {PUBLISHER_BRAND_NAME}
           </span>
 
+          <nav
+            aria-label="Legal"
+            className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.15em]"
+          >
+            <Link
+              href="/privacy-policy"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/cookie-policy"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Cookie Policy
+            </Link>
+          </nav>
+
           <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
             Selective - Intelligent - Cinematic
           </span>

@@ -22,6 +22,8 @@ const STATIC_PATHS = [
   'advertise',
   'access',
   'contact',
+  'privacy-policy',
+  'cookie-policy',
   'archive',
   'topics',
   'series',

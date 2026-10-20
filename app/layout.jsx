@@ -1,4 +1,5 @@
 import './globals.css';
+import AnalyticsConsent from '@/components/analytics-consent';
 import {
   BRAND_LOGO_URL,
   BRAND_TAGLINE,
@@ -86,6 +87,7 @@ export default function RootLayout({ children }) {
             __html: serializeJsonLd(siteGraph),
           }}
         />
+        <AnalyticsConsent />
         {children}
       </body>
     </html>
