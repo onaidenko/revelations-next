@@ -289,6 +289,10 @@ try {
   console.log('GA4_BROWSER_INTEGRATION_SUCCESS');
   socket.close();
 } finally {
-  chrome?.kill('SIGTERM');
+  if (chrome) {
+    const closed = new Promise((resolve) => chrome.once('exit', resolve));
+    chrome.kill('SIGTERM');
+    await Promise.race([closed, sleep(5000)]);
+  }
   if (profile) await rm(profile, { recursive: true, force: true });
 }
