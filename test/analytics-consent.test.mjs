@@ -28,6 +28,10 @@ function createStorage(initial = {}) {
   };
 }
 
+function dataLayerEntry(entry) {
+  return Array.from(entry);
+}
+
 test('GA4 is not rendered before an explicit accepted consent choice', async () => {
   const [layout, boundary] = await Promise.all([
     readFile(new URL('../app/layout.jsx', import.meta.url), 'utf8'),
@@ -92,7 +96,13 @@ test('accept persists analytics consent and configures GA4 once with advertising
     ).length,
     1
   );
-  assert.deepEqual(windowObject.dataLayer[0], [
+  assert.equal(
+    Object.prototype.toString.call(windowObject.dataLayer[0]),
+    '[object Arguments]',
+    'Google gtag.js consumes arguments objects, not rest-parameter arrays'
+  );
+  assert.equal(Array.isArray(windowObject.dataLayer[0]), false);
+  assert.deepEqual(dataLayerEntry(windowObject.dataLayer[0]), [
     'consent',
     'default',
     {
@@ -102,7 +112,7 @@ test('accept persists analytics consent and configures GA4 once with advertising
       analytics_storage: 'denied',
     },
   ]);
-  assert.deepEqual(windowObject.dataLayer[1], [
+  assert.deepEqual(dataLayerEntry(windowObject.dataLayer[1]), [
     'consent',
     'update',
     {
@@ -135,7 +145,7 @@ test('revoking analytics consent disables future collection and clears GA cookie
   clearAnalyticsCookies(documentObject);
 
   assert.equal(windowObject[`ga-disable-${TEST_GA4_MEASUREMENT_ID}`], true);
-  assert.deepEqual(windowObject.dataLayer.at(-1), [
+  assert.deepEqual(dataLayerEntry(windowObject.dataLayer.at(-1)), [
     'consent',
     'update',
     {
