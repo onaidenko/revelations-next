@@ -1,6 +1,6 @@
 # Текущее состояние
 
-## GA4 Basic Consent Mode v2 (local, not deployed)
+## GA4 Basic Consent Mode v2 (production hotfix prepared, not deployed)
 
 - The public Next.js frontend now has a compact, styled analytics consent
   surface. `NEXT_PUBLIC_GA4_MEASUREMENT_ID` controls analytics at build time:
@@ -22,18 +22,24 @@
   identify Google Analytics, localStorage choices, accessible GA cookies,
   YouTube's click-to-load player, outbound resources and the email-based
   Access/Contact flows without claiming unverified recipients or retention.
+- The original GA4 release `a6e7003ef463c3941baed44f002023909ed171ba` is in
+  production. Its consent boundary works, but its wrapper queued rest arrays
+  instead of the `arguments` objects required by Google `gtag.js`, preventing
+  collection. The prepared hotfix `50b3a8e74269a044eb131897670be7ec0a28823a`
+  uses the official wrapper and has not been deployed.
 - Focused tests cover pre-consent blocking, reject, accept, persistence,
-  revocation, advertising denial, no manual page view and policy-route/link
-  coverage, including a disabled Measurement ID. `npm run lint`, the full
-  `npm test` suite (133 passing tests), `git diff --check`, a staging-configured
-  build without the production ID, and the production-configured build with
-  the required ID passed. The staging release script forces the variable empty
-  and fails if its packaged artifact contains the production ID.
-- An isolated headless-browser check against the local production build found
-  no GA tag or measurement ID before a choice, exactly one tag after Accept,
-  and a rejected preference plus GA disable flag after revocation. A client
-  navigation to `/privacy-policy` then produced no GA collector request. The
-  collector domains were blocked in that test, so it did not create GA4 data.
+  revocation, repeated consent, advertising denial, no manual page view and
+  policy-route/link coverage, including a disabled Measurement ID. `npm run
+  lint`, the full `npm test` suite (138 passing tests), `git diff --check`, and
+  the production-configured build with the required ID passed. The staging
+  release script forces the variable empty and fails if its packaged artifact
+  contains the production ID.
+- A browser integration check against the built production candidate used the
+  actual Google tag while intercepting collector traffic locally: there was no
+  GA request before Accept; one tag, one config and an intercepted `g/collect`
+  `page_view` after Accept; and exactly one `page_view` for section, article
+  and History API navigation. Reject and withdrawal stopped future collection;
+  a later Accept resumed collection without another tag or config.
 - The public policies name `info@julscorp.com` as the confirmed privacy
   contact and describe REVELATIONS as operating under the JULS brand without
   representing JULS as a registered legal entity. Public policy copy contains
@@ -50,8 +56,8 @@
   and the full supplied SHA must equal the workflow run SHA, checkout HEAD and
   current remote branch tip. The existing protected `production` environment,
   immutable build/package, backup, isolated candidate, atomic switch and
-  rollback checks remain unchanged. No production workflow or deployment has
-  been run for this configuration.
+  rollback checks remain unchanged. The original GA4 release was deployed;
+  the prepared wrapper hotfix has not been sent through the workflow.
 - The workflow attaches checkout to `release/ga4-consent-legal`, rather than
   checking out the input SHA in detached HEAD, so the existing release scripts'
   branch guards can run. The SHA is validated as an environment value before
