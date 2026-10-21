@@ -52,6 +52,11 @@
   immutable build/package, backup, isolated candidate, atomic switch and
   rollback checks remain unchanged. No production workflow or deployment has
   been run for this configuration.
+- The workflow attaches checkout to `release/ga4-consent-legal`, rather than
+  checking out the input SHA in detached HEAD, so the existing release scripts'
+  branch guards can run. The SHA is validated as an environment value before
+  shell use. A local Git fixture confirms both the attached checkout and the
+  required refusal when the remote branch advances after dispatch.
 - The production rollback contract now restores the previous directory after a
   failed candidate activation, restarts the untouched live release after a
   failed first move, and routes HUP, INT and TERM through the same EXIT trap.

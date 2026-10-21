@@ -254,12 +254,16 @@ test('production workflow is bound to the approved GA4 release branch and its ex
     'workflow_dispatch:',
     'environment: production',
     'RELEASE_BRANCH: release/ga4-consent-legal',
-    'ref: ${{ inputs.commit }}',
+    'EXPECTED_COMMIT: ${{ inputs.commit }}',
+    'ref: ${{ env.RELEASE_BRANCH }}',
+    'if [[ ! "$EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]',
     'test "$GITHUB_REF" = "refs/heads/$RELEASE_BRANCH"',
-    'test "$COMMIT" = "$GITHUB_SHA"',
-    'test "$COMMIT" = "$(git rev-parse HEAD)"',
+    'test "$EXPECTED_COMMIT" = "$GITHUB_SHA"',
     'git fetch origin "$RELEASE_BRANCH"',
-    'test "$COMMIT" = "$(git rev-parse "origin/$RELEASE_BRANCH")"',
+    'git switch --force-create "$RELEASE_BRANCH" "origin/$RELEASE_BRANCH"',
+    'test "$(git branch --show-current)" = "$RELEASE_BRANCH"',
+    'test "$EXPECTED_COMMIT" = "$(git rev-parse HEAD)"',
+    'test "$EXPECTED_COMMIT" = "$(git rev-parse "origin/$RELEASE_BRANCH")"',
     '--release-branch "$RELEASE_BRANCH"',
     '--confirm "deploy-production-${COMMIT:0:12}"',
   ]) {
@@ -267,7 +271,86 @@ test('production workflow is bound to the approved GA4 release branch and its ex
   }
 
   assert.doesNotMatch(source, /ref: admin-editorial/);
+  assert.doesNotMatch(source, /ref: \$\{\{ inputs\.commit \}\}/);
+  assert.doesNotMatch(source, /COMMIT="\$\{\{ inputs\.commit \}\}"/);
   assert.doesNotMatch(source, /merge-base --is-ancestor/);
+});
+
+test('release-branch checkout stays attached and rejects a branch advanced after dispatch', async () => {
+  const fixture = await mkdtemp(join(tmpdir(), 'revelations-workflow-checkout-'));
+  const remote = join(fixture, 'remote.git');
+  const source = join(fixture, 'source');
+  const runner = join(fixture, 'runner');
+  const branch = 'release/ga4-consent-legal';
+  const git = (cwd, args) => {
+    const result = spawnSync('git', ['-C', cwd, ...args], {
+      encoding: 'utf8',
+    });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    return result.stdout.trim();
+  };
+
+  try {
+    assert.equal(
+      spawnSync('git', ['init', '--bare', remote], { encoding: 'utf8' }).status,
+      0
+    );
+    assert.equal(
+      spawnSync('git', ['init', source], { encoding: 'utf8' }).status,
+      0
+    );
+    git(source, ['checkout', '-b', branch]);
+    git(source, ['config', 'user.email', 'release@example.test']);
+    git(source, ['config', 'user.name', 'Release Test']);
+    await writeFile(join(source, 'RELEASE_COMMIT'), 'first\n');
+    git(source, ['add', 'RELEASE_COMMIT']);
+    git(source, ['commit', '-m', 'first']);
+    git(source, ['remote', 'add', 'origin', remote]);
+    git(source, ['push', '-u', 'origin', branch]);
+    const expectedCommit = git(source, ['rev-parse', 'HEAD']);
+
+    assert.equal(
+      spawnSync('git', ['init', runner], { encoding: 'utf8' }).status,
+      0
+    );
+    git(runner, ['remote', 'add', 'origin', remote]);
+    git(runner, ['fetch', 'origin', branch]);
+    git(runner, ['checkout', '--detach', expectedCommit]);
+
+    const attach = spawnSync(
+      'bash',
+      [
+        '-c',
+        'set -euo pipefail; git fetch origin "$1"; git switch --force-create "$1" "origin/$1"; test "$(git branch --show-current)" = "$1"; test "$2" = "$(git rev-parse HEAD)"',
+        'bash',
+        branch,
+        expectedCommit,
+      ],
+      { cwd: runner, encoding: 'utf8' }
+    );
+    assert.equal(attach.status, 0, attach.stderr || attach.stdout);
+    assert.equal(git(runner, ['branch', '--show-current']), branch);
+
+    await writeFile(join(source, 'RELEASE_COMMIT'), 'second\n');
+    git(source, ['add', 'RELEASE_COMMIT']);
+    git(source, ['commit', '-m', 'second']);
+    git(source, ['push', 'origin', branch]);
+
+    const advanced = spawnSync(
+      'bash',
+      [
+        '-c',
+        'set -euo pipefail; git fetch origin "$1"; git switch --force-create "$1" "origin/$1"; test "$2" = "$(git rev-parse HEAD)"',
+        'bash',
+        branch,
+        expectedCommit,
+      ],
+      { cwd: runner, encoding: 'utf8' }
+    );
+    assert.notEqual(advanced.status, 0, advanced.stderr || advanced.stdout);
+  } finally {
+    await rm(fixture, { recursive: true, force: true });
+  }
 });
 
 test('production release scripts reject an unallowlisted branch before any release work', () => {

@@ -476,7 +476,9 @@ approval requirement are canonical in
   default-branch workflow definition, but the GA4 release path is restricted
   to `release/ga4-consent-legal`. The workflow requires the selected ref, the
   workflow run SHA, checked-out HEAD and fetched origin tip to match the same
-  full input SHA. Prepare and deploy scripts carry that branch into the
+  full input SHA. It checks out and explicitly switches to the named release
+  branch rather than a detached SHA, because the prepare and deploy scripts
+  require that branch. Prepare and deploy scripts carry that branch into the
   manifest and accept only their explicit branch allowlist; they never merge
   or derive a release from `admin-editorial`.
 

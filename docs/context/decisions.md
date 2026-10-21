@@ -46,6 +46,7 @@ cannot override that Constitution without explicit product-owner approval.
   from `release/ga4-consent-legal`, not a merge into `admin-editorial`. The
   workflow requires an exact full SHA that equals the selected release ref,
   the workflow run SHA, checked-out HEAD and the remote branch tip. The
+  checkout is attached to that release branch, not the input SHA. The
   production scripts accept that branch only through an explicit allowlist and
   bind it into the immutable release manifest.
 - **Причина:** GitHub requires a `workflow_dispatch` definition on the default
@@ -53,6 +54,10 @@ cannot override that Constitution without explicit product-owner approval.
   target the separately reviewed release branch. Equality checks prevent a
   dispatch from rebuilding another commit or silently taking later work from
   `admin-editorial`.
+- **Safeguard:** the dispatch input is passed only as an environment value and
+  must match the lowercase 40-character SHA format before shell commands use
+  it. If the branch advances after dispatch, checkout or the fetched remote tip
+  differs from the stored dispatch SHA and the job fails before preparation.
 - **Решение:** the remote rollback considers the actual `PREVIOUS` release
   directory as well as the in-memory switch state, and records that service
   shutdown has begun before invoking `systemctl stop`. HUP, INT and TERM exit
