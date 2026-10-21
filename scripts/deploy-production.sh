@@ -553,9 +553,10 @@ systemctl stop "$SERVICE" \
 
 mv "$LIVE_ROOT" "$PREVIOUS" \
   || fail "live_release_move_failed"
+# The live release is displaced; arm rollback before activating the candidate.
+SWITCHED=1
 mv "$CANDIDATE" "$LIVE_ROOT" \
   || fail "candidate_activation_failed"
-SWITCHED=1
 
 find_service_ports() {
   local main_pid="$1"
