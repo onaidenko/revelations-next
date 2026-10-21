@@ -84,6 +84,10 @@ test('production deploy is fail-closed and transfers runtime environment only af
     'Prepared artifact contains the staging domain.',
     'REMOTE_TMP_CREATED=1',
     'PREPARED_RELEASE_VALIDATION_SUCCESS',
+    "trap 'exit 129' HUP",
+    "trap 'exit 130' INT",
+    "trap 'exit 143' TERM",
+    'SERVICE_STOPPING=1',
   ]) {
     assert.ok(
       source.includes(required),
@@ -419,6 +423,81 @@ test('failed candidate activation restores the previous live release via the rea
       await readFile(join(fixture, 'live', 'RELEASE_COMMIT'), 'utf8'),
       'previous-release',
       'rollback must restore the original live directory after the second mv fails'
+    );
+  } finally {
+    await rm(fixture, { recursive: true, force: true });
+  }
+});
+
+test('failed live release relocation restarts the unchanged live release via the real rollback trap', async () => {
+  const source = await readFile(deployPath, 'utf8');
+  const switchStart = source.indexOf(
+    '\nmv "$LIVE_ROOT" "$PREVIOUS"',
+    source.indexOf('echo "ATOMIC_SWITCH_START"')
+  );
+  const switchEnd = source.indexOf('\nfind_service_ports()', switchStart);
+  const rollbackStart = source.indexOf('\nrollback() {');
+  const onExitStart = source.indexOf('\non_exit() {', rollbackStart);
+  const trapStart = source.indexOf('\ntrap on_exit EXIT', onExitStart);
+
+  assert.ok(switchStart > 0 && switchEnd > switchStart);
+  assert.ok(rollbackStart > 0 && onExitStart > rollbackStart && trapStart > onExitStart);
+
+  const switchSource = source.slice(switchStart + 1, switchEnd).trim();
+  const rollbackSource = source.slice(rollbackStart + 1, onExitStart).trim();
+  const onExitSource = source.slice(onExitStart + 1, trapStart).trim();
+  const fixture = await mkdtemp(join(tmpdir(), 'revelations-rollback-'));
+
+  try {
+    await mkdir(join(fixture, 'live'), { recursive: true });
+    await mkdir(join(fixture, 'candidate'), { recursive: true });
+    await mkdir(join(fixture, 'backup'), { recursive: true });
+    await writeFile(join(fixture, 'live', 'RELEASE_COMMIT'), 'previous-release');
+
+    const shell = [
+      'set -euo pipefail',
+      'LIVE_ROOT="$1/live"',
+      'PREVIOUS="$1/previous"',
+      'CANDIDATE="$1/candidate"',
+      'BACKUP="$1/backup"',
+      'FAILED_RELEASE="$BACKUP/failed-release"',
+      'PREDEPLOY_MANIFEST="$BACKUP/predeploy-manifest.json"',
+      'SITE_URL="https://example.test"',
+      'SERVICE="test-service"',
+      'SERVICE_LOG="$1/service.log"',
+      'SERVICE_STOPPING=1',
+      'SWITCHED=0',
+      'SUCCESS=0',
+      'CANDIDATE_PID=""',
+      'stop_candidate() { :; }',
+      'systemctl() { printf "%s\\n" "$*" >> "$SERVICE_LOG"; }',
+      'verify_with_retries() { :; }',
+      'mv() {',
+      '  if [[ "$1" == "$LIVE_ROOT" && "$2" == "$PREVIOUS" ]]; then return 40; fi',
+      '  command mv "$@"',
+      '}',
+      'fail() { printf "INJECTED_FAILURE=%s\\n" "$1" >&2; exit 12; }',
+      rollbackSource,
+      onExitSource,
+      'trap on_exit EXIT',
+      switchSource,
+    ].join('\n');
+
+    const result = spawnSync('bash', ['-c', shell, 'bash', fixture], {
+      encoding: 'utf8',
+    });
+
+    assert.equal(result.status, 12, result.stderr);
+    assert.match(result.stderr, /INJECTED_FAILURE=live_release_move_failed/);
+    assert.equal(
+      await readFile(join(fixture, 'live', 'RELEASE_COMMIT'), 'utf8'),
+      'previous-release',
+      'a failed first mv must leave the live directory in place'
+    );
+    assert.match(
+      await readFile(join(fixture, 'service.log'), 'utf8'),
+      /start test-service/,
+      'rollback must restart the service after a failed first mv'
     );
   } finally {
     await rm(fixture, { recursive: true, force: true });

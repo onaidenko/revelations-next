@@ -459,6 +459,13 @@ approval requirement are canonical in
   revalidation-GET or staging-noindex check exits explicitly through `fail`.
   The EXIT trap restores the timestamped previous release and checks it against
   a pre-deploy public manifest.
+- The atomic-switch rollback is armed immediately after moving the live
+  release. It also treats the presence of the timestamped previous directory
+  as evidence that restoration is required, so a signal between the two moves
+  cannot depend on an in-memory flag. A failed first move preserves and
+  restarts the stopped live service. HUP, INT and TERM are converted into an
+  EXIT-path rollback; SIGKILL and host failure remain unrecoverable in-process
+  events covered by the server-side backup.
 - Remote deployment output is streamed live to the controlling process while
   being retained in the local deploy log. The SSH status and the log writer
   status are checked separately, with an SSH failure taking precedence.

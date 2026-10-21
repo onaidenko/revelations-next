@@ -53,6 +53,15 @@ cannot override that Constitution without explicit product-owner approval.
   target the separately reviewed release branch. Equality checks prevent a
   dispatch from rebuilding another commit or silently taking later work from
   `admin-editorial`.
+- **Решение:** the remote rollback considers the actual `PREVIOUS` release
+  directory as well as the in-memory switch state, and records that service
+  shutdown has begun before invoking `systemctl stop`. HUP, INT and TERM exit
+  through the existing rollback path.
+- **Причина:** if the second move fails, or an ordinary terminating signal
+  arrives between the two moves, the displaced live release must be restored.
+  If the first move fails after service shutdown, the untouched live release
+  must be started again. SIGKILL and host-level failure cannot execute shell
+  cleanup and rely on the timestamped server backup for recovery.
 
 ## CMS article authority
 

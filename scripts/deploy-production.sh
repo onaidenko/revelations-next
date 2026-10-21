@@ -280,6 +280,7 @@ CANDIDATE_MANIFEST="$BACKUP/candidate-manifest.json"
 CANDIDATE_LOG="$BACKUP/candidate.log"
 RUNTIME_ENV_SOURCE="$LIVE_ROOT/.env.production"
 CANDIDATE_PID=""
+SERVICE_STOPPING=0
 SWITCHED=0
 SUCCESS=0
 
@@ -323,7 +324,7 @@ rollback() {
   set +e
   stop_candidate
 
-  if [[ "$SWITCHED" -eq 1 ]]; then
+  if [[ "$SWITCHED" -eq 1 || -d "$PREVIOUS" ]]; then
     systemctl stop "$SERVICE" >/dev/null 2>&1 || true
 
     if [[ -d "$LIVE_ROOT" ]]; then
@@ -344,8 +345,14 @@ rollback() {
       18 \
       >"$BACKUP/rollback-verification.log" 2>&1 \
       || true
-  elif [[ -d "$CANDIDATE" ]]; then
-    mv "$CANDIDATE" "$BACKUP/failed-candidate" || true
+  else
+    if [[ -d "$CANDIDATE" ]]; then
+      mv "$CANDIDATE" "$BACKUP/failed-candidate" || true
+    fi
+
+    if [[ "$SERVICE_STOPPING" -eq 1 ]]; then
+      systemctl start "$SERVICE" >/dev/null 2>&1 || true
+    fi
   fi
 }
 
@@ -360,6 +367,9 @@ on_exit() {
   exit "$status"
 }
 trap on_exit EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 echo "REMOTE_PREFLIGHT"
 test "$(id -u)" -eq 0
@@ -548,6 +558,7 @@ nginx -t >/dev/null 2>&1 \
   || fail "nginx_invalid_before_switch"
 
 echo "ATOMIC_SWITCH_START"
+SERVICE_STOPPING=1
 systemctl stop "$SERVICE" \
   || fail "service_stop_failed"
 

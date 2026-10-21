@@ -52,6 +52,12 @@
   immutable build/package, backup, isolated candidate, atomic switch and
   rollback checks remain unchanged. No production workflow or deployment has
   been run for this configuration.
+- The production rollback contract now restores the previous directory after a
+  failed candidate activation, restarts the untouched live release after a
+  failed first move, and routes HUP, INT and TERM through the same EXIT trap.
+  Focused filesystem fixtures execute both move-failure paths. SIGKILL and
+  host-level failure remain outside shell-trap recovery and require the
+  timestamped server backup.
 
 Дата изменения: 2026-10-21.
 
