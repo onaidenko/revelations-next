@@ -5,9 +5,10 @@ import test from 'node:test';
 const read = (path) => readFile(new URL(path, import.meta.url), 'utf8');
 
 test('public legal pages describe the implemented analytics and consent behavior', async () => {
-  const [privacy, cookies] = await Promise.all([
+  const [privacy, cookies, site] = await Promise.all([
     read('../app/privacy-policy/page.jsx'),
     read('../app/cookie-policy/page.jsx'),
+    read('../lib/site.js'),
   ]);
 
   for (const source of [privacy, cookies]) {
@@ -19,9 +20,20 @@ test('public legal pages describe the implemented analytics and consent behavior
     assert.doesNotMatch(source, /ad_storage.*granted/);
   }
 
-  assert.match(privacy, /\[legal entity name to be confirmed\]/);
-  assert.match(privacy, /\[registered address to be confirmed\]/);
-  assert.match(privacy, /\[privacy contact email to be confirmed\]/);
+  assert.match(site, /CONTACT_EMAIL = 'info@julscorp\.com'/);
+  assert.match(privacy, /CONTACT_EMAIL/);
+  assert.match(cookies, /CONTACT_EMAIL/);
+  assert.match(
+    privacy,
+    /REVELATIONS is an independent digital media platform operating under\s+the JULS brand\./
+  );
+  assert.doesNotMatch(privacy, /\[legal entity name to be confirmed\]/);
+  assert.doesNotMatch(privacy, /\[registered address to be confirmed\]/);
+  assert.doesNotMatch(privacy, /\[privacy contact email to be confirmed\]/);
+  assert.doesNotMatch(privacy, /not yet been published/);
+  assert.doesNotMatch(privacy, /identity of the data controller/);
+  assert.doesNotMatch(cookies, /Information still to be confirmed/);
+  assert.doesNotMatch(cookies, /must be confirmed before production/);
   assert.match(cookies, /revelations\.analytics-consent/);
   assert.match(cookies, /revelations-theme/);
   assert.match(cookies, /youtube-nocookie/);

@@ -9,7 +9,6 @@ import {
   DEFAULT_TITLE,
   ORGANIZATION_ID,
   ORGANIZATION_LOCATION_NAME,
-  PUBLISHER_BRAND_NAME,
   SITE_NAME,
   SITE_URL,
   SOCIAL_PROFILE_URLS,
@@ -72,8 +71,6 @@ export default function RootLayout({ children }) {
           CONTACT_EMAIL,
         locationName:
           ORGANIZATION_LOCATION_NAME,
-        publisherBrandName:
-          PUBLISHER_BRAND_NAME,
       }),
     ],
   };

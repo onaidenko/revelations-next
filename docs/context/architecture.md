@@ -270,8 +270,9 @@ approval requirement are canonical in
 - Public `/privacy-policy` and `/cookie-policy` use the shared legal-page
   shell, are linked from the footer and sitemap, and Cookie Policy is linked
   from the consent surface. Their copy is limited to implemented public-site
-  behavior and explicitly marks unknown controller, contact, hosting,
-  retention and transfer information for confirmation.
+  behavior and names the confirmed privacy contact. Public policy copy does
+  not expose internal release placeholders; unresolved controller identity,
+  address, hosting, retention and transfer matters remain release risks.
 - The browser-held choice is deliberately not treated as an auditable
   controller-side consent record: the current localStorage value contains no
   notice version, timestamp or source and is unavailable to the controller.

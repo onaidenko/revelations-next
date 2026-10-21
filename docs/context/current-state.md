@@ -41,14 +41,19 @@
   confirmed the banner, consent persistence, Reject and SPA navigation while
   retaining zero GA tag, `dataLayer` and Google network requests after Accept,
   as required for a staging build without a Measurement ID.
-- Before release, the controller's legal name, registered address, privacy
-  contact, hosting/server-log and processor arrangements, retention settings,
-  international transfers and applicable legal basis must be confirmed. The
-  localStorage preference respects a choice on the device but does not provide
-  controller-held consent evidence (for example notice version, time and
-  source); a lawful consent-record strategy needs a separate decision.
+- The public policies name `info@julscorp.com` as the confirmed privacy
+  contact and describe REVELATIONS as operating under the JULS brand without
+  representing JULS as a registered legal entity. Public policy copy contains
+  no technical placeholders. The unresolved identity of the data controller,
+  address for privacy notices, hosting/server-log and processor arrangements,
+  retention settings, international transfers and applicable legal basis are
+  release risks. The localStorage preference respects a choice on the device
+  but does not provide controller-held consent evidence (for example notice
+  version, time and source); a lawful consent-record strategy needs a separate
+  decision. Public JSON-LD identifies REVELATIONS only and contains no
+  `parentOrganization` relation to JULS.
 
-Дата изменения: 2026-10-20.
+Дата изменения: 2026-10-21.
 
 ## Native Art section implementation (local, not deployed)
 

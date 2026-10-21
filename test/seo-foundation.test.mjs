@@ -293,7 +293,6 @@ test('article, site graph and breadcrumbs keep images and authors truthful', () 
     contactEmail: 'info@julscorp.com',
     locationName:
       'Dubai, United Arab Emirates',
-    publisherBrandName: 'JULS',
   });
   const website = buildWebsiteJsonLd({
     siteUrl: 'https://revelations.me',
@@ -339,10 +338,7 @@ test('article, site graph and breadcrumbs keep images and authors truthful', () 
     organization['@id'],
     organizationId
   );
-  assert.equal(
-    organization.parentOrganization.name,
-    'JULS'
-  );
+  assert.equal(organization.parentOrganization, undefined);
   assert.equal(
     organization.location.name,
     'Dubai, United Arab Emirates'
