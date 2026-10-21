@@ -15,6 +15,10 @@ const verifierPath = new URL(
   '../scripts/verify-production-release.py',
   import.meta.url
 );
+const workflowPath = new URL(
+  '../.github/workflows/production-deploy.yml',
+  import.meta.url
+);
 
 test('production deploy is fail-closed and transfers runtime environment only after candidate verification', async () => {
   const source = await readFile(deployPath, 'utf8');
@@ -218,6 +222,10 @@ test('prepare and deploy scripts keep the commit-bound release contract', async 
     'npm run audit:taxonomy',
     'npm run build:production',
     'PREPARE_SUCCESS',
+    'DEFAULT_RELEASE_BRANCH="admin-editorial"',
+    'APPROVED_RELEASE_BRANCH="release/ga4-consent-legal"',
+    '--release-branch',
+    'Release branch is not allowlisted',
   ]) {
     assert.ok(source.includes(required), `missing prepare safeguard: ${required}`);
   }
@@ -231,6 +239,48 @@ test('prepare and deploy scripts keep the commit-bound release contract', async 
   assert.match(deploySource, /assert data\.get\("cms_api_url"\) == cms_api_url/);
   assert.match(deploySource, /assert checks\.get\("staging_domain"\) == "absent"/);
   assert.match(deploySource, /assert checks\.get\("runtime_secret_files"\) == "absent"/);
+});
+
+test('production workflow is bound to the approved GA4 release branch and its exact dispatch SHA', async () => {
+  const source = await readFile(workflowPath, 'utf8');
+
+  for (const required of [
+    'workflow_dispatch:',
+    'environment: production',
+    'RELEASE_BRANCH: release/ga4-consent-legal',
+    'ref: ${{ inputs.commit }}',
+    'test "$GITHUB_REF" = "refs/heads/$RELEASE_BRANCH"',
+    'test "$COMMIT" = "$GITHUB_SHA"',
+    'test "$COMMIT" = "$(git rev-parse HEAD)"',
+    'git fetch origin "$RELEASE_BRANCH"',
+    'test "$COMMIT" = "$(git rev-parse "origin/$RELEASE_BRANCH")"',
+    '--release-branch "$RELEASE_BRANCH"',
+    '--confirm "deploy-production-${COMMIT:0:12}"',
+  ]) {
+    assert.ok(source.includes(required), `missing workflow safeguard: ${required}`);
+  }
+
+  assert.doesNotMatch(source, /ref: admin-editorial/);
+  assert.doesNotMatch(source, /merge-base --is-ancestor/);
+});
+
+test('production release scripts reject an unallowlisted branch before any release work', () => {
+  for (const script of [preparePath, deployPath]) {
+    const result = spawnSync(
+      'bash',
+      [
+        script.pathname,
+        '--expected-commit',
+        'fd3e875a753b0d1ccf511fb46f79b0af968c8c73',
+        '--release-branch',
+        'release/untrusted',
+      ],
+      { encoding: 'utf8' }
+    );
+
+    assert.equal(result.status, 2, result.stderr || result.stdout);
+    assert.match(result.stderr, /Release branch is not allowlisted/);
+  }
 });
 
 test('production release verifier is sitemap-driven and passes its self-test', async () => {

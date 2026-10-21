@@ -2,7 +2,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BRANCH="admin-editorial"
+DEFAULT_RELEASE_BRANCH="admin-editorial"
+APPROVED_RELEASE_BRANCH="release/ga4-consent-legal"
+RELEASE_BRANCH="$DEFAULT_RELEASE_BRANCH"
 SITE_URL="https://revelations.me"
 CMS_API_URL="https://cms.revelations.me/wp-json/revelations/v1"
 VERIFY_SOURCE="$ROOT/scripts/verify-production-release.py"
@@ -12,7 +14,8 @@ usage() {
   cat <<'EOF'
 Usage:
   bash scripts/prepare-production-release.sh \
-    --expected-commit <full-sha>
+    --expected-commit <full-sha> \
+    [--release-branch <allowed-branch>]
 
 Builds a commit-bound, immutable local production release under
 .release/production/<full-sha>/ without contacting production.
@@ -23,6 +26,10 @@ while [[ "$#" -gt 0 ]]; do
   case "$1" in
     --expected-commit)
       EXPECTED_COMMIT="${2:-}"
+      shift 2
+      ;;
+    --release-branch)
+      RELEASE_BRANCH="${2:-}"
       shift 2
       ;;
     --help|-h)
@@ -41,6 +48,15 @@ if [[ ! "$EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
   echo "A full 40-character commit SHA is required." >&2
   exit 2
 fi
+
+case "$RELEASE_BRANCH" in
+  "$DEFAULT_RELEASE_BRANCH"|"$APPROVED_RELEASE_BRANCH")
+    ;;
+  *)
+    echo "Release branch is not allowlisted: $RELEASE_BRANCH" >&2
+    exit 2
+    ;;
+esac
 
 RELEASE_BASE="$ROOT/.release/production"
 RELEASE_DIR="$RELEASE_BASE/$EXPECTED_COMMIT"
@@ -64,14 +80,14 @@ echo "===== PREPARE PRODUCTION RELEASE PREFLIGHT ====="
 echo "pwd=$PWD"
 echo "branch=$(git branch --show-current)"
 
-test "$(git branch --show-current)" = "$BRANCH"
+test "$(git branch --show-current)" = "$RELEASE_BRANCH"
 test -z "$(git status --porcelain=v1 --untracked-files=all)"
 test -f "$VERIFY_SOURCE"
 
-git fetch origin "$BRANCH"
+git fetch origin "$RELEASE_BRANCH"
 
 test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
-test "$(git rev-parse "origin/$BRANCH")" = "$EXPECTED_COMMIT"
+test "$(git rev-parse "origin/$RELEASE_BRANCH")" = "$EXPECTED_COMMIT"
 test ! -e "$RELEASE_DIR"
 mkdir -p "$RELEASE_BASE"
 mkdir -m 700 "$STAGE_DIR"
@@ -147,7 +163,7 @@ ARCHIVE_SHA="$(shasum -a 256 "$ARCHIVE" | awk '{print $1}')"
 
 test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
-python3 - "$MANIFEST" "$EXPECTED_COMMIT" "$BRANCH" "$BUILD_ID" \
+python3 - "$MANIFEST" "$EXPECTED_COMMIT" "$RELEASE_BRANCH" "$BUILD_ID" \
   "$(basename "$ARCHIVE")" "$ARCHIVE_SHA" "$SITE_URL" "$CMS_API_URL" <<'PY'
 import json
 import sys

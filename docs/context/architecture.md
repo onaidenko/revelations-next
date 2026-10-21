@@ -465,6 +465,13 @@ approval requirement are canonical in
   Shared SSH/SCP options enforce batch mode, bounded connection and liveness
   checks without weakening host-key verification. Success is emitted only after
   runtime transfer, public verification and all surrounding checks have passed.
+- The GitHub Actions production workflow remains manually dispatched from the
+  default-branch workflow definition, but the GA4 release path is restricted
+  to `release/ga4-consent-legal`. The workflow requires the selected ref, the
+  workflow run SHA, checked-out HEAD and fetched origin tip to match the same
+  full input SHA. Prepare and deploy scripts carry that branch into the
+  manifest and accept only their explicit branch allowlist; they never merge
+  or derive a release from `admin-editorial`.
 
 
 ## Public brand identity graph

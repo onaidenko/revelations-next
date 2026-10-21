@@ -45,6 +45,13 @@
   version, time and source); a lawful consent-record strategy needs a separate
   decision. Public JSON-LD identifies REVELATIONS only and contains no
   `parentOrganization` relation to JULS.
+- The isolated GA4 release branch has a commit-bound production workflow path:
+  `release/ga4-consent-legal` must be selected in the manual workflow dispatch,
+  and the full supplied SHA must equal the workflow run SHA, checkout HEAD and
+  current remote branch tip. The existing protected `production` environment,
+  immutable build/package, backup, isolated candidate, atomic switch and
+  rollback checks remain unchanged. No production workflow or deployment has
+  been run for this configuration.
 
 Дата изменения: 2026-10-21.
 

@@ -2,7 +2,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BRANCH="admin-editorial"
+DEFAULT_RELEASE_BRANCH="admin-editorial"
+APPROVED_RELEASE_BRANCH="release/ga4-consent-legal"
+RELEASE_BRANCH="$DEFAULT_RELEASE_BRANCH"
 REMOTE="revelations-prod"
 SERVICE="revelations-production.service"
 LIVE_ROOT="/var/www/revelations-production"
@@ -27,12 +29,13 @@ usage() {
 Usage:
   bash scripts/deploy-production.sh \
     --expected-commit <full-sha> \
+    [--release-branch <allowed-branch>] \
     --prepared-release .release/production/<full-sha> \
     --confirm deploy-production-<first-12-sha>
     [--validate-prepared-release]
 
-The command deploys only an exact, previously prepared release from
-origin/admin-editorial at the expected commit. It never rebuilds locally.
+The command deploys only an exact, previously prepared release from an
+allowlisted origin branch at the expected commit. It never rebuilds locally.
 The optional validation mode exits before any SSH or SCP operation.
 EOF
 }
@@ -41,6 +44,10 @@ while [[ "$#" -gt 0 ]]; do
   case "$1" in
     --expected-commit)
       EXPECTED_COMMIT="${2:-}"
+      shift 2
+      ;;
+    --release-branch)
+      RELEASE_BRANCH="${2:-}"
       shift 2
       ;;
     --confirm)
@@ -71,6 +78,15 @@ if [[ ! "$EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
   echo "A full 40-character commit SHA is required." >&2
   exit 2
 fi
+
+case "$RELEASE_BRANCH" in
+  "$DEFAULT_RELEASE_BRANCH"|"$APPROVED_RELEASE_BRANCH")
+    ;;
+  *)
+    echo "Release branch is not allowlisted: $RELEASE_BRANCH" >&2
+    exit 2
+    ;;
+esac
 
 EXPECTED_CONFIRM="deploy-production-${EXPECTED_COMMIT:0:12}"
 if [[ "$CONFIRM" != "$EXPECTED_CONFIRM" ]]; then
@@ -109,14 +125,14 @@ echo "===== PRODUCTION DEPLOY PREFLIGHT ====="
 echo "pwd=$PWD"
 echo "branch=$(git branch --show-current)"
 
-test "$(git branch --show-current)" = "$BRANCH"
+test "$(git branch --show-current)" = "$RELEASE_BRANCH"
 test -z "$(git status --porcelain=v1 --untracked-files=all)"
 test -f "$VERIFY_SOURCE"
 
-git fetch origin "$BRANCH"
+git fetch origin "$RELEASE_BRANCH"
 
 test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
-test "$(git rev-parse "origin/$BRANCH")" = "$EXPECTED_COMMIT"
+test "$(git rev-parse "origin/$RELEASE_BRANCH")" = "$EXPECTED_COMMIT"
 
 echo "expected_commit=$EXPECTED_COMMIT"
 echo "working_tree=clean"
@@ -132,7 +148,7 @@ MANIFEST_VALUES=()
 while IFS= read -r manifest_value; do
   MANIFEST_VALUES+=("$manifest_value")
 done < <(
-  python3 - "$MANIFEST" "$EXPECTED_COMMIT" "$BRANCH" "$SITE_URL" "$CMS_API_URL" <<'PY'
+  python3 - "$MANIFEST" "$EXPECTED_COMMIT" "$RELEASE_BRANCH" "$SITE_URL" "$CMS_API_URL" <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -853,7 +869,7 @@ grep -Fqx 'ABOUT_REDIRECT=passed' "$REMOTE_LOG"
 
 test -z "$(git status --porcelain=v1 --untracked-files=all)"
 test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
-test "$(git rev-parse "origin/$BRANCH")" = "$EXPECTED_COMMIT"
+test "$(git rev-parse "origin/$RELEASE_BRANCH")" = "$EXPECTED_COMMIT"
 
 echo
 echo "===== PRODUCTION DEPLOY COMPLETE ====="
@@ -882,4 +898,4 @@ echo "cms_writes=0"
 echo "database_writes=0"
 echo "signed_revalidation_post=not_performed"
 echo "openai_requests=0"
-git rev-list --left-right --count "origin/$BRANCH"...HEAD
+git rev-list --left-right --count "origin/$RELEASE_BRANCH"...HEAD

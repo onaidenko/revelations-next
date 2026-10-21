@@ -42,6 +42,17 @@ cannot override that Constitution without explicit product-owner approval.
   is not controller-held proof of consent. If the applicable regime requires
   evidence, the product owner must approve a lawful record strategy, including
   the notice version, time and source, before production release.
+- **Решение:** the GA4 production candidate uses a manual workflow dispatch
+  from `release/ga4-consent-legal`, not a merge into `admin-editorial`. The
+  workflow requires an exact full SHA that equals the selected release ref,
+  the workflow run SHA, checked-out HEAD and the remote branch tip. The
+  production scripts accept that branch only through an explicit allowlist and
+  bind it into the immutable release manifest.
+- **Причина:** GitHub requires a `workflow_dispatch` definition on the default
+  branch to expose manual runs, while the Run workflow branch selector may
+  target the separately reviewed release branch. Equality checks prevent a
+  dispatch from rebuilding another commit or silently taking later work from
+  `admin-editorial`.
 
 ## CMS article authority
 
