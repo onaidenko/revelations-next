@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import LegalPage from '@/components/legal-page';
 import { buildPageMetadata } from '@/lib/seo';
-import { SITE_URL } from '@/lib/site';
+import { CONTACT_EMAIL, SITE_URL } from '@/lib/site';
 
 export const metadata = buildPageMetadata({
   title: 'Cookie Policy',
@@ -16,7 +16,7 @@ export default function CookiePolicyPage() {
   return (
     <LegalPage title="Cookie Policy">
       <p>
-        Last updated: October 20, 2026. This Cookie Policy explains the
+        Last updated: October 21, 2026. This Cookie Policy explains the
         cookies and browser storage used by the public REVELATIONS website at
         revelations.me. See also the <Link href="/privacy-policy" className="text-foreground underline decoration-rose/70 underline-offset-4 hover:decoration-rose">Privacy Policy</Link>.
       </p>
@@ -64,8 +64,7 @@ export default function CookiePolicyPage() {
               Google Analytics may set cookies with names such as `_ga` and
               `_ga_*` only after analytics consent. They support aggregated
               measurement of how the site is used. Their duration is controlled
-              by the Google Analytics configuration and must be confirmed
-              before production publication.
+              by the Google Analytics configuration.
             </p>
           </div>
           <div className="border-l border-rose/50 pl-4">
@@ -102,13 +101,12 @@ export default function CookiePolicyPage() {
       </section>
 
       <section>
-        <h2 className="mb-3 font-display text-2xl text-foreground">Information still to be confirmed</h2>
+        <h2 className="mb-3 font-display text-2xl text-foreground">Contact</h2>
         <p>
-          The data controller&apos;s legal name, registered address, privacy
-          contact, hosting and server-log arrangements, Google Analytics
-          retention settings, international-transfer arrangements and any
-          jurisdiction-specific legal basis must be confirmed before production
-          release. These details belong in the <Link href="/privacy-policy" className="text-foreground underline decoration-rose/70 underline-offset-4 hover:decoration-rose">Privacy Policy</Link> once approved.
+          For privacy requests or questions about cookies, contact us at{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="text-foreground underline decoration-rose/70 underline-offset-4 hover:decoration-rose">
+            {CONTACT_EMAIL}
+          </a>. See also the <Link href="/privacy-policy" className="text-foreground underline decoration-rose/70 underline-offset-4 hover:decoration-rose">Privacy Policy</Link>.
         </p>
       </section>
     </LegalPage>

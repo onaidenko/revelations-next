@@ -35,8 +35,9 @@ cannot override that Constitution without explicit product-owner approval.
 - **Решение:** the public frontend has separate Privacy Policy and Cookie
   Policy routes in the shared legal-page shell. Footer navigation links to
   both; the consent banner links to Cookie Policy. The policies describe only
-  observed frontend behavior and visibly mark unconfirmed controller/contact,
-  hosting, retention and transfer details instead of inventing them.
+  observed frontend behavior, name `info@julscorp.com` as the confirmed
+  privacy contact, without presenting unconfirmed controller identity,
+  address, hosting, retention or transfer details as public facts.
 - **Open requirement:** localStorage persists the choice for that browser but
   is not controller-held proof of consent. If the applicable regime requires
   evidence, the product owner must approve a lawful record strategy, including

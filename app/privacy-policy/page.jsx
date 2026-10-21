@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import LegalPage from '@/components/legal-page';
 import { buildPageMetadata } from '@/lib/seo';
-import { SITE_URL } from '@/lib/site';
+import { CONTACT_EMAIL, SITE_URL } from '@/lib/site';
 
 export const metadata = buildPageMetadata({
   title: 'Privacy Policy',
@@ -16,24 +16,22 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPage title="Privacy Policy">
       <p>
-        Last updated: October 20, 2026. This Privacy Policy describes the
+        Last updated: October 21, 2026. This Privacy Policy describes the
         public REVELATIONS website at revelations.me. It should be read with
         the <Link href="/cookie-policy" className="text-foreground underline decoration-rose/70 underline-offset-4 hover:decoration-rose">Cookie Policy</Link>.
       </p>
 
       <section>
-        <h2 className="mb-3 font-display text-2xl text-foreground">Who is responsible</h2>
+        <h2 className="mb-3 font-display text-2xl text-foreground">Who we are</h2>
         <p>
-          The following controller details have not yet been confirmed for
-          publication:
+          REVELATIONS is an independent digital media platform operating under
+          the JULS brand.
         </p>
-        <ul className="mt-3 list-disc space-y-2 pl-5">
-          <li>Data controller: [legal entity name to be confirmed]</li>
-          <li>Registered address: [registered address to be confirmed]</li>
-          <li>Privacy contact: [privacy contact email to be confirmed]</li>
-        </ul>
         <p className="mt-3">
-          General contact details are available on the <Link href="/contact" className="text-foreground underline decoration-rose/70 underline-offset-4 hover:decoration-rose">Contact page</Link>. The controller details above must be confirmed before this policy is relied on in production.
+          For privacy questions, contact us at{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="text-foreground underline decoration-rose/70 underline-offset-4 hover:decoration-rose">
+            {CONTACT_EMAIL}
+          </a>.
         </p>
       </section>
 
@@ -99,12 +97,10 @@ export default function PrivacyPolicyPage() {
       <section>
         <h2 className="mb-3 font-display text-2xl text-foreground">Sharing, retention and transfers</h2>
         <p>
-          The confirmed recipients described above are Google Analytics after
-          analytics consent, email providers when you choose to send email,
-          and third-party media or link providers when their resources are
-          requested. Hosting, server-log, processor, international-transfer
-          and retention arrangements have not yet been confirmed for
-          publication.
+          Information may be processed by Google Analytics after analytics
+          consent, email providers when you choose to send email, and
+          third-party media or link providers when their resources are
+          requested.
         </p>
       </section>
 
@@ -114,9 +110,11 @@ export default function PrivacyPolicyPage() {
           Depending on where you live and the applicable law, you may have
           rights concerning personal information, including access, correction,
           deletion, restriction, objection or withdrawal of consent. Cookie
-          settings controls optional analytics directly. A confirmed privacy
-          contact and applicable request process are required before the site
-          can provide a complete rights-request route.
+          settings controls optional analytics directly. For privacy requests,
+          contact us at{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="text-foreground underline decoration-rose/70 underline-offset-4 hover:decoration-rose">
+            {CONTACT_EMAIL}
+          </a>.
         </p>
       </section>
 
