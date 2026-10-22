@@ -1,5 +1,24 @@
 # Текущее состояние
 
+## Targeted technical SEO fixes (prepared, not deployed)
+
+- The two historic OpenxAI paths now have exact, one-hop `308` redirects to
+  the published Ashton Hettiarachi canonical URL. The proxy matcher is limited
+  to those paths; existing legacy-ID routing and intentionally deleted URLs
+  remain unchanged.
+- Article document-title composition now removes only a terminal stored
+  `REVELATIONS` suffix before the root layout adds its standard suffix. It
+  fixes the eight duplicated titles without changing WordPress data, H1,
+  canonical URLs, Open Graph, Twitter or JSON-LD values.
+- `npm test` (142 passing), `npm run lint`, the production build and local
+  standalone candidate verification passed. Candidate checks confirmed both
+  redirects, eight corrected HTML titles, `200` canonical successors,
+  sitemap/robots routes and the release verifier's sitemap, taxonomy and
+  JSON-LD contracts. No WordPress, Nginx, robots, sitemap or GA4 source change
+  was made; production deployment remains unperformed.
+
+Дата изменения: 2026-10-22.
+
 ## GA4 Basic Consent Mode v2 (production hotfix prepared, not deployed)
 
 - The public Next.js frontend now has a compact, styled analytics consent
