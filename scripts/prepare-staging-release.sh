@@ -2,34 +2,42 @@
 set -euo pipefail
 
 ROOT="${REVELATIONS_RELEASE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-BRANCH=admin-editorial
 SITE_URL=https://staging.revelations.me
 CMS_API_URL=https://staging.revelations.me/cms/wp-json/revelations/v1
 PRODUCTION_GA4_MEASUREMENT_ID='G-GZSZRHS50G'
-EXPECTED_COMMIT="${1:-}"
+EXPECTED_COMMIT=''
+RELEASE_BRANCH=''
+
+usage() { echo 'Usage: prepare-staging-release.sh --expected-commit <sha> --release-branch <branch>'; }
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    --expected-commit) EXPECTED_COMMIT="${2:-}"; shift 2 ;;
+    --release-branch) RELEASE_BRANCH="${2:-}"; shift 2 ;;
+    --help|-h) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+done
 
 [[ "$EXPECTED_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo 'Full commit SHA required.' >&2; exit 2; }
+case "$RELEASE_BRANCH" in admin-editorial|release/ga4-consent-legal) ;; *) echo 'Release branch is not allowlisted.' >&2; exit 2;; esac
 cd "$ROOT"
-if [[ "${REVELATIONS_ALLOW_DETACHED_RELEASE:-0}" != 1 ]]; then
-  test "$(git branch --show-current)" = "$BRANCH"
-fi
-test -z "$(git status --porcelain=v1 --untracked-files=all)"
-git fetch origin "$BRANCH"
-test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
-if [[ "${REVELATIONS_ALLOW_DETACHED_RELEASE:-0}" = 1 ]]; then
-  git merge-base --is-ancestor "$EXPECTED_COMMIT" "origin/$BRANCH"
-else
-  test "$(git rev-parse "origin/$BRANCH")" = "$EXPECTED_COMMIT"
-fi
+git fetch origin "$RELEASE_BRANCH"
+test "$(git rev-parse "origin/$RELEASE_BRANCH")" = "$EXPECTED_COMMIT"
 
 RELEASE_DIR="$ROOT/.release/staging/$EXPECTED_COMMIT"
 STAGE_DIR="$ROOT/.release/staging/.${EXPECTED_COMMIT}.prepare-$$"
+SOURCE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/revelations-staging-source.XXXXXX")"
 PACKAGE_DIR="$STAGE_DIR/release"
 ARCHIVE="$STAGE_DIR/revelations-staging.tar.gz"
 mkdir -p "$ROOT/.release/staging"
 test ! -e "$RELEASE_DIR"
 mkdir -m 700 "$STAGE_DIR"
-trap 'rm -rf "$STAGE_DIR"' EXIT
+cleanup() { status=$?; trap - EXIT; git -C "$ROOT" worktree remove --force "$SOURCE_DIR" >/dev/null 2>&1 || true; rm -rf "$STAGE_DIR"; exit "$status"; }
+trap cleanup EXIT
+git worktree add --detach "$SOURCE_DIR" "$EXPECTED_COMMIT" >/dev/null
+test "$(git -C "$SOURCE_DIR" rev-parse HEAD)" = "$EXPECTED_COMMIT"
+test -z "$(git -C "$SOURCE_DIR" status --porcelain=v1 --untracked-files=all)"
+cd "$SOURCE_DIR"
 
 if [[ ! -d node_modules/he ]]; then
   npm ci
@@ -61,11 +69,13 @@ fi
 COPYFILE_DISABLE=1 tar --no-xattrs -C "$PACKAGE_DIR" -czf "$ARCHIVE" .
 SHA="$(shasum -a 256 "$ARCHIVE" | awk '{print $1}')"
 BUILD_ID="$(cat .next/BUILD_ID)"
-python3 - "$STAGE_DIR/manifest.json" "$EXPECTED_COMMIT" "$BUILD_ID" "$SHA" <<'PY'
+python3 - "$STAGE_DIR/manifest.json" "$EXPECTED_COMMIT" "$RELEASE_BRANCH" "$BUILD_ID" "$SHA" "$SITE_URL" "$CMS_API_URL" <<'PY'
 import json, sys
 from pathlib import Path
-Path(sys.argv[1]).write_text(json.dumps({"commit": sys.argv[2], "build_id": sys.argv[3], "sha256": sys.argv[4], "archive": "revelations-staging.tar.gz"}, indent=2) + "\n")
+p,c,b,i,s,u,api=sys.argv[1:]
+Path(p).write_text(json.dumps({"schema_version":1,"commit":c,"expected_commit":c,"source_branch":b,"build_id":i,"sha256":s,"archive_sha256":s,"archive":"revelations-staging.tar.gz","site_url":u,"cms_api_url":api,"checks":{"production_ga4":"absent","runtime_secret_files":"absent","standalone":"passed"}}, indent=2) + "\n")
 PY
 mv "$STAGE_DIR" "$RELEASE_DIR"
 trap - EXIT
+git -C "$ROOT" worktree remove --force "$SOURCE_DIR"
 printf 'PREPARED_STAGING_RELEASE=%s\nBUILD_ID=%s\nSHA256=%s\n' "$RELEASE_DIR" "$BUILD_ID" "$SHA"
